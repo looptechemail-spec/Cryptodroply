@@ -73,6 +73,9 @@ const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v : null)
 
 async function importTools() {
   const { collections } = await wix('/wix-data/v2/collections')
+  // Pulizia dei tool importati con la vecchia versione (id senza prefisso, si sovrascrivevano tra collezioni).
+  const old = await db.tool.deleteMany({ where: { wixId: { not: { contains: ':' } } } })
+  if (old.count) log(`Rimossi ${old.count} tool della vecchia importazione`)
   let total = 0
   for (const [order, id] of TOOL_COLLECTIONS.entries()) {
     const col = collections.find((c: any) => c.id === id)
@@ -125,8 +128,10 @@ async function importTools() {
         status: (d._publishStatus === 'DRAFT' ? 'DRAFT' : 'PUBLISHED') as PublishStatus,
         publishedAt: date(d._publishDate) ?? date(d._createdDate),
       }
+      // Gli id Wix ("1", "2"...) si ripetono tra collezioni: si prefissa con l'id della collezione.
+      const wixId = `${id}:${d._id}`
       const tool = await db.tool.upsert({
-        where: { wixId: d._id }, update: data, create: { ...data, wixId: d._id },
+        where: { wixId }, update: data, create: { ...data, wixId },
       })
       const tr = {
         description: plain(first(d, 'description_fld', 'description')), fullDescription: str(d.fullDescription),
