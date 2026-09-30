@@ -41,6 +41,9 @@ export default async function Header() {
             )
           })}
           <Link href="/blog" className="nav-link">Blog</Link>
+          <Link href="/analyses" className="nav-link">
+            Analyses<span className="nav-pro">PRO</span>
+          </Link>
         </nav>
         <Link href="/#plans" className="btn btn-blue btn-sm">
           Get started free
