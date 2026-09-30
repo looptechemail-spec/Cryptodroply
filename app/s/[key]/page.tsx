@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { db } from '@/lib/db'
-import { getCategories, pick } from '@/lib/content'
+import { getCategories, getSectionTools } from '@/lib/content'
+import { AppCard } from '@/components/AppCard'
 import { SECTIONS } from '@/lib/sections'
 
 export const dynamic = 'force-dynamic'
@@ -20,12 +20,9 @@ export default async function SectionPage({ params }: Props) {
   const section = SECTIONS.find((s) => s.key === key)
   if (!section) notFound()
 
-  const categories = (await getCategories()).filter((c) => c.wixId && section.collections.includes(c.wixId))
-  const tools = await db.tool.findMany({
-    where: { status: 'PUBLISHED', category: { wixId: { in: section.collections } } },
-    orderBy: [{ category: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
-    include: { translations: true, category: true },
-  })
+  const cats = (await getCategories()).filter((c) => c.wixId && section.collections.includes(c.wixId))
+  const tools = await getSectionTools(section.collections, 200)
+  const groups = cats.map((c) => ({ c, list: tools.filter((t) => t.categorySlug === c.slug) })).filter((g) => g.list.length)
 
   return (
     <div className="container">
@@ -40,28 +37,27 @@ export default async function SectionPage({ params }: Props) {
           )}
         </h1>
         <p style={{ fontSize: 20, maxWidth: 640 }}>{section.description}</p>
-        <p style={{ marginTop: 16 }}>
-          {categories.map((c, i) => (
-            <span key={c.id}>
-              {i > 0 && ', '}
-              <Link href={`/${c.slug}`} style={{ fontWeight: 700, textDecoration: 'underline' }}>
-                {c.name} ({c.count})
-              </Link>
-            </span>
+        <div className="hero-chips dark">
+          {cats.map((c) => (
+            <Link key={c.id} href={`/${c.slug}`}>
+              {c.name} ({c.count})
+            </Link>
           ))}
-        </p>
+        </div>
       </div>
-      <div className="tool-list">
-        {tools.map((t) => (
-          <Link key={t.id} href={`/${t.category.slug}/${t.slug}`} className="tool-row">
-            <div className="lg">{t.logoUrl && <img src={t.logoUrl} alt="" loading="lazy" />}</div>
-            <div>
-              <div className="t">{t.title}</div>
-              <div className="d">{pick(t.translations)?.description}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {groups.map(({ c, list }) => (
+        <section key={c.id} className="group">
+          <div className="row-head">
+            <h2 style={{ fontSize: 28 }}>{c.name}</h2>
+            <Link href={`/${c.slug}`}>See all</Link>
+          </div>
+          <div className="app-grid">
+            {list.map((t) => (
+              <AppCard key={t.id} tool={t} pro={section.pro} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   )
 }

@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
+import { AppCard } from '@/components/AppCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,15 +44,23 @@ export default async function CategoryPage({ params }: Props) {
         <h1>{name}</h1>
         <p style={{ fontSize: 20, maxWidth: 640 }}>{pick(c.translations)?.description}</p>
       </div>
-      <div className="tool-list">
+      <div className="app-grid" style={{ margin: '32px 0 72px' }}>
         {c.tools.map((t) => (
-          <Link key={t.id} href={`${base}/${t.slug}`} className="tool-row">
-            <div className="lg">{t.logoUrl && <img src={t.logoUrl} alt="" loading="lazy" />}</div>
-            <div>
-              <div className="t">{t.title}</div>
-              <div className="d">{pick(t.translations)?.description}</div>
-            </div>
-          </Link>
+          <AppCard
+            key={t.id}
+            base={base}
+            pro={pro}
+            tool={{
+              id: t.id,
+              slug: t.slug,
+              title: t.title,
+              logoUrl: t.logoUrl,
+              coverUrl: t.coverUrl,
+              description: pick(t.translations)?.description ?? null,
+              categorySlug: c.slug,
+              categoryName: name,
+            }}
+          />
         ))}
       </div>
     </div>

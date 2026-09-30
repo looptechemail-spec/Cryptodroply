@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { getCategories, pick } from '@/lib/content'
+import { getSectionTools, pick } from '@/lib/content'
+import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
 import { SECTIONS, sectionHref } from '@/lib/sections'
 import { PRO_PRICE_LABEL } from '@/lib/access'
 
@@ -20,22 +21,31 @@ const PRO_FEATURES = [
 ]
 
 export default async function Home() {
-  const [categories, posts] = await Promise.all([
-    getCategories(),
+  const [posts, sectionTools] = await Promise.all([
     db.post.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
       take: 3,
       include: { translations: true, category: { include: { translations: true } } },
     }),
+    Promise.all(SECTIONS.map((s) => getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12))),
   ])
-
-  const index = [...categories].sort((a, b) => b.count - a.count).slice(0, 8)
+  const bySection = Object.fromEntries(SECTIONS.map((s, i) => [s.key, sectionTools[i]]))
   const telegram = process.env.NEXT_PUBLIC_TELEGRAM_URL ?? '#'
+
+  const all = sectionTools.flat()
+  const floaters = all.filter((t) => t.logoUrl).slice(0, 7)
+  // in evidenza: tool con copertina, uno per sezione gratuita
+  const picks = SECTIONS.filter((s) => !s.pro)
+    .map((s) => bySection[s.key].find((t) => t.coverUrl))
+    .filter((t): t is NonNullable<typeof t> => !!t)
+    .slice(0, 3)
+  const tones = ['blue', 'yellow', 'ink'] as const
 
   return (
     <>
       <section className="hero">
+        <div className="hero-glow" aria-hidden="true" />
         <div className="container">
           <div>
             <h1>Discover the best crypto tools, airdrops and privacy stack</h1>
@@ -47,51 +57,85 @@ export default async function Home() {
               <Link href="#plans" className="btn btn-yellow">
                 Get started free
               </Link>
-              <Link href="#sections" className="btn btn-outline">
-                Explore sections
+              <Link href="#wallets" className="btn btn-outline">
+                Browse the store
               </Link>
             </div>
-          </div>
-          <div>
-            <div className="index-title">Inside the directory</div>
-            <div className="index-list">
-              {index.map((c) => (
-                <Link key={c.id} href={`/${c.slug}`} className="index-row">
-                  <span>{c.name}</span>
-                  <b>{c.count}</b>
+            <div className="hero-chips">
+              {SECTIONS.filter((s) => !s.pro).map((s) => (
+                <Link key={s.key} href={sectionHref(s.key)}>
+                  {s.title}
                 </Link>
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="block" id="sections">
-        <div className="container">
-          <h2>Start with what you want to do</h2>
-          <p className="lead">
-            Sections cover the whole crypto toolkit, from earning your first coins to keeping your activity private.
-          </p>
-          <div className="tiles">
-            {SECTIONS.map((s, i) => (
-              <Link
-                key={s.key}
-                href={sectionHref(s.key)}
-                className={`tile ${i === 0 ? 'tile-yellow' : i === 1 ? 'tile-blue' : ''}`}
-              >
-                <div>
-                  <h3>
-                    {s.title}
-                    {s.pro && <span className="badge-pro">PRO</span>}
-                  </h3>
-                  <p>{s.description}</p>
-                </div>
-                <span className="more">Browse {s.title.toLowerCase()}</span>
-              </Link>
+          <div className="stack" aria-hidden="true">
+            {floaters.map((t, i) => (
+              <div key={t.id} className={`stack-card stack-${i}`}>
+                <img src={t.logoUrl!} alt="" />
+              </div>
             ))}
           </div>
         </div>
       </section>
+
+      {picks.length > 0 && (
+        <section className="block store-top">
+          <div className="container">
+            <div className="row-head">
+              <h2>Editor&apos;s picks</h2>
+            </div>
+            <div className="features">
+              {picks.map((t, i) => (
+                <FeatureCard key={t.id} tool={t} tone={tones[i]} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="block" id="wallets">
+        <div className="container">
+          <div className="row-head">
+            <div>
+              <h2>Wallets</h2>
+              <p className="lead" style={{ marginBottom: 0 }}>{SECTIONS[1].description}</p>
+            </div>
+            <Link href={sectionHref('wallet')}>See all</Link>
+          </div>
+          <div className="chart">
+            {bySection['wallet'].map((t, i) => (
+              <AppRow key={t.id} tool={t} rank={i + 1} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {SECTIONS.filter((s) => s.key !== 'wallet').map((s) => {
+        const list = bySection[s.key]
+        if (!list.length) return null
+        return (
+          <section key={s.key} className="block rail-block">
+            <div className="container">
+              <div className="row-head">
+                <div>
+                  <h2>
+                    {s.title}
+                    {s.pro && <span className="badge-pro">PRO</span>}
+                  </h2>
+                  <p className="lead" style={{ marginBottom: 0 }}>{s.description}</p>
+                </div>
+                <Link href={sectionHref(s.key)}>See all</Link>
+              </div>
+            </div>
+            <div className="rail" role="list">
+              {list.map((t) => (
+                <AppCard key={t.id} tool={t} pro={s.pro} />
+              ))}
+            </div>
+          </section>
+        )
+      })}
 
       <section className="block" id="plans">
         <div className="container">
