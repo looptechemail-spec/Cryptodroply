@@ -182,6 +182,15 @@ async function importBlog() {
     })
     tagByWix.set(t._id, row.id)
   }
+  // Accesso: un articolo è PRO se su Wix ha almeno un piano a pagamento (pricingPlanIds).
+  const paid = new Set<string>()
+  for (let offset = 0; ; offset += 50) {
+    const r = await wix('/blog/v3/posts/query', 'POST', { query: { paging: { limit: 50, offset } }, fieldsets: ['URL'] })
+    const list: any[] = r.posts ?? []
+    for (const x of list) if (Array.isArray(x.pricingPlanIds) && x.pricingPlanIds.length) { paid.add(x.id); paid.add(x.slug) }
+    if (list.length < 50) break
+  }
+  log(`Articoli a pagamento su Wix: ${paid.size / 2}`)
   let n = 0
   for await (const p of queryAll('Blog/Posts', 20)) {
     const slug = str(p.slug) ?? slugify(p.title)
@@ -189,7 +198,7 @@ async function importBlog() {
       slug, legacyPath: `/post/${slug}`,
       categoryId: catByWix.get(typeof p.mainCategory === 'string' ? p.mainCategory : p.mainCategory?._id) ?? null,
       coverUrl: img(p.coverImage),
-      access: (Array.isArray(p.paidPlans) && p.paidPlans.length ? 'PRO' : 'FREE') as Access,
+      access: (paid.has(p.uuid) || paid.has(slug) ? 'PRO' : 'FREE') as Access,
       featured: !!p.featured, pinned: !!p.pinned,
       status: 'PUBLISHED' as PublishStatus,
       publishedAt: date(p.publishedDate), viewCount: p.viewCount ?? 0,
