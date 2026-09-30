@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { getSectionTools, pick } from '@/lib/content'
+import { getCategories, getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
-import { SECTIONS, sectionHref } from '@/lib/sections'
+import { SECTIONS, sectionHref, CATEGORY_BLURBS } from '@/lib/sections'
 import { PRO_PRICE_LABEL } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +21,8 @@ const PRO_FEATURES = [
 ]
 
 export default async function Home() {
-  const [posts, sectionTools] = await Promise.all([
+  const [categories, posts, sectionTools] = await Promise.all([
+    getCategories(),
     db.post.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
@@ -57,7 +58,7 @@ export default async function Home() {
               <Link href="#plans" className="btn btn-yellow">
                 Get started free
               </Link>
-              <Link href="#wallets" className="btn btn-outline">
+              <Link href="#categories" className="btn btn-outline">
                 Browse the store
               </Link>
             </div>
@@ -79,20 +80,41 @@ export default async function Home() {
         </div>
       </section>
 
-      {picks.length > 0 && (
-        <section className="block store-top">
-          <div className="container">
-            <div className="row-head">
-              <h2>Editor&apos;s picks</h2>
-            </div>
-            <div className="features">
-              {picks.map((t, i) => (
-                <FeatureCard key={t.id} tool={t} tone={tones[i]} />
-              ))}
+      <section className="block" id="categories">
+        <div className="container">
+          <div className="row-head">
+            <div>
+              <h2>Every category</h2>
+              <p className="lead" style={{ marginBottom: 0 }}>Pick a category and go straight to its tools.</p>
             </div>
           </div>
-        </section>
-      )}
+          <div className="cat-groups">
+            {SECTIONS.map((s) => {
+              const cats = categories.filter((c) => c.wixId && s.collections.includes(c.wixId))
+              if (!cats.length) return null
+              return (
+                <div key={s.key} className="cat-group">
+                  <Link href={sectionHref(s.key)} className="cat-group-title">
+                    {s.title}
+                    {s.pro && <span className="badge-pro">PRO</span>}
+                  </Link>
+                  <div className="cat-list">
+                    {cats.map((c) => (
+                      <Link key={c.id} href={`/${c.slug}`} className="cat-item">
+                        <span>
+                          <b>{c.name}</b>
+                          <small>{CATEGORY_BLURBS[c.wixId!]}</small>
+                        </span>
+                        <em>{c.count}</em>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
 
       <section className="block" id="wallets">
         <div className="container">
@@ -111,7 +133,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {SECTIONS.filter((s) => s.key !== 'wallet').map((s) => {
+      {SECTIONS.filter((s) => !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
         const list = bySection[s.key]
         if (!list.length) return null
         return (
@@ -128,7 +150,7 @@ export default async function Home() {
                 <Link href={sectionHref(s.key)}>See all</Link>
               </div>
             </div>
-            <div className="rail" role="list">
+            <div className="rail rail-small" role="list">
               {list.map((t) => (
                 <AppCard key={t.id} tool={t} pro={s.pro} />
               ))}
@@ -136,6 +158,21 @@ export default async function Home() {
           </section>
         )
       })}
+
+      {picks.length > 0 && (
+        <section className="block store-top">
+          <div className="container">
+            <div className="row-head">
+              <h2>Editor&apos;s picks</h2>
+            </div>
+            <div className="features">
+              {picks.map((t, i) => (
+                <FeatureCard key={t.id} tool={t} tone={tones[i]} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="block" id="plans">
         <div className="container">
