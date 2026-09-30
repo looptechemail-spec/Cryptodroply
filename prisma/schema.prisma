@@ -1,0 +1,379 @@
+// Cryptodroply - schema database (PostgreSQL)
+// Lingue: EN (default) + IT. Ogni contenuto ha una riga base + traduzioni per locale.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Locale {
+  EN
+  IT
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum Access {
+  FREE
+  PRO
+}
+
+enum AttributeType {
+  TEXT
+  BOOLEAN
+  URL
+  NUMBER
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SubStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+enum EventKind {
+  AFFILIATE_CLICK
+  PAGE_VIEW
+}
+
+enum FormType {
+  CONTACT
+  LIST_PROJECT
+  COLLAB
+}
+
+// ---------------------------------------------------------------------------
+// Strumenti (le 19 collezioni Wix diventano categorie)
+// ---------------------------------------------------------------------------
+
+model Category {
+  id         String         @id @default(cuid())
+  slug       String         @unique // es. "cold-wallet", "crypto-card"
+  wixId      String?        @unique // id collezione Wix, per l'import
+  icon       String?
+  sortOrder  Int            @default(0)
+  translations CategoryTranslation[]
+  attributes AttributeDef[]
+  tools      Tool[]
+}
+
+model CategoryTranslation {
+  id          String   @id @default(cuid())
+  categoryId  String
+  locale      Locale
+  name        String
+  description String?
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+}
+
+// Definisce i campi specifici di una categoria (es. Cold Wallet: "multisig";
+// Crypto Card: "IBAN"). Aggiungere un campo = una riga, nessun codice.
+model AttributeDef {
+  id          String        @id @default(cuid())
+  categoryId  String
+  key         String
+  type        AttributeType @default(TEXT)
+  labelEn     String
+  labelIt     String?
+  sortOrder   Int           @default(0)
+  showInTable Boolean       @default(false)
+  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, key])
+}
+
+model Tool {
+  id          String        @id @default(cuid())
+  categoryId  String
+  slug        String // parte finale dell'URL, identica a quella attuale
+  legacyPath  String?       @unique // percorso Wix originale, per i redirect
+  title       String
+  logoUrl     String?
+  coverUrl    String? // immagine articolo / anteprima social
+  ratingImage String?
+  refLink     String? // link affiliato
+  websiteUrl  String?
+  featured    Boolean       @default(false)
+  sponsored   Boolean       @default(false)
+  sortOrder   Int           @default(0)
+  // valori degli attributi specifici della categoria: { "multisig": "Yes", ... }
+  attributes  Json          @default("{}")
+  // quali sezioni sono PRO: { "video": "PRO", "analysis": "FREE" }
+  status      PublishStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  wixId       String?       @unique
+
+  category     Category          @relation(fields: [categoryId], references: [id])
+  translations ToolTranslation[]
+  videos       ToolVideo[]
+  events       Event[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId, status, sortOrder])
+}
+
+model ToolTranslation {
+  id              String  @id @default(cuid())
+  toolId          String
+  locale          Locale
+  description     String? // breve, per le card
+  fullDescription String?
+  whatIs          String? // "Cos'è"
+  howItWorks      String? // "Come funziona"
+  whenToUse       String? // "Quando usarlo"
+  tip             String?
+  // attributi traducibili (testi) per questa lingua
+  attributes      Json    @default("{}")
+  seoTitle        String?
+  seoDescription  String?
+  tool            Tool    @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, locale])
+}
+
+// Video tutorial YouTube: il campo "access" decide se sono gratis o PRO.
+// Spostarli tra i piani = cambiare un valore.
+model ToolVideo {
+  id          String  @id @default(cuid())
+  toolId      String
+  youtubeUrl  String
+  titleEn     String?
+  titleIt     String?
+  description String?
+  access      Access  @default(PRO)
+  sortOrder   Int     @default(0)
+  tool        Tool    @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// Blog
+// ---------------------------------------------------------------------------
+
+model PostCategory {
+  id    String @id @default(cuid())
+  slug  String @unique
+  wixId String? @unique
+  translations PostCategoryTranslation[]
+  posts Post[]
+}
+
+model PostCategoryTranslation {
+  id         String       @id @default(cuid())
+  categoryId String
+  locale     Locale
+  name       String
+  category   PostCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  slug  String @unique
+  label String
+  wixId String? @unique
+  posts PostTag[]
+}
+
+model Post {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  legacyPath  String?       @unique
+  categoryId  String?
+  coverUrl    String?
+  access      Access        @default(FREE)
+  featured    Boolean       @default(false)
+  pinned      Boolean       @default(false)
+  status      PublishStatus @default(DRAFT)
+  publishedAt DateTime?
+  viewCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  wixId       String?       @unique
+
+  category     PostCategory?     @relation(fields: [categoryId], references: [id])
+  translations PostTranslation[]
+  tags         PostTag[]
+
+  @@index([status, publishedAt])
+}
+
+model PostTranslation {
+  id             String  @id @default(cuid())
+  postId         String
+  locale         Locale
+  title          String
+  excerpt        String?
+  contentMd      String // contenuto in Markdown
+  seoTitle       String?
+  seoDescription String?
+  post           Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, locale])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+// ---------------------------------------------------------------------------
+// Utenti e abbonamento PRO (unico piano, 14 EUR/mese, Stripe)
+// ---------------------------------------------------------------------------
+
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String?
+  passwordHash     String?
+  role             Role     @default(USER)
+  locale           Locale   @default(EN)
+  stripeCustomerId String?  @unique
+  emailVerifiedAt  DateTime?
+  createdAt        DateTime @default(now())
+  wixMemberId      String?  @unique
+
+  subscription Subscription?
+  resetTokens  PasswordReset[]
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  stripeSubscriptionId String    @unique
+  stripePriceId        String
+  status               SubStatus
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Newsletter e email marketing (consenso GDPR tracciato)
+// ---------------------------------------------------------------------------
+
+model NewsletterList {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  subscribers NewsletterMembership[]
+  campaigns   Campaign[]
+}
+
+model Subscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  locale           Locale    @default(EN)
+  source           String? // footer, popup, import-wix...
+  consentAt        DateTime?
+  consentIp        String?
+  confirmedAt      DateTime? // double opt-in
+  unsubscribedAt   DateTime?
+  createdAt        DateTime  @default(now())
+  lists            NewsletterMembership[]
+}
+
+model NewsletterMembership {
+  subscriberId String
+  listId       String
+  subscriber   Subscriber     @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  list         NewsletterList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, listId])
+}
+
+model Campaign {
+  id        String         @id @default(cuid())
+  listId    String
+  subject   String
+  bodyHtml  String
+  locale    Locale         @default(EN)
+  sentAt    DateTime?
+  createdAt DateTime       @default(now())
+  list      NewsletterList @relation(fields: [listId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard: click sui link affiliati e visite
+// ---------------------------------------------------------------------------
+
+model Event {
+  id        String    @id @default(cuid())
+  kind      EventKind
+  toolId    String?
+  path      String?
+  referrer  String?
+  country   String?
+  sessionId String? // hash anonimo, nessun dato personale
+  createdAt DateTime  @default(now())
+  tool      Tool?     @relation(fields: [toolId], references: [id], onDelete: SetNull)
+
+  @@index([kind, createdAt])
+  @@index([toolId, kind, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Moduli, redirect SEO, chiavi API per n8n
+// ---------------------------------------------------------------------------
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  type      FormType
+  email     String?
+  payload   Json
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Redirect {
+  id        String   @id @default(cuid())
+  fromPath  String   @unique
+  toPath    String
+  status    Int      @default(301)
+  createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String // es. "n8n"
+  keyHash    String    @unique
+  scopes     String[] // tools:write, posts:write, subscribers:read...
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
