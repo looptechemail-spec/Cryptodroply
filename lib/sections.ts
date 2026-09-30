@@ -40,10 +40,10 @@ export const SECTIONS: Section[] = [
   {
     key: 'tools',
     title: 'Tools',
-    description: 'Security, analysis, portfolio and spending tools.',
-    intro: 'Everyday helpers around your crypto: tools that check contracts and protect your wallet, tools to spend crypto in real life and crypto cards that turn your balance into a payment card.',
+    description: 'Security, analysis, portfolio and spending tools, everything you need.',
+    intro: 'Everyday helpers around your crypto: security tools that check contracts and protect your wallet, on-chain and market analysis tools to research before you invest, tools to spend crypto in real life and crypto cards that turn your balance into a payment card.',
     pro: false,
-    collections: ['toolssecurity', 'SpendingTools', 'CryptoCard'],
+    collections: ['toolssecurity', 'toolsanalysis', 'SpendingTools', 'CryptoCard'],
   },
   {
     key: 'grow',
@@ -60,14 +60,6 @@ export const SECTIONS: Section[] = [
     intro: 'For people who want to keep their financial activity private. Buy and sell without handing over documents, manage your coins so they are harder to trace and pay with cards that do not ask who you are.',
     pro: true,
     collections: ['Import1', 'Import2', 'Import4'],
-  },
-  {
-    key: 'analysis',
-    title: 'Analysis',
-    description: 'On-chain and market analysis tools.',
-    intro: 'Data tools to understand what is really happening on chain and in the market: who moves funds, where liquidity goes and which projects are growing. Useful before you commit money to anything.',
-    pro: true,
-    collections: ['toolsanalysis'],
   },
 ]
 

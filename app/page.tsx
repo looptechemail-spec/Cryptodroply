@@ -10,15 +10,24 @@ export const dynamic = 'force-dynamic'
 const FREE_FEATURES = [
   'Free earn, Wallet, Exchange and Tools sections',
   'Key facts for every tool, side by side',
-  'Guides on what each tool is, how it works and when to use it',
-  'Blog and newsletter',
+  'A plain guide to what each tool is, how it works and when to use it',
+  'The blog and the newsletter',
 ]
 const PRO_FEATURES = [
   'Everything in Free',
-  'Grow, Privacy and Analysis sections',
+  'The Grow and Privacy sections',
   'Video tutorials for each tool',
+  'Full weekly analyses, not just the opening',
   'Cancel any time',
 ]
+const ICONS: Record<string, React.ReactNode> = {
+  'free-earn': <path d="M12 3v18M3 12h18M6.5 6.5l11 11M17.5 6.5l-11 11" />,
+  wallet: <path d="M3 7a2 2 0 0 1 2-2h13v4M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16 14.5h.01" />,
+  exchange: <path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5" />,
+  tools: <path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2-.5-.5-2z" />,
+  grow: <path d="M4 18l5-5 4 4 7-8M15 9h5v5" />,
+  privacy: <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3zM9.5 12l2 2 3.5-4" />,
+}
 
 export default async function Home() {
   const [categories, posts, sectionTools] = await Promise.all([
@@ -26,13 +35,25 @@ export default async function Home() {
     db.post.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
-      take: 3,
+      take: 40,
       include: { translations: true, category: { include: { translations: true } } },
     }),
     Promise.all(SECTIONS.map((s) => getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12))),
   ])
   const bySection = Object.fromEntries(SECTIONS.map((s, i) => [s.key, sectionTools[i]]))
   const telegram = process.env.NEXT_PUBLIC_TELEGRAM_URL ?? '#'
+
+  const freePosts = posts.filter((p) => p.access === 'FREE').slice(0, 4)
+  const proPosts = posts.filter((p) => p.access === 'PRO').slice(0, 4)
+  const PostLink = ({ p, locked = false }: { p: (typeof posts)[number]; locked?: boolean }) => (
+    <Link href={`/post/${p.slug}`} className="post-row">
+      <span className="t">
+        {locked && <span className="lock" aria-hidden="true">&#128274;</span>}
+        {pick(p.translations)?.title}
+      </span>
+      <span className="m">{p.publishedAt?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+    </Link>
+  )
 
   const all = sectionTools.flat()
   const floaters = all.filter((t) => t.logoUrl).slice(0, 7)
@@ -75,6 +96,30 @@ export default async function Home() {
               <div key={t.id} className={`stack-card stack-${i}`}>
                 <img src={t.logoUrl!} alt="" />
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="block start" id="start">
+        <div className="container">
+          <h2>Start here</h2>
+          <p className="lead">Choose what you want to do. Each section opens the tools for it, with a plain explanation of every one.</p>
+          <div className="start-grid">
+            {SECTIONS.map((s) => (
+              <Link key={s.key} href={sectionHref(s.key)} className={`start-card ${s.pro ? 'is-pro' : ''}`}>
+                <span className="start-icon">
+                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {ICONS[s.key]}
+                  </svg>
+                </span>
+                <span className="start-title">
+                  {s.title}
+                  {s.pro && <span className="badge-pro">PRO</span>}
+                </span>
+                <span className="start-text">{s.description}</span>
+                <span className="start-go">Go</span>
+              </Link>
             ))}
           </div>
         </div>
@@ -176,13 +221,16 @@ export default async function Home() {
 
       <section className="block" id="plans">
         <div className="container">
-          <h2>Start free, upgrade for the PRO sections</h2>
+          <h2>Free to start, PRO when you want more</h2>
           <p className="lead">One paid plan, billed monthly. Cancel whenever you like.</p>
           <div className="plans">
             <div className="plan">
-              <h3>Free</h3>
-              <div className="price">€0, no card needed</div>
-              <ul>
+              <div className="plan-name">Free</div>
+              <div className="plan-price">
+                <b>€0</b>
+                <span>no card needed</span>
+              </div>
+              <ul className="plan-list">
                 {FREE_FEATURES.map((f) => (
                   <li key={f}>{f}</li>
                 ))}
@@ -192,11 +240,14 @@ export default async function Home() {
               </Link>
             </div>
             <div className="plan plan-pro">
-              <h3>PRO</h3>
-              <div className="price">
-                <b>€14</b> per month
+              <div className="plan-name">
+                PRO <span className="badge-pro pro-on-dark">All access</span>
               </div>
-              <ul>
+              <div className="plan-price">
+                <b>€14</b>
+                <span>per month</span>
+              </div>
+              <ul className="plan-list">
                 {PRO_FEATURES.map((f) => (
                   <li key={f}>{f}</li>
                 ))}
@@ -209,32 +260,36 @@ export default async function Home() {
         </div>
       </section>
 
-      {posts.length > 0 && (
-        <section className="block">
-          <div className="container">
-            <div className="row-head">
-              <h2>Latest guides</h2>
-              <Link href="/blog">All articles</Link>
+      <section className="block">
+        <div className="container">
+          <div className="two-col">
+            <div>
+              <div className="row-head">
+                <h2 style={{ fontSize: 34 }}>Blog</h2>
+                <Link href="/blog">All articles</Link>
+              </div>
+              <div className="posts">
+                {freePosts.map((p) => (
+                  <PostLink key={p.id} p={p} />
+                ))}
+              </div>
             </div>
-            <div className="posts">
-              {posts.map((p) => {
-                const t = pick(p.translations)
-                const cat = p.category ? pick(p.category.translations)?.name : null
-                return (
-                  <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
-                    <span className="t">{t?.title}</span>
-                    <span className="m">
-                      {[cat, p.publishedAt?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </span>
-                  </Link>
-                )
-              })}
+            <div>
+              <div className="row-head">
+                <h2 style={{ fontSize: 34 }}>
+                  Analyses <span className="badge-pro">PRO</span>
+                </h2>
+                <Link href="/analyses">All analyses</Link>
+              </div>
+              <div className="posts">
+                {proPosts.map((p) => (
+                  <PostLink key={p.id} p={p} locked />
+                ))}
+              </div>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       <section className="cta-band">
         <div className="container">
