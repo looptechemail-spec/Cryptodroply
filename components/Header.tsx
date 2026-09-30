@@ -40,10 +40,29 @@ export default async function Header() {
               </div>
             )
           })}
-          <Link href="/blog" className="nav-link">Blog</Link>
-          <Link href="/analyses" className="nav-link">
-            Analyses<span className="nav-pro">PRO</span>
-          </Link>
+          <div className="nav-item" tabIndex={0}>
+            <Link href="/blog" className="nav-link">
+              Blog
+              <span className="nav-caret" aria-hidden="true" />
+            </Link>
+            <div className="menu menu-right">
+              <div className="menu-inner">
+                <Link href="/blog" className="menu-item">
+                  <span>
+                    <b>Blog</b>
+                    <small>Guides and news, free for everyone.</small>
+                  </span>
+                </Link>
+                <Link href="/analyses" className="menu-item">
+                  <span>
+                    <b>Analyses</b>
+                    <small>In-depth analysis, full text for PRO members.</small>
+                  </span>
+                  <em className="menu-pro">PRO</em>
+                </Link>
+              </div>
+            </div>
+          </div>
         </nav>
         <Link href="/#plans" className="btn btn-blue btn-sm">
           Get started free

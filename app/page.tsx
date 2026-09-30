@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { getCategories, getSectionTools, pick } from '@/lib/content'
+import { getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
-import { SECTIONS, sectionHref, CATEGORY_BLURBS } from '@/lib/sections'
+import { SECTIONS, sectionHref } from '@/lib/sections'
 import { PRO_PRICE_LABEL } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
@@ -30,8 +30,7 @@ const ICONS: Record<string, React.ReactNode> = {
 }
 
 export default async function Home() {
-  const [categories, posts, sectionTools] = await Promise.all([
-    getCategories(),
+  const [posts, sectionTools] = await Promise.all([
     db.post.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
@@ -79,7 +78,7 @@ export default async function Home() {
               <Link href="#plans" className="btn btn-yellow">
                 Get started free
               </Link>
-              <Link href="#categories" className="btn btn-outline">
+              <Link href="#start" className="btn btn-outline">
                 Browse the store
               </Link>
             </div>
@@ -121,42 +120,6 @@ export default async function Home() {
                 <span className="start-go">Go</span>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="block" id="categories">
-        <div className="container">
-          <div className="row-head">
-            <div>
-              <h2>Every category</h2>
-              <p className="lead" style={{ marginBottom: 0 }}>Pick a category and go straight to its tools.</p>
-            </div>
-          </div>
-          <div className="cat-groups">
-            {SECTIONS.map((s) => {
-              const cats = categories.filter((c) => c.wixId && s.collections.includes(c.wixId))
-              if (!cats.length) return null
-              return (
-                <div key={s.key} className="cat-group">
-                  <Link href={sectionHref(s.key)} className="cat-group-title">
-                    {s.title}
-                    {s.pro && <span className="badge-pro">PRO</span>}
-                  </Link>
-                  <div className="cat-list">
-                    {cats.map((c) => (
-                      <Link key={c.id} href={`/${c.slug}`} className="cat-item">
-                        <span>
-                          <b>{c.name}</b>
-                          <small>{CATEGORY_BLURBS[c.wixId!]}</small>
-                        </span>
-                        <em>{c.count}</em>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
           </div>
         </div>
       </section>
@@ -208,7 +171,7 @@ export default async function Home() {
         <section className="block store-top">
           <div className="container">
             <div className="row-head">
-              <h2>Editor&apos;s picks</h2>
+              <h2 style={{ fontSize: 30 }}>Editor&apos;s picks</h2>
             </div>
             <div className="features">
               {picks.map((t, i) => (
