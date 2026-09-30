@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
 import { SECTIONS, sectionHref } from '@/lib/sections'
-import { PRO_PRICE_LABEL } from '@/lib/access'
+import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +30,7 @@ const ICONS: Record<string, React.ReactNode> = {
 }
 
 export default async function Home() {
+  const member = await hasPro()
   const [posts, sectionTools] = await Promise.all([
     db.post.findMany({
       where: { status: 'PUBLISHED' },
@@ -43,7 +44,8 @@ export default async function Home() {
   const telegram = process.env.NEXT_PUBLIC_TELEGRAM_URL ?? '#'
 
   const freePosts = posts.filter((p) => p.access === 'FREE').slice(0, 4)
-  const proPosts = posts.filter((p) => p.access === 'PRO').slice(0, 4)
+  const proAll = posts.filter((p) => p.access === 'PRO')
+  const proPosts = member ? proAll.slice(0, 4) : []
   const PostLink = ({ p, locked = false }: { p: (typeof posts)[number]; locked?: boolean }) => (
     <Link href={`/post/${p.slug}`} className="post-row">
       <span className="t">
@@ -244,11 +246,22 @@ export default async function Home() {
                 </h2>
                 <Link href="/analyses">All analyses</Link>
               </div>
-              <div className="posts">
-                {proPosts.map((p) => (
-                  <PostLink key={p.id} p={p} locked />
-                ))}
-              </div>
+              {member ? (
+                <div className="posts">
+                  {proPosts.map((p) => (
+                    <PostLink key={p.id} p={p} />
+                  ))}
+                </div>
+              ) : (
+                <div className="paywall paywall-sm">
+                  <span className="paywall-lock" aria-hidden="true">&#128274;</span>
+                  <h3>Weekly analyses for PRO members</h3>
+                  <p>In-depth analysis of price, on-chain data and fundamentals.</p>
+                  <Link href="/signup?plan=pro" className="btn btn-yellow btn-sm">
+                    Get PRO
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

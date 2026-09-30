@@ -11,14 +11,16 @@ export const metadata: Metadata = { title: 'Analyses', description: 'In-depth cr
 const fmt = (d: Date | null) => d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default async function Analyses() {
-  const [posts, member] = await Promise.all([
-    db.post.findMany({
+  const member = await hasPro()
+  // Chi non è PRO non riceve nemmeno i titoli: si leggono solo se si è abbonati.
+  const posts = member
+    ? await db.post.findMany({
       where: { status: 'PUBLISHED', access: 'PRO' },
       orderBy: [{ pinned: 'desc' }, { publishedAt: 'desc' }],
       include: { translations: true, category: { include: { translations: true } } },
-    }),
-    hasPro(),
-  ])
+    })
+    : []
+  const total = member ? posts.length : await db.post.count({ where: { status: 'PUBLISHED', access: 'PRO' } })
   return (
     <div className="container">
       <div className="page-head">
@@ -30,32 +32,34 @@ export default async function Analyses() {
         </p>
       </div>
       <BlogTabs active="analyses" />
-      {!member && (
-        <div className="lock-banner">
-          <div>
-            <b>Full analyses are for PRO members</b>
-            <span>You can read the opening of every analysis. Unlock the full text for {PRO_PRICE_LABEL}.</span>
-          </div>
-          <Link href="/signup?plan=pro" className="btn btn-yellow btn-sm">
+      {!member ? (
+        <div className="paywall" style={{ marginTop: 28 }}>
+          <span className="paywall-lock" aria-hidden="true">&#128274;</span>
+          <h2>Analyses are for PRO members</h2>
+          <p>
+            {total} in-depth analyses on price structure, on-chain data, fundamentals and risk. Get PRO for {PRO_PRICE_LABEL} to read them all.
+          </p>
+          <Link href="/signup?plan=pro" className="btn btn-yellow">
             Get PRO
           </Link>
+          <Link href="/login" className="paywall-login">
+            Already a member? Log in
+          </Link>
+        </div>
+      ) : (
+        <div className="posts" style={{ margin: '28px 0 72px' }}>
+          {posts.map((p) => {
+            const t = pick(p.translations)
+            const cat = p.category ? pick(p.category.translations)?.name : null
+            return (
+              <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
+                <span className="t">{t?.title}</span>
+                <span className="m">{[cat, fmt(p.publishedAt)].filter(Boolean).join(', ')}</span>
+              </Link>
+            )
+          })}
         </div>
       )}
-      <div className="posts" style={{ margin: '28px 0 72px' }}>
-        {posts.map((p) => {
-          const t = pick(p.translations)
-          const cat = p.category ? pick(p.category.translations)?.name : null
-          return (
-            <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
-              <span className="t">
-                {!member && <span className="lock" aria-label="Locked">&#128274;</span>}
-                {t?.title}
-              </span>
-              <span className="m">{[cat, fmt(p.publishedAt)].filter(Boolean).join(', ')}</span>
-            </Link>
-          )
-        })}
-      </div>
     </div>
   )
 }

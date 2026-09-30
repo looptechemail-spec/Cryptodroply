@@ -20,6 +20,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await load(slug)
   if (!post) return {}
   const t = pick(post.translations)
+  if (post.access === 'PRO' && !(await hasPro())) {
+    // Analisi a pagamento: niente estratto, niente immagine, niente indicizzazione.
+    return { title: t?.title, robots: { index: false, follow: false } }
+  }
   const image = post.coverUrl ?? undefined
   return {
     title: t?.seoTitle ?? t?.title,
@@ -47,20 +51,28 @@ export default async function PostPage({ params }: Props) {
             .join(', ')}
         </p>
       </div>
-      {post.coverUrl && <img src={post.coverUrl} alt="" style={{ borderRadius: 20, width: '100%' }} />}
-      <div className="prose" style={{ margin: '32px 0 72px' }}>
-        {(locked ? paragraphs.slice(0, 2) : paragraphs).map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-        {locked && (
-          <div className="video-locked" style={{ aspectRatio: 'auto', padding: 36, marginTop: 24 }}>
-            <b>The rest of this article is for PRO members</b>
-            <Link href="/signup?plan=pro" className="btn btn-yellow btn-sm">
-              Get PRO for {PRO_PRICE_LABEL}
-            </Link>
+      {locked ? (
+        <div className="paywall">
+          <span className="paywall-lock" aria-hidden="true">&#128274;</span>
+          <h2>This analysis is for PRO members</h2>
+          <p>Get PRO for {PRO_PRICE_LABEL} to read this and every weekly analysis in full.</p>
+          <Link href="/signup?plan=pro" className="btn btn-yellow">
+            Get PRO
+          </Link>
+          <Link href="/login" className="paywall-login">
+            Already a member? Log in
+          </Link>
+        </div>
+      ) : (
+        <>
+          {post.coverUrl && <img src={post.coverUrl} alt="" style={{ borderRadius: 20, width: '100%' }} />}
+          <div className="prose" style={{ margin: '32px 0 72px' }}>
+            {paragraphs.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   )
 }

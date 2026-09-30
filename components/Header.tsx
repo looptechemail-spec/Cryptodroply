@@ -56,7 +56,7 @@ export default async function Header() {
                 <Link href="/analyses" className="menu-item">
                   <span>
                     <b>Analyses</b>
-                    <small>In-depth analysis, full text for PRO members.</small>
+                    <small>In-depth analysis, for PRO members only.</small>
                   </span>
                   <em className="menu-pro">PRO</em>
                 </Link>

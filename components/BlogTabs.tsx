@@ -11,7 +11,7 @@ export default function BlogTabs({ active }: { active: 'blog' | 'analyses' }) {
         <b>
           Analyses <span className="badge-pro">PRO</span>
         </b>
-        <small>In-depth analysis, full text for PRO members</small>
+        <small>In-depth analysis, for PRO members only</small>
       </Link>
     </div>
   )

@@ -8,7 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, tools, posts] = await Promise.all([
     db.category.findMany({ select: { slug: true } }),
     db.tool.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, updatedAt: true, category: { select: { slug: true } } } }),
-    db.post.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, updatedAt: true } }),
+    db.post.findMany({ where: { status: 'PUBLISHED', access: 'FREE' }, select: { slug: true, updatedAt: true } }),
   ])
   return [
     { url: `${base}/` },
