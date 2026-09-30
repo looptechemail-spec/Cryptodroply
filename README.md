@@ -29,7 +29,8 @@ npm run dev
 - [x] Schema database
 - [x] Configurazione Railway
 - [ ] Import contenuti da Wix
-- [ ] Pagine pubbliche (EN + IT) con gli stessi URL di oggi
+- [x] Pagine pubbliche in inglese (home, sezioni, categorie, tool, blog)
+- [ ] Italiano (/it) e URL identici a Wix (serve la mappa degli URL)
 - [ ] Area membri e abbonamento Stripe
 - [ ] Pannello admin e API per n8n
 - [ ] Dashboard click affiliati

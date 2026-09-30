@@ -1,0 +1,29 @@
+import './globals.css'
+import type { Metadata } from 'next'
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+
+const font = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '700', '800'] })
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.SITE_URL ?? 'https://www.cryptodroply.com'),
+  title: {
+    default: 'Cryptodroply | Curated Crypto Tools and Privacy Solutions',
+    template: '%s | Cryptodroply',
+  },
+  description:
+    'Cryptodroply is the largest crypto tools directory for wallets, exchanges, airdrops, DeFi, privacy, security and crypto analysis.',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={font.className}>
+      <body>
+        <Header />
+        <main>{children}</main>
+        <Footer />
+      </body>
+    </html>
+  )
+}
