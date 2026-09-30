@@ -16,10 +16,11 @@ export default function Footer() {
               Email address
             </label>
             <input id="nl-email" name="email" type="email" required placeholder="Your email" />
+            <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }} />
             <button type="submit">Subscribe</button>
           </form>
           <p style={{ fontSize: 13, marginTop: 10, opacity: 0.85 }}>
-            By subscribing you agree to receive our newsletter. You can unsubscribe at any time.
+            By subscribing you agree to receive our newsletter. We will email you to confirm, and you can unsubscribe at any time.
           </p>
         </div>
         <div className="col">

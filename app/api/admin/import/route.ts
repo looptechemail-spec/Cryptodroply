@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto'
 import { runWixImport } from '@/lib/wix-import'
+import { isAdmin } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 600
@@ -14,8 +15,10 @@ function ok(given: string) {
 
 export async function POST(req: Request) {
   const { password } = (await req.json().catch(() => ({}))) as { password?: string }
-  if (!process.env.ADMIN_PASSWORD) return new Response('ADMIN_PASSWORD non impostata su Railway.', { status: 503 })
-  if (!ok(password ?? '')) return new Response('Password errata.', { status: 401 })
+  if (!(await isAdmin())) {
+    if (!process.env.ADMIN_PASSWORD) return new Response('ADMIN_PASSWORD non impostata su Railway.', { status: 503 })
+    if (!ok(password ?? '')) return new Response('Accesso admin richiesto.', { status: 401 })
+  }
 
   const enc = new TextEncoder()
   const stream = new ReadableStream({

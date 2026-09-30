@@ -1,0 +1,223 @@
+﻿"Title","Crypto Card (Item)","PRO Crypto Card (Item)","Description","Logo","Circuito","ID","Created Date","Updated Date","Owner","Custodia","Sede","TIP","cashback","monete supportate","spese mensili","virtuale carta","fisica carta","carta deposito","crypto deposito","sepa deposito","IBAN","browser","Mobile","PC","Star Rate","Full description","IMG Articolo","Cos'è","Come funziona","quando usarlo","fee cambio","reflink","created1","video1","titolo1","Manual sort","Publish Date","Unpublish Date","Status"
+"Oobit","/crypto-card/oobit","/pro-crypto-card/oobit","<p class=""font_8"">Tap &amp; Pay crypto card backed by Tether</p>","wix:image://v1/b69407_9cd270ed153b4d2289a81b77b2857407~mv2.png/oobit%20cryptodroply.png#originWidth=512&originHeight=512","Visa","04170dac-893c-4076-b50f-0a1edcd6a00c",2026-05-06T18:21:32Z,2026-05-14T08:12:18Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial*","Global","wallet connect
+no annual fee","Yes, up to 10%","Multi","No","No","Yes","Yes","No","No","No","Yes","No","No","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","Oobit is the crypto version of Apple Pay. You tap your phone, the app converts your USDT, BTC or ETH into local currency in real time, and the merchant gets paid instantly","wix:image://v1/b69407_9689ae5bf71945aa842c3aa7d4b25660~mv2.png/oobit%20card%20cryptodroply.png#originWidth=695&originHeight=717","<p class=""font_8"">Oobit is the crypto version of Apple Pay. You tap your phone, the app converts your USDT, BTC or ETH into local currency in real time, and the merchant gets paid instantly — no preloading, no manual sell orders, no waiting. Backed by Tether (the company behind the world's most used stablecoin), it runs on Visa rails at 150M+ merchants across 150+ countries.</p>
+<p class=""font_8"">The DePay layer goes one step further: instead of depositing into Oobit, you connect your own MetaMask or Trust Wallet and spend directly from it. Funds stay self-custodied until the nanosecond of payment. For users who want crypto-native payments without giving up wallet control, this is the closest existing solution.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Download the Oobit app (iOS or Android) and complete KYC onboarding.</p></li>
+  <li><p class=""font_8"">Fund your Oobit wallet by depositing USDT, BTC, ETH or other supported assets, OR connect an external wallet (MetaMask, Trust Wallet, etc.) via DePay to spend without preloading.</p></li>
+  <li><p class=""font_8"">Activate your virtual Visa card — no physical card is available.</p></li>
+  <li><p class=""font_8"">Pay in-store via Tap &amp; Pay (NFC) or online anywhere Visa is accepted — crypto converts to local fiat at checkout at a 1% fee.</p></li>
+  <li><p class=""font_8"">Earn 2% cashback automatically on eligible transactions (paid in USDT), or up to 10% by holding OOB tokens.</p></li>
+</ol>","<p class=""font_8"">Use Oobit when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Hold stablecoins (USDT, USDC) and want to spend them for daily purchases without converting first</p></li>
+  <li><p class=""font_8"">Want the highest cashback rate in the market without locking up capital in a native token</p></li>
+  <li><p class=""font_8"">Use an external wallet (MetaMask, Trust Wallet) and want to spend from it directly via DePay</p></li>
+  <li><p class=""font_8"">Need a global card in 150+ countries with no annual fee or mandatory staking</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Need a physical card — Oobit is virtual-only</p></li>
+  <li><p class=""font_8"">Need IBAN or SEPA banking features — Oobit is a payment app, not a neobank</p></li>
+  <li><p class=""font_8"">Want the full 10% cashback without engaging with OOB token — the base rate is 2%</p></li>
+</ul>","Yes","https://get.oobit.app/dl9e2v","<p class=""font_8"">Video created by&nbsp;<a href=""https://www.youtube.com/@Crypto_Sister"">Crypto Sister</a></p>","https://www.youtube.com/watch?v=BYVqseSMjXQ","Oobit Review: The Best Crypto Card? | Non-Custodial Card Explained",,2026-05-13T17:31:41Z,,"PUBLISHED"
+"Brighty","/crypto-card/brighty","/pro-crypto-card/brighty","<p class=""font_8"">Crypto-native EU banking app with IBAN, Visa card and DeFi yield vaults</p>",,"Visa","1b07395b-1af5-4225-878c-2e1c5c59d44b",2026-04-04T12:45:18Z,2026-04-10T08:51:02Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Lithuania","IBAN account
+DeFi yield","Yes, +1.75%","Multi","No","Yes","Yes","Yes","Yes","Yes","No","Yes","No","No","wix:image://v1/b69407_ee96c2779c5944babf594e03ede2362f~mv2.png/4.png#originWidth=500&originHeight=500","Brighty is what you get when ex-Revolut builders ask ""what if we made crypto banking actually crypto-native?"".",,"<p class=""font_8"">Brighty is the crypto banking app that does not force you to choose between fiat and crypto. Your IBAN receives salary, freelance income or SEPA transfers. Your Visa card spends BTC, ETH or USDC. Your vault earns yield on stablecoins overnight. All three work in the same app without moving money between platforms.</p>
+<p class=""font_8"">Think of it as a bank account that grew up in the DeFi world. The fiat rails are real (European IBAN, SEPA, Apple Pay), but the backend is built around crypto logic — instant conversion, on-chain yield, crypto-first UX.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Download the app (iOS or Android), register and complete KYC.</p></li>
+  <li><p class=""font_8"">Receive your European IBAN — start accepting SEPA transfers immediately.</p></li>
+  <li><p class=""font_8"">Deposit crypto (BTC, ETH, USDC via ERC-20 or TRC-20) or fiat from your bank.</p></li>
+  <li><p class=""font_8"">Activate your Visa card (virtual instant, physical mailed) — link it to any account balance.</p></li>
+  <li><p class=""font_8"">Pay anywhere Visa is accepted — crypto converts to EUR at ~1% spread at checkout.</p></li>
+  <li><p class=""font_8"">Optionally open an Earning Vault to earn yield on idle USDC or ETH (up to 10% APY).</p></li>
+</ol>","<p class=""font_8"">Use Brighty when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Live in Europe and want crypto + IBAN in one app without a traditional bank account</p></li>
+  <li><p class=""font_8"">Receive income in crypto or stablecoins and need to spend it in daily life</p></li>
+  <li><p class=""font_8"">Want to earn yield on idle USDC while keeping spending access</p></li>
+  <li><p class=""font_8"">Are a digital nomad who needs flexible EUR/USD/GBP support</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Need high ATM withdrawal limits — fees are higher than the industry average</p></li>
+  <li><p class=""font_8"">Want a globally recognized, established brand — Brighty is still growing its reputation</p></li>
+  <li><p class=""font_8"">Prefer full self-custody spending — all balances are custodial on Brighty</p></li>
+</ul>","Yes","https://brighty.app/en",,,,"8",,2026-04-04T12:54:49Z,"DRAFT"
+"Nexo Card","/crypto-card/nexo-card","/pro-crypto-card/nexo-card","<p class=""font_8"">Spend crypto without directly selling it.</p>","wix:image://v1/b69407_852bdbe86b44469fb25df65a374c2d55~mv2.jpg/nexo%20card%20cryptodroply.jpg#originWidth=400&originHeight=400","Mastercard","4e1d6b50-4e5a-4ffd-a6f3-7c640b2c32f5",2026-02-14T23:09:39Z,2026-04-04T12:54:46Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Europe","Cashback
+No sell","Yes, +2%","Multi","No","Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","Crypto-backed card ideal for users holding assets on Nexo and spending without selling crypto.","wix:image://v1/b69407_ff8f1c8b05fc40d692656fc047d0983b~mv2.png/nexo%20cryptodroply.png#originWidth=636&originHeight=728","<p class=""font_8"">Nexo Card is a Mastercard linked to your Nexo account that allows you to spend crypto without directly selling it.</p>
+<p class=""font_8"">It works primarily in <strong>credit mode</strong>, where your crypto acts as collateral for a loan used to cover purchases. This allows users to maintain exposure to their assets while spending.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Deposit crypto on Nexo</p></li>
+  <li><p class=""font_8"">Activate the card</p></li>
+  <li><p class=""font_8"">Spend normally via Mastercard</p></li>
+  <li><p class=""font_8"">The purchase is covered by a crypto-backed credit line</p></li>
+</ol>
+<p class=""font_8"">Users can also use debit mode (where available), spending directly from their balance.</p>
+<p class=""font_8"">Cashback is paid in BTC or NEXO token depending on user preference and tier.</p>","<p class=""font_8"">Use Nexo Card when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Hold crypto long-term</p></li>
+  <li><p class=""font_8"">Want to spend without selling assets</p></li>
+  <li><p class=""font_8"">Want cashback in crypto</p></li>
+  <li><p class=""font_8"">Need a crypto-linked IBAN account</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Prefer full self-custody</p></li>
+  <li><p class=""font_8"">Don’t want platform custody risk</p></li>
+</ul>","Spread",,,,,"g",,2026-04-04T12:54:46Z,"DRAFT"
+"Gnosis Pay","/crypto-card/gnosis-pay","/pro-crypto-card/gnosis-pay","<p class=""font_8"">Self-custodial card, spend directly from your wallet.</p>","wix:image://v1/b69407_6ed4045d3f764663a135185b1cacc674~mv2.jpg/gnosispay%20%20card%20cryptodroply.jpg#originWidth=400&originHeight=400","Visa","6f0d8127-657a-40fe-8ea3-a4953cc1704e",2026-02-16T15:09:41Z,2026-04-04T12:54:44Z,"b6940792-8897-44e1-9353-172086fbb219","SelfC.","England","Spend by wallet
+smart contract","No","Multi","No","Yes","Yes","No","Yes","No","No","Yes","Yes","Yes","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","One of the most innovative crypto cards. True self-custody spending directly from your smart wallet.","wix:image://v1/b69407_a37459d7c9b64c12a4d9b906403181d1~mv2.png/gnosis%20pay%20%20cryptodroply.png#originWidth=672&originHeight=755","<p class=""font_8"">Gnosis Pay is a self-custodial crypto debit card built on Gnosis Chain. Unlike centralized crypto cards, it allows users to spend directly from a smart contract wallet.</p>
+<p class=""font_8"">Funds remain on-chain and under user control until the moment of payment.</p>
+<p class=""font_8"">It is tightly integrated with the Safe (formerly Gnosis Safe) ecosystem and Web3 wallets.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Connect or create a smart wallet</p></li>
+  <li><p class=""font_8"">Fund the wallet with supported assets</p></li>
+  <li><p class=""font_8"">Link the Visa card</p></li>
+  <li><p class=""font_8"">When paying, assets are swapped on-chain</p></li>
+  <li><p class=""font_8"">Merchant receives fiat via Visa network</p></li>
+</ol>
+<p class=""font_8"">The user keeps custody of funds until the transaction is executed.</p>","<p class=""font_8"">Use Gnosis Pay when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Prefer self-custody</p></li>
+  <li><p class=""font_8"">Use DeFi regularly</p></li>
+  <li><p class=""font_8"">Want on-chain spending</p></li>
+  <li><p class=""font_8"">Avoid centralized custody risk</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want IBAN banking features</p></li>
+  <li><p class=""font_8"">Prefer fully custodial plug-and-play</p></li>
+  <li><p class=""font_8"">Don’t use Web3 wallets</p></li>
+</ul>","chain/spread",,,,,"6",,2026-04-04T12:54:44Z,"DRAFT"
+"RedotPay","/crypto-card/redotpay","/pro-crypto-card/redotpay","<p class=""font_8"">Visa card for global spending with no monthly fees.</p>","wix:image://v1/b69407_497d9310139a4c4eb13b7b79b016fc84~mv2.jpg/redotpay%20%20card%20cryptodroply.jpg#originWidth=640&originHeight=640","Visa","748fdf92-d770-4a3c-ae08-a4c0105e9262",2026-02-16T14:12:37Z,2026-04-28T10:20:45Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Argentina","Pay Multi Fiat
+Istant convert","No","Multi","No","Yes","Yes","Yes","Yes","Yes","Yes, only you","Yes","Yes","No","wix:image://v1/b69407_e736e82291c94113a113a5876226a4c3~mv2.png/2.png#originWidth=500&originHeight=500","Simple and accessible crypto Visa card for everyday spending in supported regions.","wix:image://v1/b69407_10fade2fab254bae848f87d534849605~mv2.png/redotpay%20%20cryptodroply.png#originWidth=783&originHeight=702","<p class=""font_8"">RedotPay is a crypto payment platform offering a Visa card that allows users to spend cryptocurrencies globally. The card converts crypto to fiat at the moment of purchase.</p>
+<p class=""font_8"">It is designed for simple day-to-day spending without requiring complex staking models.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Deposit crypto into your RedotPay account</p></li>
+  <li><p class=""font_8"">Activate virtual or physical card</p></li>
+  <li><p class=""font_8"">Pay via Visa network</p></li>
+  <li><p class=""font_8"">Crypto is converted into fiat at checkout</p></li>
+</ol>
+<p class=""font_8"">Transactions are processed through the Visa payment infrastructure.</p>","<p class=""font_8"">Use RedotPay when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want a simple crypto Visa card</p></li>
+  <li><p class=""font_8"">Prefer no monthly fees</p></li>
+  <li><p class=""font_8"">Spend USDT or stablecoins frequently</p></li>
+  <li><p class=""font_8"">Need global card acceptance</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want cashback rewards</p></li>
+  <li><p class=""font_8"">Need a crypto-linked IBAN</p></li>
+  <li><p class=""font_8"">Prefer self-custody solutions</p></li>
+</ul>","Spread","https://url.hk/i/en/7w6n2","<p class=""font_8"">Video created by <a href=""https://www.youtube.com/@LetsUncover"">Lets Uncover</a></p>","https://www.youtube.com/watch?v=CplYk3mTEsw","Redotpay Tutorial 2026 | P2P is Available in Redotpay with Crypto Debit Cards","2",2026-02-16T14:12:37Z,,"PUBLISHED"
+"Wirex","/crypto-card/plutus","/pro-crypto-card/wirex","<p class=""font_8"">Card with cashback and integrated IBAN account.</p>","wix:image://v1/b69407_ef33972994ff478cae8af80769420833~mv2.jpg/wirex%20%20card%20cryptodroply.jpg#originWidth=400&originHeight=400","Mastercard","918fb808-f26f-4512-ae8b-8e6f50756376",2026-02-16T15:20:06Z,2026-04-04T12:54:42Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","England","cashback
+IBAN account.","Yes, +2%","Multi","No","Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes","No","wix:image://v1/b69407_ee96c2779c5944babf594e03ede2362f~mv2.png/4.png#originWidth=500&originHeight=500","Established crypto card provider offering multi-currency accounts and crypto rewards.","wix:image://v1/b69407_607f67197a10402b9f7ebf2b9b4c6884~mv2.avif/wirex%20cryptodroply.avif#originWidth=876&originHeight=625","<p class=""font_8"">Wirex is one of the longest-standing crypto payment platforms. It offers a Mastercard debit card linked to a multi-currency account that supports both crypto and fiat balances.</p>
+<p class=""font_8"">Users can store crypto, exchange it inside the app, and spend globally through the Mastercard network.</p>
+<p class=""font_8"">Wirex also provides cashback rewards paid in crypto.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Open Wirex account</p></li>
+  <li><p class=""font_8"">Receive fiat account (EUR / GBP depending on region)</p></li>
+  <li><p class=""font_8"">Deposit crypto or fiat</p></li>
+  <li><p class=""font_8"">Pay using Mastercard</p></li>
+  <li><p class=""font_8"">Crypto is converted to fiat at the moment of payment</p></li>
+</ol>
+<p class=""font_8"">Rewards are credited based on user tier and token participation.</p>","<p class=""font_8"">Use Wirex when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want both crypto and fiat accounts</p></li>
+  <li><p class=""font_8"">Need IBAN functionality</p></li>
+  <li><p class=""font_8"">Prefer an established provider</p></li>
+  <li><p class=""font_8"">Spend in multiple currencies</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want self-custody spending</p></li>
+  <li><p class=""font_8"">Want zero conversion spread</p></li>
+  <li><p class=""font_8"">Need US availability</p></li>
+</ul>","Spread",,,,,"4",,2026-04-04T12:54:42Z,"DRAFT"
+"Kast","/crypto-card/kast","/pro-crypto-card/kast","<p class=""font_8"">Stablecoin-funded USD Visa card, available in the US</p>","wix:image://v1/b69407_6694619b052449bda40e32d675ec49cf~mv2.jpg/KAST%20cryptodroply.jpg#originWidth=400&originHeight=400","Visa ","a53ec2af-9459-438a-9907-338ccfa778e3",2026-08-22T14:18:03Z,2026-09-21T07:52:29Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Anjouan","USA
+Stablecoin+","Yes, +1.5%","Multi","No","Yes","Yes","No","Yes","No","No","No","Yes","No","wix:image://v1/b69407_ee96c2779c5944babf594e03ede2362f~mv2.png/4.png#originWidth=500&originHeight=500","Stablecoin-backed Visa card that converts a USD balance from crypto deposits, with instant virtual card issuance and availability in the US.","wix:image://v1/b69407_5fad50ea65e04e7c9eb27e713d634cbd~mv2.png/kast-cryptodroply.com.png#originWidth=811&originHeight=750","<p class=""font_8"">Kast is a prepaid Visa card linked to a custodial USD balance funded through stablecoin or crypto deposits. Stablecoins (USDT, USDC, USDe, PYUSD, RLUSD) load at 1:1 with no fee, while volatile assets (BTC, ETH, SOL, XRP, BNB) are converted to USD on arrival at a 2%–5% fee. The card is available in 170+ countries, including the US, where it also provides virtual USD account numbers for ACH and FedWire transfers.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Download the app and complete KYC (ID and selfie, no credit check).</p></li>
+  <li><p class=""font_8"">Deposit stablecoins (1:1, no fee) or volatile crypto (converted at 2%–5% fee) into the Kast balance.</p></li>
+  <li><p class=""font_8"">Receive an instant virtual Visa card; order a physical card if needed ($40 shipping on the free tier, 7–10 business days).</p></li>
+  <li><p class=""font_8"">Spend via Visa network, Apple Pay, or Google Pay — USD purchases carry 0% fee, non-USD purchases carry 0.5%–1.75% FX fee.</p></li>
+  <li><p class=""font_8"">Earn cashback in USD credited to the card balance: 1.5% on the free tier (up to $2,000/month spend), 2% on Premium ($1,000/year), or 3% on Private ($10,000/year).</p></li>
+</ol>","<p class=""font_8""><strong>Use Kast when you:</strong></p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Hold stablecoins (USDT, USDC) and want to spend them in USD without an off-ramp</p></li>
+  <li><p class=""font_8"">Are a US resident or reside in one of the 170+ supported countries</p></li>
+  <li><p class=""font_8"">Want a free-tier card with no annual fee and instant virtual issuance</p></li>
+  <li><p class=""font_8"">Need virtual USD account numbers for ACH/FedWire alongside card spending</p></li>
+</ul>
+<p class=""font_8""><strong>Not ideal if you:</strong></p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Mainly hold BTC or ETH — deposits are sold at a 2%–5% fee before you can spend</p></li>
+  <li><p class=""font_8"">Need frequent ATM cash — withdrawals are capped at $250 each, $750/24h, plus $3 + 2% fee</p></li>
+  <li><p class=""font_8"">Prefer self-custody — all balances are custodial, held by Kast</p></li>
+  <li><p class=""font_8"">Need SEPA/IBAN banking — Kast offers US ACH/FedWire, not European IBAN rails</p></li>
+</ul>","0% in USD","https://app.kast.xyz/referral/3FGRPZDD","<p class=""font_8"">Video created by <a href=""https://www.youtube.com/@MisterCryptoGuides"">Mister Crypto Guides</a></p>","https://www.youtube.com/watch?v=kWO3E35retg&t=24s","
+This Is The BEST Crypto Card for 2026! Here's WHY!","g",2026-08-22T14:17:32Z,,"PUBLISHED"
+"Crypto.com","/crypto-card/crypto.com","/pro-crypto-card/crypto.com","<p class=""font_8"">Popular Visa crypto card offering cashback</p>","wix:image://v1/b69407_4f902950f8bc4b36bbfe648eab454c41~mv2.jpg/cryptocom%20%20card%20cryptodroply.jpg#originWidth=400&originHeight=400","Visa","ab508786-a187-4d14-aef6-21699ac747ab",2026-02-16T17:34:28Z,2026-03-28T14:46:47Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Malta","popular
+staking CRO","Yes, +1%","Multi","No","Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes","No","wix:image://v1/b69407_8c89ea9c0a124a359f2f83a141574c34~mv2.png/5.png#originWidth=500&originHeight=500","Well-known crypto card with tiered rewards and global availability, ideal for active Crypto.com users.","wix:image://v1/b69407_42dea31fb0ca4bc1bb2615c8a15507e6~mv2.png/cryptocom%20%20cryptodroply.png#originWidth=840&originHeight=812","<p class=""font_8"">Crypto.com Card is a Visa debit card linked to the Crypto.com app. It allows users to spend crypto globally, with purchases settled through Visa.</p>
+<p class=""font_8"">The card is tier-based and linked to CRO token staking. Higher staking levels unlock higher cashback and additional perks such as subscription rebates and airport lounge access.</p>
+<p class=""font_8"">Funds are held within the Crypto.com custodial platform.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Open Crypto.com account</p></li>
+  <li><p class=""font_8"">Complete KYC</p></li>
+  <li><p class=""font_8"">Stake CRO (optional for higher tiers)</p></li>
+  <li><p class=""font_8"">Top up with crypto or fiat</p></li>
+  <li><p class=""font_8"">Pay via Visa network</p></li>
+  <li><p class=""font_8"">Earn cashback in CRO</p></li>
+</ol>
+<p class=""font_8"">Crypto is converted to fiat at the moment of purchase.</p>","<p class=""font_8"">Use Crypto.com Card when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want high cashback potential</p></li>
+  <li><p class=""font_8"">Already use Crypto.com exchange/app</p></li>
+  <li><p class=""font_8"">Are willing to stake CRO</p></li>
+  <li><p class=""font_8"">Need wide global availability</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Prefer self-custody</p></li>
+  <li><p class=""font_8"">Don’t want token staking exposure</p></li>
+  <li><p class=""font_8"">Want zero spread on conversion</p></li>
+</ul>","High","https://crypto.com/app/ra2q6megcz","<p class=""font_8"">Video created by <a href=""https://www.youtube.com/@MoneyZG""><u>MoneyZG</u></a></p>","https://www.youtube.com/watch?v=kGCIYOrGnvk","Crypto.com Tutorial for Beginners (Buy, Sell, Deposit, Withdraw)","3",2026-02-16T14:12:37Z,,"PUBLISHED"
+"Revolut","/crypto-card/revolut","/pro-crypto-card/revolut","<p class=""font_8"">Mainstream fintech crypto spending on 180+ assets</p>","wix:image://v1/b69407_3dc59c3ac69e4b64a031f18b00692823~mv2.jpg/revolut%20cryptodroply.jpg#originWidth=400&originHeight=400","Mastercard","de713ec0-b280-4ace-bb0b-54a5bf458995",2026-04-04T12:41:45Z,2026-05-13T16:38:30Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Lithuania","cashback
+180+ assets","Yes, +1%","Multi","No","Yes","Yes","Yes","Yes","Yes","Yes","Yes","No","No","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","Revolut is the fintech super-app that turned ""bank for the modern era"" into a real product.","wix:image://v1/b69407_2d37f6455a7c4427bccd2f1db980dd0e~mv2.png/revolut%20card%20%20cryptodroply.png#originWidth=616&originHeight=612","<p class=""font_8"">Revolut is the Swiss army knife of digital finance: banking, crypto, stock trading and international transfers all in one app. Its Mastercard lets you spend any of your balances — fiat, crypto, or stablecoin — and the app converts automatically at checkout, prioritizing whichever asset you set first in your spending order.</p>
+<p class=""font_8"">Think of it as a bank account that happens to speak crypto. You never leave the app to manage your money across different platforms. If you want to go from USDC to a restaurant bill in Tokyo without touching anything, Revolut handles it.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Sign up with email and complete KYC (required for all tiers).</p></li>
+  <li><p class=""font_8"">Choose your plan — free Standard plan gives basic crypto access; Metal and Ultra plans unlock cashback and reduced trading fees.</p></li>
+  <li><p class=""font_8"">Deposit fiat via bank transfer or card, or buy crypto directly in-app.</p></li>
+  <li><p class=""font_8"">Set your spending priority order in Settings — choose which balance the card draws from first.</p></li>
+  <li><p class=""font_8"">Pay anywhere Mastercard is accepted — crypto converts to fiat at the point of purchase.</p></li>
+  <li><p class=""font_8"">Cashback (up to 1%) is credited in the currency of your choice on eligible paid-plan transactions.</p></li>
+</ol>","<p class=""font_8"">Use Revolut when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want one app for banking, crypto and international transfers without juggling platforms</p></li>
+  <li><p class=""font_8"">Travel frequently and need zero-fee foreign exchange within plan limits</p></li>
+  <li><p class=""font_8"">Already have fiat in the app and want to add crypto exposure on top</p></li>
+  <li><p class=""font_8"">Need a real IBAN and SEPA functionality alongside crypto spending</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want meaningful cashback — it requires a paid plan (from €9.99/mo)</p></li>
+  <li><p class=""font_8"">Prefer self-custody — all assets are custodial inside Revolut</p></li>
+  <li><p class=""font_8"">Want a pure crypto-focused product — Revolut is primarily a neobank</p></li>
+</ul>","Yes","https://revolut.com/referral/?referral-code=nicolopb2!MAY1-26-AR-L1&geo-redirect","<p class=""font_8"">Video created by <strong>MoneyZG</strong></p>","https://www.youtube.com/watch?v=wr6SDIvNhbg","Revolut Tutorial for Beginners (How to Use Revolut App)","2g",2026-05-05T12:26:55Z,,"PUBLISHED"
+"Ether.fi","/crypto-card/ether.fi","/pro-crypto-card/ether.fi","<p class=""font_8"">Crypto card linked to Ether.fi ecosystem</p>","wix:image://v1/b69407_75b0c501571d466c9bb819a2b2b938d9~mv2.jpg/etherfi%20card%20cryptodroply.jpg#originWidth=400&originHeight=400","Mastercard","f650c404-99d8-4e16-874e-3e0908a0d0e4",2026-02-16T14:23:01Z,2026-04-04T12:43:55Z,"b6940792-8897-44e1-9353-172086fbb219","Custodial","Cayman","earning yield
+spend loan
+","Yes, +3%","Multi","No","Yes","Yes","No","Yes","No","No","Yes","No","Yes","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","Innovative crypto card connected to Ether.fi ecosystem, ideal for users already earning yield within the platform.","wix:image://v1/b69407_60ef18c5f22d43ca8096db2a58f69756~mv2.png/etherfi%20%20cryptodroply.png#originWidth=646&originHeight=688","<p class=""font_8"">The Ether.fi Card is a crypto debit card linked to the Ether.fi ecosystem. It allows users to spend digital assets while participating in Ether.fi’s yield infrastructure.</p>
+<p class=""font_8"">The card integrates with assets held inside the platform and converts crypto into fiat at the time of purchase.</p>
+<p class=""font_8"">It is primarily designed for users already active in Ethereum staking or DeFi strategies connected to Ether.fi.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Deposit crypto into your Ether.fi account</p></li>
+  <li><p class=""font_8"">Activate the card</p></li>
+  <li><p class=""font_8"">Make purchases via Mastercard</p></li>
+  <li><p class=""font_8"">Crypto is converted to fiat at checkout</p></li>
+</ol>
+<p class=""font_8"">Rewards and benefits may depend on platform tier or token holdings.</p>","<p class=""font_8"">Use Ether.fi Card when you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Hold ETH or stablecoins inside Ether.fi</p></li>
+  <li><p class=""font_8"">Want crypto cashback</p></li>
+  <li><p class=""font_8"">Are active in DeFi or staking</p></li>
+  <li><p class=""font_8"">Prefer spending directly from crypto balances</p></li>
+</ul>
+<p class=""font_8"">Not ideal if you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Want a standalone crypto bank account</p></li>
+  <li><p class=""font_8"">Need SEPA transfers or IBAN</p></li>
+  <li><p class=""font_8"">Prefer self-custody spending</p></li>
+</ul>","Spread","https://www.ether.fi/refer/3a8fcfd8","<p class=""font_8"">Viceo created by <a href=""https://www.youtube.com/@TheCalculatorGuy""><u>Stephen TCG | DeFi Dojo</u></a></p>","https://www.youtube.com/watch?v=m0sMf63Fp2E","How to: EtherFi Cash Crypto Credit Card (10% APR)","3o",2026-02-16T14:12:37Z,,"PUBLISHED"

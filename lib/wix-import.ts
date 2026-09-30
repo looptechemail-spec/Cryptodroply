@@ -5,6 +5,7 @@
  */
 import { Access, PublishStatus } from '@prisma/client'
 import { db } from './db'
+import { importCsvFiles } from './csv-import'
 
 const API = 'https://www.wixapis.com'
 let KEY = ''
@@ -228,6 +229,7 @@ export async function runWixImport(logger: (m: string) => void = console.log) {
   SITE = process.env.WIX_SITE_ID ?? ''
   if (!KEY || !SITE) throw new Error('Imposta WIX_API_KEY e WIX_SITE_ID')
   await importTools()
+  await importCsvFiles(log)
   await importBlog()
   log('Import completato.')
 }

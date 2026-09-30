@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import Logo from './Logo'
 import { getCategories } from '@/lib/content'
+import { getUser } from '@/lib/auth'
 import { SECTIONS, sectionHref, CATEGORY_BLURBS } from '@/lib/sections'
 
 export default async function Header() {
   const categories = await getCategories().catch(() => [])
+  const user = await getUser().catch(() => null)
   return (
     <header className="site-header">
       <div className="container">
@@ -64,9 +66,20 @@ export default async function Header() {
             </div>
           </div>
         </nav>
-        <Link href="/#plans" className="btn btn-blue btn-sm">
-          Get started free
-        </Link>
+        {user ? (
+          <Link href="/account" className="btn btn-blue btn-sm">
+            Account
+          </Link>
+        ) : (
+          <div className="head-cta">
+            <Link href="/login" className="nav-link">
+              Log in
+            </Link>
+            <Link href="/signup" className="btn btn-blue btn-sm">
+              Get started free
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   )

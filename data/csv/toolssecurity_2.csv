@@ -1,0 +1,210 @@
+﻿"Title","Security Tools (Item)","PRO Security Tools (Item)","Description","Logo","Difficulty","ID","Created Date","Updated Date","Owner","type","access","TIP","chains","Free / Paid","opensource","browser","Mobile","PC","Star Rate","Full description","IMG Articolo","Cos'è","Come funziona","quando usarlo","Manual sort","reflink","video1","created1","titolo1","Publish Date","Unpublish Date","Status"
+"GoPlus","/tools-security/goplus","/pro-tools-security/goplus","<p class=""font_8"">Onchain security scanner for tokens, wallets and dApps.</p>","wix:image://v1/b69407_5e31a082fd1d4d4cbfe5297334d0e71a~mv2.jpg/goplus%20security%20cryptodroply.jpg#originWidth=400&originHeight=400","💡Medium","33278280-1b5d-4a5e-b362-7a844d9266c2",2026-02-18T18:21:05Z,2026-04-28T10:04:29Z,"b6940792-8897-44e1-9353-172086fbb219","Protector","🌐 Web","Scan wallet
+token scam","Multi","Free+","Part","Yes","No","No","wix:image://v1/b69407_e736e82291c94113a113a5876226a4c3~mv2.png/2.png#originWidth=500&originHeight=500","GoPlus Security provides real-time risk analysis for tokens, smart contracts and wallet interactions. It helps users detect honeypots, malicious contracts, risky permissions and scam behaviors before signing transactions.","wix:image://v1/b69407_1a71a28190dc41618a340fcf6e472bc2~mv2.png/goplus%20cryptodroply.png#originWidth=627&originHeight=816","<p class=""font_8"">GoPlus Security is an on-chain risk analysis tool that evaluates the safety of tokens, smart contracts and DeFi interactions.</p>
+<p class=""font_8""><br></p>
+<p class=""font_8"">It is used to:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Check if a token may be a scam</p></li>
+  <li><p class=""font_8"">Detect honeypot behavior</p></li>
+  <li><p class=""font_8"">Analyze smart contract risks</p></li>
+  <li><p class=""font_8"">Evaluate wallet and dApp security</p></li>
+</ul>
+<p class=""font_8"">It is one of the most widely used backend security systems integrated by wallets and DeFi platforms.</p>","<p class=""font_8"">GoPlus analyzes:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Contract address</p></li>
+  <li><p class=""font_8"">Token parameters</p></li>
+  <li><p class=""font_8"">Owner permissions</p></li>
+  <li><p class=""font_8"">Mint functions</p></li>
+  <li><p class=""font_8"">Tax settings</p></li>
+  <li><p class=""font_8"">Blacklist / whitelist logic</p></li>
+</ul>
+<p class=""font_8"">Typical workflow:</p>
+<ol class=""font_8"">
+  <li><p class=""font_8"">Connect wallet to goplus</p></li>
+  <li><p class=""font_8"">The system scans the wallet and smart contract</p></li>
+  <li><p class=""font_8"">A risk report is generated</p></li>
+  <li><p class=""font_8"">Potential red flags are highlighted</p></li>
+</ol>
+<p class=""font_8"">Many wallets integrate GoPlus automatically to display warnings before you sign a transaction.</p>","<p class=""font_8"">Use GoPlus when:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">You are about to buy a new token</p></li>
+  <li><p class=""font_8"">You interact with unknown smart contracts</p></li>
+  <li><p class=""font_8"">You farm airdrops</p></li>
+  <li><p class=""font_8"">You discover newly launched DEX tokens</p></li>
+  <li><p class=""font_8"">You want to avoid honeypots</p></li>
+</ul>","38","https://gopluslabs.io","https://www.youtube.com/watch?v=ew6aQ9Oxwi4","<p class=""font_8"">Video created by <u>Hughie Campbell</u></p>","GoPlus: Revolutionizing Web3 User Security",,,"PUBLISHED"
+"Token Sniffer","/tools-security/token-sniffer","/pro-tools-security/token-sniffer","<p class=""font_8"">Automatic scanner to detect honeypots and rug pulls</p>","wix:image://v1/b69407_11d90e577e3c47878fd9b9f7bfc51a93~mv2.jpg/tokensniffer%20cryptodroply.jpg#originWidth=382&originHeight=382","🌱Started","3b5a3e3a-b906-4b2b-8281-ae4703a360ce",2026-02-28T22:56:47Z,2026-04-28T10:04:18Z,"b6940792-8897-44e1-9353-172086fbb219","Scanner","Multi","Detection
+Scanner","EVM","Free","No","Yes","No","No","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","An automated token security scanner that analyzes smart contracts for honeypot patterns, rug pull mechanisms, ownership concentration, and other red flags before you buy.","wix:image://v1/b69407_1355339b432a49738326a389b8b16372~mv2.png/tokensniffer%20analysis%20cryptodroply.png#originWidth=697&originHeight=718","<p class=""font_8"">Token Sniffer is a free tool that scans a token's smart contract and gives you a security score before you invest a single dollar.</p>
+<p class=""font_8"">Think of it as a metal detector at the airport: it won't catch everything, but it will flag the most obvious threats. If a token fails Token Sniffer's checks, walk away. If it passes, that's a green light to dig deeper — not a guarantee of safety.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Go to tokensniffer.com and paste the token contract address.</p></li>
+  <li><p class=""font_8"">The tool automatically analyzes the contract code for known scam patterns.</p></li>
+  <li><p class=""font_8"">You receive a score and a breakdown of checks: honeypot test, ownership renouncement, liquidity lock, similar contracts, and more.</p></li>
+  <li><p class=""font_8"">Red flags are highlighted clearly — failed checks mean high risk.</p></li>
+</ol>
+<p class=""font_8"">Supports Ethereum, BSC, Base, Avalanche, and more chains. Free to use, no wallet connection required.</p>","<ul class=""font_8"">
+  <li><p class=""font_8"">Every single time you're about to buy a new or unknown token.</p></li>
+  <li><p class=""font_8"">When someone sends you a contract address on Telegram or Twitter.</p></li>
+  <li><p class=""font_8"">Before aping into a meme coin or presale token.</p></li>
+  <li><p class=""font_8"">As a first-pass filter before doing deeper manual research.</p></li>
+</ul>
+<p class=""font_8"">Make it a habit: if you don't check Token Sniffer first, you're flying blind.</p>","3g","https://tokensniffer.com/","https://www.youtube.com/watch?v=cGnk6MvP_Bk","<p class=""font_8"">Video created by&nbsp;<u>Drolby Crypto</u></p>","How to Use Token Sniffer for Beginners Tutorial (but you need to be cautious about this!)",2026-02-28T22:56:47Z,,"PUBLISHED"
+"Revoke.cash","/tools-security/revoke.cash","/pro-tools-security/revoke.cash","<p class=""font_8"">Revoke token approvals from your wallet.</p>","wix:image://v1/b69407_02ae7230080c42d88257b8289d6875bc~mv2.jpg/revoke%20security%20cryptodroply.jpg#originWidth=400&originHeight=400","💡Medium","4ba062be-482a-4a42-af14-f54fb7b1be2d",2026-02-18T18:59:37Z,2026-04-28T10:04:18Z,"b6940792-8897-44e1-9353-172086fbb219","Approval","🌐 Web","revoke
+permissions","Multi","Free","Yes","Yes","No","No","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","Revoke.cash allows users to view and revoke smart contract token approvals granted by their wallet. It helps reduce the risk of wallet drain attacks by removing unnecessary permissions.","wix:image://v1/b69407_95e4f335ac214c61ba566fa20acac9ff~mv2.png/revoke%20scam%20cryptodroply.png#originWidth=802&originHeight=847","<p class=""font_8"">Revoke.cash is a security tool that allows users to manage and remove token approvals from their wallet.</p>
+<p class=""font_8"">When you interact with DeFi protocols, you often grant unlimited token allowances to smart contracts. If those contracts are compromised, your funds may be at risk.</p>
+<p class=""font_8""><br></p>
+<p class=""font_8"">Revoke.cash helps you:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">View all active token approvals</p></li>
+  <li><p class=""font_8"">Identify unlimited allowances</p></li>
+  <li><p class=""font_8"">Revoke unnecessary permissions</p></li>
+  <li><p class=""font_8"">Reduce attack surface</p></li>
+</ul>
+<p class=""font_8"">It is widely recommended for active DeFi and airdrop users.</p>","<p class=""font_8"">Revoke.cash scans your wallet address and displays:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Approved tokens</p></li>
+  <li><p class=""font_8"">Spender contract addresses</p></li>
+  <li><p class=""font_8"">Approval amount (limited or unlimited)</p></li>
+  <li><p class=""font_8"">Network used</p></li>
+</ul>
+<p class=""font_8"">Typical workflow:</p>
+<ol class=""font_8"">
+  <li><p class=""font_8"">Connect your wallet</p></li>
+  <li><p class=""font_8"">Select blockchain network</p></li>
+  <li><p class=""font_8"">View all active approvals</p></li>
+  <li><p class=""font_8"">Click “Revoke” on unwanted permissions</p></li>
+  <li><p class=""font_8"">Confirm transaction in wallet</p></li>
+</ol>
+<p class=""font_8"">Important:</p>
+<p class=""font_8"">Revoking requires a blockchain transaction → gas fees apply.</p>","<p class=""font_8"">Use Revoke.cash when:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">You used many DeFi protocols</p></li>
+  <li><p class=""font_8"">You farmed airdrops</p></li>
+  <li><p class=""font_8"">You interacted with unknown dApps</p></li>
+  <li><p class=""font_8"">You suspect wallet risk</p></li>
+  <li><p class=""font_8"">You want routine wallet hygiene</p></li>
+</ul>
+<p class=""font_8"">Best practice:</p>
+<p class=""font_8"">Check approvals every 1–2 months if you are an active DeFi user.</p>","3","https://revoke.cash","https://www.youtube.com/watch?v=U2YkLVGZGwo","<p class=""font_8"">Video created by <u>WiiMee</u></p>","How to Use Revoke.cash",2026-02-18T18:21:06Z,,"PUBLISHED"
+"Honeypot.is","/tools-security/honeypot.is","/pro-tools-security/honeypot.is","<p class=""font_8"">Dedicated honeypot checker for tokens on ETH, BSC</p>","wix:image://v1/b69407_fac9154ae91c404797f525e6dfb95efc~mv2.jpg/honeypot%20cryptodroply.jpg#originWidth=320&originHeight=320","🌱Started","5f5557be-8959-4efd-8260-8e2270eec4c4",2026-02-28T22:56:47Z,2026-04-28T10:04:18Z,"b6940792-8897-44e1-9353-172086fbb219","Scanner","Multi","Honeypot 
+Check
+","EVM","Free","No","Yes","No","No","wix:image://v1/b69407_ee96c2779c5944babf594e03ede2362f~mv2.png/4.png#originWidth=500&originHeight=500","A specialized tool that simulates buy and sell transactions for any token to detect honeypots — contracts that allow buying but block selling — before you commit real funds.","wix:image://v1/b69407_32c49392624447599851e012b36a5304~mv2.png/honeypot%20analyzer%20cryptodroply.png#originWidth=903&originHeight=751","<p class=""font_8"">Honeypot.is does one thing and does it well: it tells you if you can actually sell a token after buying it.</p>
+<p class=""font_8"">A honeypot is a trap: the contract lets you buy freely, but when you try to sell, the transaction fails or gets blocked. You're stuck holding a worthless token with no exit. Honeypot.is simulates the sell before you buy — like test-driving a car in reverse before paying for it.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Go to honeypot.is and paste the token contract address.</p></li>
+  <li><p class=""font_8"">Select the chain (ETH, BSC, etc.).</p></li>
+  <li><p class=""font_8"">The tool simulates a buy and sell transaction without using real funds.</p></li>
+  <li><p class=""font_8"">Results show: is it a honeypot? What are the buy/sell taxes? Is there a max transaction limit?</p></li>
+</ol>
+<p class=""font_8"">Takes less than 10 seconds. No wallet connection required. Free forever.</p>","<ul class=""font_8"">
+  <li><p class=""font_8"">Before buying any token you found on DEX or in a Telegram group.</p></li>
+  <li><p class=""font_8"">When buy/sell taxes seem unusually high or asymmetric.</p></li>
+  <li><p class=""font_8"">When a token is new and has no audit or reputation yet.</p></li>
+  <li><p class=""font_8"">Use it alongside Token Sniffer for a double layer of basic security checks.</p></li>
+</ul>
+<p class=""font_8"">This is the minimum viable security check before any DEX purchase. No excuses.</p>","4","https://honeypot.is","https://www.youtube.com/watch?v=gEQwitwTQH4","<p class=""font_8"">Video created by&nbsp;<u>Cyberscope</u></p>","What is a Honeypot?",2026-02-28T22:56:47Z,,"PUBLISHED"
+"Brave Browser","/tools-security/brave-browser","/pro-tools-security/brave-browser","<p class=""font_8"">Open-source, privacy-first browser with built-in ad blocking and a native crypto wallet.</p>","wix:image://v1/b69407_20485ff0d86e44df9f7d9820918e929d~mv2.png/brave%20cryptodroply.png#originWidth=512&originHeight=512","🌱started","79345d69-0c09-42d0-8d30-1909ec4e3a73",2026-09-23T18:30:56Z,2026-09-25T16:18:56Z,"b6940792-8897-44e1-9353-172086fbb219","Browser","💻 App","Built-in ad block
+private browsing","Multi","Free","Yes","Yes","Yes","Yes","wix:image://v1/b69407_e736e82291c94113a113a5876226a4c3~mv2.png/2.png#originWidth=500&originHeight=500","Brave is a free, open-source web browser built on Chromium and launched in 2016 by Brendan Eich, co-founder of Mozilla and creator of JavaScript. It blocks ads, trackers and fingerprinting by default through Brave Shields, with no extra extensions needed, and includes a private browsing mode with Tor for extra anonymity. Brave ships with a built-in, non-custodial crypto wallet supporting multiple blockchains (Ethereum, Solana and others), plus optional Brave Rewards, which pays users in BAT tokens for viewing privacy-respecting ads. Available on desktop and mobile.","wix:image://v1/b69407_6cbf71f5eaa6477ea325854d0b399150~mv2.webp/brave%20art%20cryptodroply.webp#originWidth=1753&originHeight=1207","<p class=""font_8"">Brave is a free, open-source web browser built on Chromium, created in 2016 by Brendan Eich (co-founder of Mozilla, creator of JavaScript). It's built around privacy: blocking ads and trackers by default, rather than relying on separate extensions.</p>","<ul class=""font_8"">
+  <li><p class=""font_8"">Brave Shields blocks third-party ads, trackers and browser fingerprinting automatically, with per-site controls to adjust or disable them.</p></li>
+  <li><p class=""font_8"">A private browsing window with Tor routes traffic through the Tor network for extra anonymity.</p></li>
+  <li><p class=""font_8"">A built-in, non-custodial crypto wallet connects to multiple blockchains (Ethereum, Solana and others) directly from the browser, no separate extension required.</p></li>
+  <li><p class=""font_8"">Brave Rewards is optional: users can choose to view privacy-respecting ads in exchange for BAT tokens.</p></li>
+</ul>","<p class=""font_8"">Useful as a daily browser for anyone wanting built-in ad and tracker blocking without installing extra extensions, or for accessing a non-custodial multi-chain wallet directly in the browser.</p>",,"https://brave.com/",,,,2026-09-23T18:30:56Z,,"PUBLISHED"
+"CertiK Skynet","/tools-security/certik-skynet","/pro-tools-security/certik-skynet","<p class=""font_8"">Blockchain security monitoring and project risk</p>","wix:image://v1/b69407_e3f9b25d288344edacc79a71b49c653e~mv2.jpg/certik%20security%20cryptodroply.jpg#originWidth=400&originHeight=400","💡Medium","8e5c4a5a-66e7-4897-9f01-4b9bd1a9ec70",2026-02-20T14:16:20Z,2026-03-28T14:08:34Z,"b6940792-8897-44e1-9353-172086fbb219","Audit Tracker","🌐 Web","Project
+Analysis","Multi","Free","No","Yes","No","No","wix:image://v1/b69407_e736e82291c94113a113a5876226a4c3~mv2.png/2.png#originWidth=500&originHeight=500","CertiK Skynet is a real-time security monitoring platform that tracks smart contract vulnerabilities, suspicious on-chain activity and risk indicators for crypto projects across multiple blockchains.","wix:image://v1/b69407_860ea3ca68f44e8583102e0a1fedc057~mv2.png/certik%20skynet%20cryptodroply.png#originWidth=677&originHeight=857","<p class=""font_8"">CertiK Skynet is a blockchain security intelligence platform developed by CertiK, a well-known smart contract auditing firm.</p>
+<p class=""font_8"">It provides:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Project security scores</p></li>
+  <li><p class=""font_8"">Live threat monitoring</p></li>
+  <li><p class=""font_8"">On-chain anomaly detection</p></li>
+  <li><p class=""font_8"">Audit history tracking</p></li>
+  <li><p class=""font_8"">Governance and operational risk indicators</p></li>
+</ul>
+<p class=""font_8"">Skynet is commonly used by investors and researchers to evaluate the security posture of crypto projects before investing.</p>","<p class=""font_8"">CertiK Skynet collects and analyzes:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Smart contract audit data</p></li>
+  <li><p class=""font_8"">On-chain transaction patterns</p></li>
+  <li><p class=""font_8"">Liquidity movements</p></li>
+  <li><p class=""font_8"">Governance activity</p></li>
+  <li><p class=""font_8"">Detected exploit attempts</p></li>
+  <li><p class=""font_8"">Code vulnerabilities</p></li>
+</ul>
+<p class=""font_8"">Typical workflow:</p>
+<ol class=""font_8"">
+  <li><p class=""font_8"">Search for a project name</p></li>
+  <li><p class=""font_8"">View its security score</p></li>
+  <li><p class=""font_8"">Review audit reports</p></li>
+  <li><p class=""font_8"">Monitor live alerts</p></li>
+  <li><p class=""font_8"">Check risk breakdown (code, liquidity, governance, etc.)</p></li>
+</ol>
+<p class=""font_8"">It combines automated monitoring with audit intelligence.</p>","<p class=""font_8"">Use CertiK Skynet when:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Researching a new crypto project</p></li>
+  <li><p class=""font_8"">Checking if a project has been audited</p></li>
+  <li><p class=""font_8"">Monitoring potential exploits</p></li>
+  <li><p class=""font_8"">Evaluating DeFi protocol risk</p></li>
+  <li><p class=""font_8"">Performing due diligence before investing</p></li>
+</ul>
+<p class=""font_8"">Especially useful for:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Medium/long-term investors</p></li>
+  <li><p class=""font_8"">DeFi researchers</p></li>
+  <li><p class=""font_8"">Token launch analysis</p></li>
+</ul>","o","https://skynet.certik.com","https://www.youtube.com/watch?v=FGKxanVMq0E","<p class=""font_8"">Video created by&nbsp;<a href=""https://www.youtube.com/@CertiKCommunity""><u>CertiK</u></a></p>","How to Use CertiK Crypto Tools | Security Leaderboard 360",2026-02-20T14:16:20Z,,"PUBLISHED"
+"Phalcon Expl.","/tools-security/phalcon-explorer","/pro-tools-security/phalcon-explorer","<p class=""font_8"">Explorer, debugging and fund flow tracing</p>","wix:image://v1/b69407_294c6babd6f74a28b1d2466ee9567095~mv2.jpg/blocksec%20cryptodroply.jpg#originWidth=400&originHeight=400","🚀Advanced","9bc09b94-e107-4a47-90c2-12e9b85aaa25",2026-08-09T13:35:15Z,2026-08-24T09:31:30Z,"b6940792-8897-44e1-9353-172086fbb219","Protector","🌐 Web","Simulate
+debug tx","Multi","Free+","No","Yes","No","No","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","BlockSec Phalcon Explorer is a transaction explorer built for the DeFi community. It shows invocation flow, fund flow, balance changes and state changes for any transaction, and lets you simulate a transaction before it happens across 17+ chains.","wix:image://v1/b69407_7ed05f9e148d4555bbf876e7ff44c17b~mv2.png/blocksec-cryptodroply.png#originWidth=1031&originHeight=717","<p class=""font_8"">Phalcon Explorer is an advanced transaction explorer built by BlockSec for developers, security researchers and traders.</p>
+<p class=""font_8""><br></p>
+<p class=""font_8"">It is used to:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Understand exactly what a transaction did, step by step</p></li>
+  <li><p class=""font_8"">Simulate a transaction before signing it</p></li>
+  <li><p class=""font_8"">Investigate hacks and trace where funds moved</p></li>
+</ul>","<p class=""font_8"">Phalcon Explorer analyzes:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">Invocation flow (function calls as a tree structure)</p></li>
+  <li><p class=""font_8"">Fund flow and balance changes for every address involved</p></li>
+  <li><p class=""font_8"">Contract state changes and gas profile</p></li>
+</ul>
+<p class=""font_8""><br></p>
+<ol class=""font_8"">
+  <li><p class=""font_8"">Paste a transaction hash or set up a simulation</p></li>
+  <li><p class=""font_8"">Phalcon breaks down the execution flow and fund movements</p></li>
+  <li><p class=""font_8"">You review the debug view before deciding to sign or invest</p></li>
+</ol>","<p class=""font_8"">Use Phalcon Explorer when:</p>
+<ul class=""font_8"">
+  <li><p class=""font_8"">You want to simulate a transaction before signing</p></li>
+  <li><p class=""font_8"">You are investigating a hack or a suspicious transaction</p></li>
+  <li><p class=""font_8"">You need to verify exactly what a smart contract call does</p></li>
+</ul>","TODO: set via drag & drop in Wix Editor","https://blocksec.com/phalcon/explorer","https://www.youtube.com/watch?v=i4lYk0LrUC4","<p class=""font_8"">Video created by&nbsp;<a href=""https://www.youtube.com/@blocksecteam"">BlockSec</a></p>","Phalcon | The ultimate final line of defense for your Web3 project",2026-08-09T13:02:32Z,,"PUBLISHED"
+"Pocket Universe","/tools-security/pocket-universe","/pro-tools-security/pocket-universe","<p class=""font_8"">Transaction simulator that shows before you sign</p>","wix:image://v1/b69407_f71bbd3138b9470eaf2d18b3f9bfb369~mv2.jpg/pocket%20universe%20cryptodroply.jpg#originWidth=400&originHeight=400","💡Medium","c71b26d6-5c0c-455b-82b2-8a4cbb9eeba3",2026-02-28T22:56:47Z,2026-04-28T10:04:18Z,"b6940792-8897-44e1-9353-172086fbb219","Protector","Multi","Simulation
+Protection","EVM","Free","Part","Yes","No","No","wix:image://v1/b69407_fa1ab0bc0e9443108c1751a21c7fc3bc~mv2.png/3.png#originWidth=500&originHeight=500","A browser extension that simulates every transaction before you sign it, showing exactly what assets will leave and enter your wallet, and flagging phishing sites and malicious contract interactions in real time.","wix:image://v1/b69407_31cfefe91f264d40aca644943e7f6391~mv2.png/pocket%20universe%20extension%20cryptodroply.png#originWidth=712&originHeight=746","<p class=""font_8"">Pocket Universe is a browser extension that acts as your last line of defense before signing any on-chain transaction.</p>
+<p class=""font_8"">Before you confirm in MetaMask or any other wallet, Pocket Universe simulates what will actually happen: what leaves your wallet, what comes in, and whether anything looks suspicious. It's like having a financial advisor read the contract before you sign — in real time, in under a second.</p>","<ol class=""font_8"">
+  <li><p class=""font_8"">Install the Pocket Universe browser extension (Chrome/Firefox).</p></li>
+  <li><p class=""font_8"">When you initiate any transaction, Pocket Universe intercepts it before the wallet popup appears.</p></li>
+  <li><p class=""font_8"">It simulates the transaction and shows a clear summary: assets leaving, assets entering, approvals being granted.</p></li>
+  <li><p class=""font_8"">If it detects a phishing site or malicious contract, it shows a warning before you can confirm.</p></li>
+  <li><p class=""font_8"">You decide whether to proceed or cancel — you always have full control.</p></li>
+</ol>","<ul class=""font_8"">
+  <li><p class=""font_8"">Always install it once and it protects every transaction automatically.</p></li>
+  <li><p class=""font_8"">Especially when interacting with new or unfamiliar DeFi protocols.</p></li>
+  <li><p class=""font_8"">When minting NFTs from links shared on social media.</p></li>
+  <li><p class=""font_8"">When you receive DMs with airdrop or claim links.</p></li>
+</ul>
+<p class=""font_8"">One of the highest ROI security tools available: free, passive, and catches mistakes before they happen.</p>","6","https://www.pocketuniverse.app","https://www.youtube.com/watch?v=Ms30KWtu4zw","<p class=""font_8"">Video created by&nbsp;<a href=""https://www.youtube.com/@cryptosalecluben""><u>CryptoSale - Community | Investing | Tips</u></a></p>","Where Is Crypto Stored? | Crypto Security - Pocket Universe app review",2026-02-28T22:56:47Z,,"PUBLISHED"
+"Ian Coleman","/tools-security/ian-coleman","/pro-tools-security/ian-coleman","<p class=""font_8"">Mnemonic generator and address derivation tool.</p>","wix:image://v1/b69407_7643b203444d4c4d9b87e7ef76bd0e32~mv2.png/Crypto%20wallet%20interface,%20abstract%20glowing%20digital%20keys%20hovering%20over%20a%20dark%20background,%20pr.png#originWidth=768&originHeight=1024","🚀Advanced","fb6a4f22-c1b1-43d6-b566-ae6bc662912a",2026-08-24T09:38:28Z,2026-08-24T09:49:20Z,"b6940792-8897-44e1-9353-172086fbb219","Generator","🌐 Web","Generate seed
+offline use","Multi","Free","Yes","Yes","No","No","wix:image://v1/b69407_e736e82291c94113a113a5876226a4c3~mv2.png/2.png#originWidth=500&originHeight=500","A client-side tool for generating BIP39 mnemonic seed phrases and deriving private keys, public keys and addresses across hundreds of coins. Supports custom entropy sources, multiple derivation standards (BIP32/44/49/84) and fully offline use.","wix:image://v1/b69407_d9a84b79a15b40408a5976b1bf1d028e~mv2.png/iancolemoan%20cryptodroply.png#originWidth=972&originHeight=730","<p class=""font_8"">Ian Coleman's BIP39 tool is an open-source mnemonic code converter used to generate and recover BIP39 seed phrases and derive the corresponding wallet keys.</p>","<p class=""font_8"">- Generate a new random seed phrase (12 to 24 words)&nbsp;</p>
+<p class=""font_8"">- Recover addresses and private keys from an existing mnemonic&nbsp;</p>
+<p class=""font_8"">- Derive keys following BIP32, BIP44, BIP49 or BIP84 paths&nbsp;</p>
+<p class=""font_8"">- Test or verify wallet recovery before relying on it</p>
+<p class=""font_8""><br></p>
+<p class=""font_8"">Typical workflow:&nbsp;</p>
+<p class=""font_8"">1. Generate a random mnemonic using the browser's cryptographic randomness, or supply your own entropy (dice, coin flips, cards)&nbsp;</p>
+<p class=""font_8"">2. Select the coin and derivation standard&nbsp;</p>
+<p class=""font_8"">3. The tool derives the seed, root key, and a list of addresses with their private/public keys&nbsp;</p>
+<p class=""font_8"">4. Results can be reviewed in a table and columns toggled to isolate specific data &nbsp;</p>
+<p class=""font_8""><br></p>
+<p class=""font_8"">The developer recommends downloading the standalone HTML file and running it on an offline, air-gapped device rather than using the live website when handling a real seed.</p>","<p class=""font_8"">Use this tool when:&nbsp;</p>
+<p class=""font_8"">- Setting up a new wallet and wanting to understand what a seed phrase actually derives&nbsp;</p>
+<p class=""font_8"">- Recovering addresses and keys from an existing mnemonic&nbsp;</p>
+<p class=""font_8"">- Verifying that a wallet's recovery phrase produces the expected addresses&nbsp;</p>
+<p class=""font_8"">- Learning how HD wallet derivation (BIP32/44/49/84) works &nbsp;</p>
+<p class=""font_8""><br></p>
+<p class=""font_8"">Important: never enter a real seed phrase into this tool while online, and never share the resulting output with anyone, legitimate support will never ask for it.</p>","g","https://iancoleman.io/bip39/","https://www.youtube.com/watch?v=oZpWdvutxN8","<p class=""font_8"">Video created by&nbsp;<strong>Crypto Guide</strong></p>","Crypto Keys. What You Can Share, what to back up. Walkthrough of Ian Coleman's BIP39 Tool.",2026-08-24T09:36:47Z,,"PUBLISHED"
