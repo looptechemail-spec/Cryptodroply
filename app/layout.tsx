@@ -4,6 +4,8 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
+export const dynamic = 'force-dynamic'
+
 const font = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '700', '800'] })
 
 export const metadata: Metadata = {
