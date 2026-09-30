@@ -103,6 +103,7 @@ model Tool {
   categoryId  String
   slug        String // parte finale dell'URL, identica a quella attuale
   legacyPath  String?       @unique // percorso Wix originale, per i redirect
+  legacyProPath String?     @unique // percorso della versione PRO (es. /pro-cold-wallet/nome)
   title       String
   logoUrl     String?
   coverUrl    String? // immagine articolo / anteprima social
