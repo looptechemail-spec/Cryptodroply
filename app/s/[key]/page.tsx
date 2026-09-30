@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCategories, getSectionTools } from '@/lib/content'
 import CategoryAccordion, { type Group } from '@/components/CategoryAccordion'
-import { SECTIONS, CATEGORY_BLURBS } from '@/lib/sections'
+import { SECTIONS, CATEGORY_BLURBS, CATEGORY_INTROS } from '@/lib/sections'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +27,7 @@ export default async function SectionPage({ params }: Props) {
       slug: c.slug,
       name: c.name,
       blurb: CATEGORY_BLURBS[c.wixId!] ?? '',
+      intro: CATEGORY_INTROS[c.wixId!] ?? '',
       count: c.count,
       tools: tools.filter((t) => t.categorySlug === c.slug),
     }))

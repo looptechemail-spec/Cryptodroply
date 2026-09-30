@@ -87,3 +87,26 @@ export const CATEGORY_BLURBS: Record<string, string> = {
   Import4: 'Cards you can get without identity verification.',
   toolsanalysis: 'On-chain and market data to research projects before you invest.',
 }
+
+/** Spiegazione più completa di ogni sottocategoria, sotto il titolo della pagina e del pannello. */
+export const CATEGORY_INTROS: Record<string, string> = {
+  Import7: 'An airdrop is a free distribution of tokens from a project to its early users. Here you find the airdrops worth your time, what you need to do to qualify and the risks to watch for, such as fake claim sites.',
+  Import8: 'A testnet is a trial version of a network where nothing you use has real value. Projects often reward people who test them early, so these are low-risk ways to position yourself for a future token.',
+  Faucet: 'A faucet gives out small amounts of crypto for free, usually so you can pay fees on a new network. The amounts are small, so use them to learn and to get started rather than to earn a living.',
+  TaskPlatform: 'Platforms that pay you in crypto for completing quests, learning tasks, surveys or small jobs. Payouts vary a lot, so each listing shows what to expect and what the platform asks from you.',
+  Gaming: 'Games and metaverse worlds where you can earn tokens or NFTs by playing or joining events. Check the time and money each one asks for before you start.',
+  Wallet: 'Hot wallets are apps, browser extensions or mobile wallets that stay connected to the internet. They are the easiest way to hold crypto and use apps, but for large amounts they are best paired with a cold wallet.',
+  ColdWallet: 'Cold wallets are hardware devices that keep your private keys offline, away from viruses and phishing. They are the safest way to store larger amounts for the long term and are signed on the device itself.',
+  ExchangeCEX: 'Centralized exchanges work like a bank: you open an account, verify your identity and can buy crypto with a card or bank transfer. They are simple and liquid, but the exchange holds your funds while they are on the platform.',
+  ExchangeDEX: 'Decentralized exchanges let you swap tokens straight from your own wallet with no account and no custody. They give you more control and access to new tokens, but you pay network fees and must watch for fake tokens.',
+  toolssecurity: 'Tools that help you check tokens, smart contracts and approvals before you interact with them, and revoke access you no longer need. A few minutes here can save you from scams and wallet drainers.',
+  SpendingTools: 'Services that let you pay with crypto in shops and online, or turn it into everyday spending. Each listing shows fees, limits and where it works.',
+  CryptoCard: 'Crypto cards are payment cards you top up with crypto. The card converts the amount when you pay, so you can spend in any shop that accepts Visa or Mastercard. Compare fees, limits and countries.',
+  Growth: 'Ways to put the crypto you hold to work: staking, lending and liquidity pools pay a yield in return for locking or lending your funds. Yield always comes with risk, and each listing explains what can go wrong.',
+  Launchpad: 'Launchpads offer early access to new tokens before they are widely listed. They can be attractive, but early projects are risky, so each listing shows how to join and what to check first.',
+  Trading: 'Platforms and tools for active trading, from spot and futures markets to charts and bots. Trading can lose money quickly, so start small and learn how each platform works first.',
+  Import1: 'Ways to buy and sell crypto with little or no identity checks, such as peer-to-peer markets and light-KYC services. Rules differ by country, so check what is allowed where you live.',
+  Import2: 'Tools to manage your coins with more privacy: wallets with coin control, mixing and ways to avoid linking your activity. Each one explains what it hides and what it does not.',
+  Import4: 'Cards you can get without handing over identity documents. Limits are usually lower and rules change by country, so each listing shows what you can expect.',
+  toolsanalysis: 'Data tools that show what is happening on chain and in the market: who moves funds, where liquidity flows and which projects are growing. Use them to research before you commit money.',
+}

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { AppCard } from './AppCard'
 import type { AppTool } from '@/lib/content'
 
-export type Group = { slug: string; name: string; blurb: string; count: number; tools: AppTool[] }
+export type Group = { slug: string; name: string; blurb: string; intro: string; count: number; tools: AppTool[] }
 
 export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pro: boolean }) {
   const [open, setOpen] = useState<string | null>(groups[0]?.slug ?? null)
@@ -28,7 +28,6 @@ export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pr
                 <span className="acc-count">{g.count}</span>
               </span>
               <span className="acc-blurb">{g.blurb}</span>
-              <span className="acc-chev" aria-hidden="true">{on ? 'Hide' : 'Show tools'}</span>
             </button>
           )
         })}
@@ -39,6 +38,7 @@ export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pr
             <h2 style={{ fontSize: 26 }}>{g.name}</h2>
             <Link href={`/${g.slug}`}>Open page</Link>
           </div>
+          {g.intro && <p className="panel-intro">{g.intro}</p>}
           <div className="app-grid">
             {g.tools.map((t) => (
               <AppCard key={t.id} tool={t} pro={pro} />

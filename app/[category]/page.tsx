@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
+import { CATEGORY_INTROS } from '@/lib/sections'
 import { AppCard } from '@/components/AppCard'
 
 export const dynamic = 'force-dynamic'
@@ -42,7 +43,7 @@ export default async function CategoryPage({ params }: Props) {
     <div className="container">
       <div className="page-head">
         <h1>{name}</h1>
-        <p style={{ fontSize: 20, maxWidth: 640 }}>{pick(c.translations)?.description}</p>
+        <p className="section-intro">{pick(c.translations)?.description ?? (c.wixId ? CATEGORY_INTROS[c.wixId] : null)}</p>
       </div>
       <div className="app-grid" style={{ margin: '32px 0 72px' }}>
         {c.tools.map((t) => (
