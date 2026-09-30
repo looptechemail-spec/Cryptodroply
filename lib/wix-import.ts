@@ -19,11 +19,16 @@ const TOOL_COLLECTIONS = [
 
 // Campi comuni a tutte le collezioni: non diventano "attributi" della categoria.
 const COMMON = new Set([
-  'title_fld', 'description_fld', 'image_fld', 'fullDescription', 'imgArticolo', 'starRate',
-  'cos', 'comeFunziona', 'quandoUsarlo', 'tip', 'refLink', 'reflink',
+  'title_fld', 'title', 'description_fld', 'description', 'image_fld', 'logo', 'fullDescription', 'imgArticolo', 'starRate',
+  'cos', 'whatIsIt', 'comeFunziona', 'howItWorks', 'quandoUsarlo', 'whenToUseIt', 'tip', 'refLink', 'reflink',
+  'imagealttext_fld', 'manualSort',
 ])
 const isSystem = (k: string) => k.startsWith('_') || k.startsWith('link-')
-const isVideoField = (k: string) => /video/i.test(k) || /^titol/i.test(k) || /^created\d*$/.test(k)
+const isVideoField = (k: string) => /video/i.test(k) || /^titol/i.test(k) || /^(created|creator)\d*$/.test(k)
+// Nelle varie collezioni lo stesso dato ha nomi diversi: si prende il primo che esiste.
+const first = (d: any, ...keys: string[]) => { for (const k of keys) { const v = str(d[k]); if (v) return v } return null }
+const plain = (v: string | null) => v ? v.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim() || null : null
+const isYoutube = (v: unknown) => typeof v === 'string' && /(youtu\.be\/|youtube\.com\/)/.test(v)
 
 async function wix(path: string, method = 'GET', body?: unknown): Promise<any> {
   const res = await fetch(API + path, {
@@ -100,18 +105,18 @@ async function importTools() {
 
     let n = 0
     for await (const d of queryAll(id)) {
-      const title = str(d.title_fld)
+      const title = plain(first(d, 'title_fld', 'title'))
       if (!title) continue
       const slug = slugify(title)
       const attributes: Record<string, string> = {}
-      for (const f of attrFields) { const v = str(d[f.key]); if (v) attributes[f.key] = v }
+      for (const f of attrFields) { const v = str(d[f.key]); if (v && !v.startsWith('wix:')) attributes[f.key] = v }
 
       const data = {
         categoryId: category.id,
         slug, title,
         legacyPath: `/${base}/${slug}`,
         legacyProPath: proBase ? `/${proBase}/${slug}` : null,
-        logoUrl: img(d.image_fld),
+        logoUrl: img(d.image_fld) ?? img(d.logo),
         coverUrl: img(d.imgArticolo),
         ratingImage: img(d.starRate),
         refLink: str(d.refLink) ?? str(d.reflink),
@@ -124,8 +129,9 @@ async function importTools() {
         where: { wixId: d._id }, update: data, create: { ...data, wixId: d._id },
       })
       const tr = {
-        description: str(d.description_fld), fullDescription: str(d.fullDescription),
-        whatIs: str(d.cos), howItWorks: str(d.comeFunziona), whenToUse: str(d.quandoUsarlo), tip: str(d.tip),
+        description: plain(first(d, 'description_fld', 'description')), fullDescription: str(d.fullDescription),
+        whatIs: first(d, 'cos', 'whatIsIt'), howItWorks: first(d, 'comeFunziona', 'howItWorks'),
+        whenToUse: first(d, 'quandoUsarlo', 'whenToUseIt'), tip: str(d.tip),
       }
       await db.toolTranslation.upsert({
         where: { toolId_locale: { toolId: tool.id, locale: 'EN' } },
@@ -134,14 +140,14 @@ async function importTools() {
 
       // video tutorial: si abbinano URL, titolo e descrizione per numero (video1/2, titolo1/2, created1/2)
       const keys = Object.keys(d)
-      const urls = keys.filter((k) => /video/i.test(k) && !/^titol/i.test(k) && str(d[k])).sort((a, b) => num(a) - num(b))
+      const urls = keys.filter((k) => !/^titol/i.test(k) && isYoutube(d[k]) && !k.startsWith('_') && !k.startsWith('link-')).sort((a, b) => num(a) - num(b))
       const titles = keys.filter((k) => /^titol/i.test(k)).sort((a, b) => num(a) - num(b))
-      const descs = keys.filter((k) => /^created\d*$/.test(k)).sort((a, b) => num(a) - num(b))
+      const descs = keys.filter((k) => /^(created|creator)\d*$/.test(k)).sort((a, b) => num(a) - num(b))
       await db.toolVideo.deleteMany({ where: { toolId: tool.id } })
       for (const [i, k] of urls.entries()) {
         await db.toolVideo.create({ data: {
           toolId: tool.id, youtubeUrl: d[k], sortOrder: i,
-          titleEn: str(d[titles[i]]), description: str(d[descs[i]]),
+          titleEn: str(d[titles[i]]), description: plain(str(d[descs[i]])),
           access: Access.PRO, // da decidere: gratis o PRO
         } })
       }
