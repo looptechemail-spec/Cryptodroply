@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 
 export const LEGAL_UPDATED = '1 October 2026'
+export const LEGAL_NAME = 'Nicolò Allodio'
+export const LEGAL_VAT = '04210160133'
 export const LEGAL_EMAIL = 'info@cryptodroply.com'
 
 export default function LegalPage({ title, intro, children }: { title: string; intro: string; children: ReactNode }) {

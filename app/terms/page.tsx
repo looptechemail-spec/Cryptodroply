@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import LegalPage, { LEGAL_EMAIL } from '@/components/LegalPage'
+import LegalPage, { LEGAL_EMAIL, LEGAL_NAME, LEGAL_VAT } from '@/components/LegalPage'
 
 export const metadata: Metadata = { title: 'Terms of use', description: 'The rules for using Cryptodroply, the PRO plan and the referral program.' }
 
@@ -41,8 +41,8 @@ export default function Terms() {
         <p>We may update these terms and will publish the new version here. They are governed by Italian law, without removing the consumer protections of the country where you live.</p>
       </div>
       <div className="sec">
-        <h2>Contact</h2>
-        <p><a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a></p>
+        <h2>Who we are</h2>
+        <p>Cryptodroply is operated by {LEGAL_NAME}, VAT number {LEGAL_VAT}. Contact: <a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a>.</p>
       </div>
     </LegalPage>
   )

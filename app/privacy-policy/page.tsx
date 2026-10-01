@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import LegalPage, { LEGAL_EMAIL } from '@/components/LegalPage'
+import LegalPage, { LEGAL_EMAIL, LEGAL_NAME, LEGAL_VAT } from '@/components/LegalPage'
 
 export const metadata: Metadata = { title: 'Privacy policy', description: 'How Cryptodroply collects, uses and protects your personal data.' }
 
@@ -9,7 +9,7 @@ export default function Privacy() {
     <LegalPage title="Privacy policy" intro="How Cryptodroply handles your personal data, in plain words.">
       <div className="sec">
         <h2>Who is responsible</h2>
-        <p>Cryptodroply is run by an independent operator. For any question about your data, write to <a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a> or use the <Link href="/contact">contact page</Link>.</p>
+        <p>The data controller is {LEGAL_NAME} (VAT number {LEGAL_VAT}), who runs Cryptodroply. For any question about your data, write to <a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a> or use the <Link href="/contact">contact page</Link>.</p>
       </div>
       <div className="sec">
         <h2>What we collect and why</h2>
