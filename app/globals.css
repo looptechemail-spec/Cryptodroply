@@ -448,3 +448,9 @@ body { background: var(--paper); }
 .admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 24px; }
 .admin-nav a { padding: 8px 16px; border-radius: 999px; background: #fff; box-shadow: var(--shadow-1); font-weight: 600; color: #000; }
 @media (max-width: 860px) { .dash { grid-template-columns: minmax(0, 1fr); } .dash-side { position: static; } }
+.copy-link { display: flex; gap: 10px; flex-wrap: wrap; }
+.copy-link input { flex: 1; min-width: 220px; padding: 14px 16px; border-radius: 16px; border: 2px solid var(--line); font: inherit; background: var(--tint); }
+.earn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+.earn-box { background: var(--tint); border-radius: 18px; padding: 16px 18px; }
+.earn-box b { display: block; font-size: 26px; font-weight: 800; color: #000; }
+.earn-box span { font-size: 14px; color: var(--muted); }

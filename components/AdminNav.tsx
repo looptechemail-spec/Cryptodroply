@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const LINKS = [
   ['/admin', 'Dashboard'], ['/admin/tools', 'Tools'], ['/admin/users', 'Users'],
-  ['/admin/subscribers', 'Newsletter'], ['/admin/messages', 'Messages'], ['/admin/import', 'Import'],
+  ['/admin/referrals', 'Referrals'], ['/admin/subscribers', 'Newsletter'], ['/admin/messages', 'Messages'], ['/admin/import', 'Import'],
 ] as const
 
 export function AdminNav() {

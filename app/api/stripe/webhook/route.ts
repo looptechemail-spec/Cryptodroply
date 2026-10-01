@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { stripe } from '@/lib/stripe'
+import { COMMISSION_RATE, RECURRING } from '@/lib/referral'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,20 @@ async function syncSubscription(sub: Stripe.Subscription) {
   await db.subscription.upsert({ where: { userId: user.id }, update: data, create: { userId: user.id, ...data } })
 }
 
+/** Commissione referral su un pagamento riuscito (una sola volta per fattura). */
+async function commissionForInvoice(inv: Stripe.Invoice) {
+  const customerId = typeof inv.customer === 'string' ? inv.customer : inv.customer?.id
+  if (!customerId || !inv.id) return
+  const buyer = await db.user.findUnique({ where: { stripeCustomerId: customerId } })
+  if (!buyer?.referredById || buyer.referredById === buyer.id) return
+  if (!RECURRING && inv.billing_reason !== 'subscription_create') return
+  const base = (inv as any).total_excluding_tax ?? inv.amount_paid
+  if (!base || base <= 0) return
+  await db.commission
+    .create({ data: { earnerId: buyer.referredById, sourceUserId: buyer.id, stripeInvoiceId: inv.id, baseCents: base, amountCents: Math.floor(base * COMMISSION_RATE) } })
+    .catch(() => undefined) // fattura già registrata
+}
+
 export async function POST(req: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET
   const signature = req.headers.get('stripe-signature')
@@ -56,6 +71,12 @@ export async function POST(req: Request) {
     event.type === 'customer.subscription.deleted'
   ) {
     await syncSubscription(event.data.object as Stripe.Subscription)
+  } else if (event.type === 'invoice.paid') {
+    await commissionForInvoice(event.data.object as Stripe.Invoice)
+  } else if (event.type === 'charge.refunded') {
+    const inv = (event.data.object as any).invoice
+    const id = typeof inv === 'string' ? inv : inv?.id
+    if (id) await db.commission.updateMany({ where: { stripeInvoiceId: id, status: 'PENDING' }, data: { status: 'VOID' } })
   }
   return NextResponse.json({ received: true })
 }

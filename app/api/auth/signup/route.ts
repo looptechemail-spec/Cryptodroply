@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { SESSION_COOKIE, cookieOptions, signToken } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { REF_COOKIE } from '@/lib/referral'
 
 const schema = z.object({
   email: z.string().email(),
@@ -26,8 +28,11 @@ export async function POST(req: Request) {
   const exists = await db.user.findUnique({ where: { email: parsed.data.email } })
   if (exists) return back('exists')
 
+  const refCode = (await cookies()).get(REF_COOKIE)?.value
+  const referrer = refCode ? await db.user.findUnique({ where: { referralCode: refCode }, select: { id: true } }) : null
   const user = await db.user.create({
     data: {
+      referredById: referrer?.id,
       email: parsed.data.email,
       name: parsed.data.name,
       passwordHash: await bcrypt.hash(parsed.data.password, 12),

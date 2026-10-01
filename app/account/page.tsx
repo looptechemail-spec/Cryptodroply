@@ -7,6 +7,9 @@ import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 import { stripeReady } from '@/lib/stripe'
 import { AppCard } from '@/components/AppCard'
 import { pick } from '@/lib/content'
+import { headers } from 'next/headers'
+import { CopyLink } from '@/components/CopyLink'
+import { COMMISSION_RATE, HOLD_DAYS, MIN_PAYOUT_CENTS, RECURRING, earnings, ensureReferralCode, euro } from '@/lib/referral'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Your account', robots: { index: false } }
@@ -28,6 +31,15 @@ export default async function Account({ searchParams }: { searchParams: Promise<
       include: { tool: { include: { translations: true, category: { include: { translations: true } } } } },
     }),
     db.subscriber.findUnique({ where: { email: user.email.toLowerCase() } }),
+  ])
+  const code = await ensureReferralCode(user.id, user.referralCode)
+  const h = await headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'cryptodroply.com'
+  const refLink = `https://${host}/r/${code}`
+  const [earn, signups, payingReferrals] = await Promise.all([
+    earnings(user.id),
+    db.user.count({ where: { referredById: user.id } }),
+    db.user.count({ where: { referredById: user.id, subscription: { status: { in: ['ACTIVE', 'TRIALING'] } } } }),
   ])
   const newsletterOn = !!subscriber && !subscriber.unsubscribedAt && !!subscriber.confirmedAt
 
@@ -77,6 +89,7 @@ export default async function Account({ searchParams }: { searchParams: Promise<
           <div className="dash-card">
             <nav className="dash-nav">
               <a href="#saved">Saved tools</a>
+              <a href="#earn">Earn 30%</a>
               {pro && <Link href="/analyses">Analyses</Link>}
               {pro && <Link href="/s/grow">Grow</Link>}
               {pro && <Link href="/s/privacy">Privacy</Link>}
@@ -116,6 +129,47 @@ export default async function Account({ searchParams }: { searchParams: Promise<
                   )
                 })}
               </div>
+            )}
+          </section>
+
+          <section className="dash-card" id="earn">
+            <h2>Earn {COMMISSION_RATE * 100}% on every PRO you bring</h2>
+            <p style={{ color: 'var(--muted)' }}>
+              Share your personal link. When someone signs up through it and subscribes to PRO, you earn {COMMISSION_RATE * 100}% of what they pay
+              ({euro(1400 * COMMISSION_RATE)} on each €14 payment{RECURRING ? ', every month they stay' : ', on the first payment'}).
+            </p>
+            <CopyLink value={refLink} />
+            <div className="earn-grid">
+              <div className="earn-box"><b>{signups}</b><span>sign-ups</span></div>
+              <div className="earn-box"><b>{payingReferrals}</b><span>active PRO</span></div>
+              <div className="earn-box"><b>{euro(earn.pending)}</b><span>in {HOLD_DAYS}-day hold</span></div>
+              <div className="earn-box"><b>{euro(earn.available)}</b><span>ready to be paid</span></div>
+              <div className="earn-box"><b>{euro(earn.paid)}</b><span>already paid</span></div>
+            </div>
+            <p className="dash-stat">
+              Commissions become payable {HOLD_DAYS} days after each payment, if it is not refunded. Payouts are made once you reach {euro(MIN_PAYOUT_CENTS)}.
+              Using your own link for yourself does not count. <Link href="/affiliate">Programme details</Link>
+            </p>
+            <form method="post" action="/api/account/payout" className="row-form" style={{ marginTop: 14 }}>
+              <label>
+                Where to pay you (PayPal email or USDT address)
+                <input name="payoutInfo" defaultValue={user.payoutInfo ?? ''} maxLength={200} style={{ minWidth: 320 }} />
+              </label>
+              <button className="btn btn-outline-dark" type="submit">Save</button>
+            </form>
+            {earn.rows.length > 0 && (
+              <table className="admin-table" style={{ marginTop: 18 }}>
+                <thead><tr><th>Date</th><th>Commission</th><th>Status</th></tr></thead>
+                <tbody>
+                  {earn.rows.slice(0, 10).map((c) => (
+                    <tr key={c.id}>
+                      <td>{c.createdAt.toISOString().slice(0, 10)}</td>
+                      <td>{euro(c.amountCents)}</td>
+                      <td>{c.status === 'PAID' ? 'Paid' : c.status === 'VOID' ? 'Refunded' : 'Pending'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </section>
 

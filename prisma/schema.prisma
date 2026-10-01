@@ -258,10 +258,17 @@ model User {
   emailVerifiedAt  DateTime?
   createdAt        DateTime @default(now())
   wixMemberId      String?  @unique
+  referralCode     String?  @unique
+  referredById     String?
+  payoutInfo       String? // PayPal o indirizzo per ricevere le commissioni
 
   subscription Subscription?
   resetTokens  PasswordReset[]
   favorites    Favorite[]
+  referredBy   User?         @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals    User[]        @relation("Referrals")
+  commissions  Commission[]  @relation("Earner")
+  generated    Commission[]  @relation("Source")
 }
 
 model Subscription {
@@ -389,4 +396,26 @@ model Favorite {
   tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
   @@id([userId, toolId])
+}
+
+enum CommissionStatus {
+  PENDING // in attesa dei giorni di garanzia
+  PAID
+  VOID // rimborsata o annullata
+}
+
+model Commission {
+  id              String           @id @default(cuid())
+  earnerId        String
+  sourceUserId    String
+  stripeInvoiceId String           @unique
+  baseCents       Int
+  amountCents     Int
+  status          CommissionStatus @default(PENDING)
+  createdAt       DateTime         @default(now())
+  paidAt          DateTime?
+  earner          User             @relation("Earner", fields: [earnerId], references: [id], onDelete: Cascade)
+  source          User             @relation("Source", fields: [sourceUserId], references: [id], onDelete: Cascade)
+
+  @@index([earnerId, status])
 }
