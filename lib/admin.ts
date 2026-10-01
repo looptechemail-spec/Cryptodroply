@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation'
 import { timingSafeEqual } from 'node:crypto'
 import { isAdmin } from './auth'
 
-export function adminPasswordOk(given: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD ?? ''
+export function adminPasswordOk(raw: string): boolean {
+  const given = raw.trim()
+  const expected = (process.env.ADMIN_PASSWORD ?? '').trim()
   if (!expected || !given) return false
   const a = Buffer.from(given)
   const b = Buffer.from(expected)

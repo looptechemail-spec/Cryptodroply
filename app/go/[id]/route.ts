@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { absUrl } from '@/lib/url'
 import { createHash } from 'node:crypto'
 import { db } from '@/lib/db'
 
@@ -10,7 +11,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params
   const tool = await db.tool.findUnique({ where: { id }, select: { id: true, refLink: true, websiteUrl: true } })
   const target = tool?.refLink ?? tool?.websiteUrl
-  if (!tool || !target) return NextResponse.redirect(new URL('/', req.url))
+  if (!tool || !target) return NextResponse.redirect(absUrl('/', req))
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? ''
   const day = new Date().toISOString().slice(0, 10)

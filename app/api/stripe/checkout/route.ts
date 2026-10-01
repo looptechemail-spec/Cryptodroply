@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
+import { absUrl } from '@/lib/url'
 import { getUser } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { stripe, stripeReady } from '@/lib/stripe'
 
 export async function POST(req: Request) {
   const user = await getUser()
-  if (!user) return NextResponse.redirect(new URL('/signup?plan=pro', req.url), 303)
-  if (!stripeReady()) return NextResponse.redirect(new URL('/account?error=stripe', req.url), 303)
+  if (!user) return NextResponse.redirect(absUrl('/signup?plan=pro', req), 303)
+  if (!stripeReady()) return NextResponse.redirect(absUrl('/account?error=stripe', req), 303)
 
-  const site = (process.env.SITE_URL ?? new URL(req.url).origin).replace(/\/$/, '')
+  const site = absUrl('/', req).origin.replace(/\/$/, '')
   let customer = user.stripeCustomerId
   if (!customer) {
     const c = await stripe().customers.create({ email: user.email, name: user.name ?? undefined, metadata: { userId: user.id } })

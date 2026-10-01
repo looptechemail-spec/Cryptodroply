@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { absUrl } from '@/lib/url'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { signToken } from '@/lib/auth'
@@ -7,9 +8,9 @@ import { sendEmail, siteUrl, emailShell, button } from '@/lib/email'
 /** Iscrizione alla newsletter con conferma via email (double opt-in). */
 export async function POST(req: Request) {
   const form = await req.formData()
-  if (String(form.get('website') ?? '')) return NextResponse.redirect(new URL('/newsletter?status=pending', req.url), 303) // trappola anti-bot
+  if (String(form.get('website') ?? '')) return NextResponse.redirect(absUrl('/newsletter?status=pending', req), 303) // trappola anti-bot
   const parsed = z.string().email().safeParse(String(form.get('email') ?? '').trim().toLowerCase())
-  if (!parsed.success) return NextResponse.redirect(new URL('/newsletter?status=invalid', req.url), 303)
+  if (!parsed.success) return NextResponse.redirect(absUrl('/newsletter?status=invalid', req), 303)
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null
   const sub = await db.subscriber.upsert({
@@ -25,5 +26,5 @@ export async function POST(req: Request) {
       html: emailShell(`<h2>One more step</h2><p>Confirm your email to get new tools, airdrops and guides from Cryptodroply.</p>${button(link, 'Confirm my email')}<p style="font-size:13px;color:#666">If you did not ask for this, ignore this email and nothing will happen.</p>`),
     }).catch(() => false)
   }
-  return NextResponse.redirect(new URL(`/newsletter?status=${sub.confirmedAt ? 'already' : 'pending'}`, req.url), 303)
+  return NextResponse.redirect(absUrl(`/newsletter?status=${sub.confirmedAt ? 'already' : 'pending'}`, req), 303)
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { absUrl } from '@/lib/url'
 import { db } from '@/lib/db'
 import { signToken } from '@/lib/auth'
 import { sendEmail, siteUrl, emailShell, button } from '@/lib/email'
@@ -17,5 +18,5 @@ export async function POST(req: Request) {
     }).catch(() => false)
   }
   // stessa risposta in ogni caso, per non svelare quali email sono registrate
-  return NextResponse.redirect(new URL('/forgot?sent=1', req.url), 303)
+  return NextResponse.redirect(absUrl('/forgot?sent=1', req), 303)
 }

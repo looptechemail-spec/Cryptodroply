@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { absUrl } from '@/lib/url'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db'
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     name: String(form.get('name') ?? '') || undefined,
     plan: String(form.get('plan') ?? '') || undefined,
   })
-  const back = (err: string) => NextResponse.redirect(new URL(`/signup?error=${err}${parsed.success && parsed.data.plan ? '&plan=' + parsed.data.plan : ''}`, req.url), 303)
+  const back = (err: string) => NextResponse.redirect(absUrl(`/signup?error=${err}${parsed.success && parsed.data.plan ? '&plan=' + parsed.data.plan : ''}`, req), 303)
   if (!parsed.success) return back('invalid')
 
   const exists = await db.user.findUnique({ where: { email: parsed.data.email } })
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
     },
   })
   // chi si registra ha già accettato le condizioni: non iscriviamo alla newsletter senza un consenso esplicito.
-  const res = NextResponse.redirect(new URL(parsed.data.plan === 'pro' ? '/account?checkout=1' : '/account', req.url), 303)
+  const res = NextResponse.redirect(absUrl(parsed.data.plan === 'pro' ? '/account?checkout=1' : '/account', req), 303)
   res.cookies.set(SESSION_COOKIE, signToken({ uid: user.id }, 60 * 60 * 24 * 30), cookieOptions(60 * 60 * 24 * 30))
   return res
 }
