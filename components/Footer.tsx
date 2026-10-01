@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Logo from './Logo'
+import CookieSettingsLink from './CookieSettingsLink'
 import { SECTIONS, sectionHref } from '@/lib/sections'
 
 export default function Footer() {
@@ -38,6 +39,7 @@ export default function Footer() {
           <Link href="/contact">Contact</Link>
           <Link href="/privacy-policy">Privacy policy</Link>
           <Link href="/cookie-policy">Cookie policy</Link>
+          <CookieSettingsLink />
           <Link href="/terms">Terms of use</Link>
           <Link href="/disclaimer">Disclaimer</Link>
         </div>

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import CookieBanner from '@/components/CookieBanner'
 import { PageViews } from '@/components/PageViews'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>{children}</main>
         <Footer />
         <PageViews />
+        <CookieBanner />
       </body>
     </html>
   )

@@ -13,7 +13,8 @@ export default function Cookies() {
           <thead><tr><th>Name</th><th>Purpose</th><th>Duration</th><th>Type</th></tr></thead>
           <tbody>
             <tr><td>cd_session</td><td>Keeps you logged in</td><td>30 days</td><td>Necessary</td></tr>
-            <tr><td>cd_ref</td><td>Remembers the referral code of the person who invited you, so they are credited if you subscribe. Set only if you arrive from a referral link</td><td>30 days</td><td>Functional</td></tr>
+            <tr><td>cd_consent</td><td>Remembers your cookie choice</td><td>6 months</td><td>Necessary</td></tr>
+            <tr><td>cd_ref</td><td>Remembers the referral code of the person who invited you, so they are credited if you subscribe. Set only if you arrive from a referral link and you accept</td><td>30 days</td><td>Functional, with your consent</td></tr>
             <tr><td>cd_admin</td><td>Administrator access, never set for visitors</td><td>12 hours</td><td>Necessary</td></tr>
           </tbody>
         </table>
@@ -28,7 +29,7 @@ export default function Cookies() {
       </div>
       <div className="sec">
         <h2>How to control cookies</h2>
-        <p>You can delete or block cookies from your browser settings. If you block the necessary ones, login will not work. More about how we treat your data in the <Link href="/privacy-policy">privacy policy</Link>.</p>
+        <p>You can change your choice at any time with "Cookie settings" in the footer. You can also delete or block cookies from your browser settings. If you block the necessary ones, login will not work. More about how we treat your data in the <Link href="/privacy-policy">privacy policy</Link>.</p>
       </div>
     </LegalPage>
   )
