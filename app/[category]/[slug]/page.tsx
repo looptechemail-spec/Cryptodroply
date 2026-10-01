@@ -178,6 +178,7 @@ export default async function ToolPage({ params }: Props) {
                           </div>
                         )}
                         <div className="video-title">{title}</div>
+                        {v.description && <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>{v.description}</div>}
                       </div>
                     )
                   })}

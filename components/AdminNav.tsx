@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 const LINKS = [
-  ['/admin', 'Dashboard'], ['/admin/tools', 'Tools'], ['/admin/users', 'Users'],
+  ['/admin', 'Dashboard'], ['/admin/tools', 'Tools'], ['/admin/videos', 'Videos'], ['/admin/users', 'Users'],
   ['/admin/referrals', 'Referrals'], ['/admin/subscribers', 'Subscribers'], ['/admin/newsletter', 'Campaigns'], ['/admin/social', 'Social'], ['/admin/automation', 'Automation'], ['/admin/seo', 'SEO pages'], ['/admin/messages', 'Messages'], ['/admin/import', 'Import'],
 ] as const
 
