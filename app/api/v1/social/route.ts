@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { guard, unauthorized } from '@/lib/v1'
+import { guard, draftGuard, unauthorized } from '@/lib/v1'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,7 @@ const item = z.object({
 
 /** Crea una o più bozze di post social. Restano in DRAFT finché l'admin non li approva da Admin > Social. */
 export async function POST(req: Request) {
-  if (!guard(req)) return unauthorized()
+  if (!draftGuard(req)) return unauthorized()
   const json = await req.json().catch(() => null)
   const p = z.array(item).max(50).safeParse(Array.isArray(json) ? json : [json])
   if (!p.success) return NextResponse.json({ error: p.error.flatten() }, { status: 400 })

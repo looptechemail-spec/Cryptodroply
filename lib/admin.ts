@@ -25,3 +25,13 @@ export function apiKeyOk(req: Request): boolean {
   const b = Buffer.from(expected)
   return a.length === b.length && timingSafeEqual(a, b)
 }
+
+/** Chiave limitata per le attività automatiche: può solo creare BOZZE (articoli, post social, newsletter), mai pubblicare o inviare. */
+export function draftKeyOk(req: Request): boolean {
+  const expected = process.env.CONTENT_API_KEY ?? ''
+  const given = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '')
+  if (!expected || !given) return false
+  const a = Buffer.from(given)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}

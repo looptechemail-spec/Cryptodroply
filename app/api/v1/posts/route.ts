@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { guard, unauthorized, slugify } from '@/lib/v1'
+import { guard, draftGuard, unauthorized, slugify } from '@/lib/v1'
+import { apiKeyOk } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,10 +28,17 @@ export async function GET(req: Request) {
 
 /** Crea o aggiorna un articolo (chiave: slug). Gli articoli PRO sono le "analisi". */
 export async function POST(req: Request) {
-  if (!guard(req)) return unauthorized()
+  if (!draftGuard(req)) return unauthorized()
   const p = body.safeParse(await req.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: p.error.flatten() }, { status: 400 })
-  const b = p.data
+  let b = p.data
+  if (!apiKeyOk(req)) {
+    // chiave limitata: solo bozze gratuite nuove, mai pubblicare né toccare articoli già online
+    b = { ...b, status: 'DRAFT', access: 'FREE', featured: undefined }
+    const slugCheck = b.slug ?? slugify((b.translations.EN ?? b.translations.IT)?.title ?? '')
+    const existing = slugCheck ? await db.post.findUnique({ where: { slug: slugCheck }, select: { status: true } }) : null
+    if (existing && existing.status === 'PUBLISHED') return NextResponse.json({ error: 'articolo già pubblicato, non modificabile con questa chiave' }, { status: 403 })
+  }
   const main = b.translations.EN ?? b.translations.IT
   if (!main) return NextResponse.json({ error: 'serve almeno una traduzione' }, { status: 400 })
   const slug = b.slug ?? slugify(main.title)
