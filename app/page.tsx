@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cleanText } from '@/lib/clean'
 import { FREE_FEATURES, PRO_FEATURES } from '@/lib/plans'
 import { db } from '@/lib/db'
 import { getSectionTools, pick } from '@/lib/content'
