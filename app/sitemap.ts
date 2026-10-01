@@ -14,7 +14,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: `${base}/` },
     { url: `${base}/blog` },
-    { url: `${base}/analyses` },
     ...categories.map((c) => ({ url: `${base}/${c.slug}` })),
     ...tools.map((t) => ({ url: `${base}/${t.category.slug}/${t.slug}`, lastModified: t.updatedAt })),
     ...posts.map((p) => ({ url: `${base}/post/${p.slug}`, lastModified: p.updatedAt })),

@@ -6,7 +6,7 @@ import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 import BlogTabs from '@/components/BlogTabs'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Analyses', description: 'In-depth crypto analysis for PRO members.' }
+export const metadata: Metadata = { title: 'Analyses', description: 'In-depth crypto analysis for PRO members.', robots: { index: false, follow: false } }
 
 const fmt = (d: Date | null) => d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
