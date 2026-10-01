@@ -419,3 +419,12 @@ model Commission {
 
   @@index([earnerId, status])
 }
+
+// Immagini copiate dal vecchio sito (copertine e immagini negli articoli), servite da /media/<id>
+model Media {
+  id          String   @id
+  sourceUrl   String
+  contentType String
+  data        Bytes
+  createdAt   DateTime @default(now())
+}

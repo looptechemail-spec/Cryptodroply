@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
 import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
+import { renderMarkdown } from '@/lib/markdown'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Analisi a pagamento: niente estratto, niente immagine, niente indicizzazione.
     return { title: t?.title, robots: { index: false, follow: false } }
   }
-  const image = post.coverUrl ?? undefined
+  const h = await headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host')
+  const image = post.coverUrl ? (post.coverUrl.startsWith('/') && host ? `https://${host}${post.coverUrl}` : post.coverUrl) : undefined
   return {
     title: t?.seoTitle ?? t?.title,
     description: t?.seoDescription ?? t?.excerpt ?? undefined,
@@ -38,8 +42,7 @@ export default async function PostPage({ params }: Props) {
   if (!post) notFound()
   const t = pick(post.translations)
   const locked = post.access === 'PRO' && !(await hasPro())
-  // TODO: l'import porta il testo semplice; la formattazione ricca arriva con la conversione Ricos -> Markdown
-  const paragraphs = (t?.contentMd ?? '').split(/\n{2,}/).filter(Boolean)
+  const html = renderMarkdown(t?.contentMd ?? '')
 
   return (
     <div className="container" style={{ maxWidth: 820 }}>
@@ -65,12 +68,8 @@ export default async function PostPage({ params }: Props) {
         </div>
       ) : (
         <>
-          {post.coverUrl && <img src={post.coverUrl} alt="" style={{ borderRadius: 20, width: '100%' }} />}
-          <div className="prose" style={{ margin: '32px 0 72px' }}>
-            {paragraphs.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
+          {post.coverUrl && !(t?.contentMd ?? '').includes(post.coverUrl) && <img src={post.coverUrl} alt="" style={{ borderRadius: 20, width: '100%' }} />}
+          <div className="md" style={{ margin: '32px 0 72px' }} dangerouslySetInnerHTML={{ __html: html }} />
         </>
       )}
     </div>

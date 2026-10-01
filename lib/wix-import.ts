@@ -7,6 +7,8 @@ import { Access, PublishStatus } from '@prisma/client'
 import { db } from './db'
 import { importCsvFiles } from './csv-import'
 import { applyCatalogTweaks } from './tweaks'
+import { mirrorImage, wixImageUrl } from './media'
+import { ricosImageIds, ricosToMarkdown } from './ricos'
 import { CATEGORY_NAMES, MERGED_INTO } from './sections'
 
 const API = 'https://www.wixapis.com'
@@ -190,42 +192,47 @@ async function importBlog() {
     })
     tagByWix.set(t._id, row.id)
   }
-  // Accesso: un articolo è PRO se su Wix ha almeno un piano a pagamento (pricingPlanIds).
-  const paid = new Set<string>()
-  for (let offset = 0; ; offset += 50) {
-    const r = await wix('/blog/v3/posts/query', 'POST', { query: { paging: { limit: 50, offset } }, fieldsets: ['URL'] })
+  // Articoli dall'API blog di Wix: testo ricco (Ricos -> Markdown), immagini copiate sul nuovo sito, accesso PRO dai piani a pagamento.
+  let n = 0, proCount = 0, images = 0
+  for (let offset = 0; ; offset += 10) {
+    const r = await wix('/blog/v3/posts/query', 'POST', { query: { paging: { limit: 10, offset } }, fieldsets: ['URL', 'RICH_CONTENT'] })
     const list: any[] = r.posts ?? []
-    for (const x of list) if (Array.isArray(x.pricingPlanIds) && x.pricingPlanIds.length) { paid.add(x.id); paid.add(x.slug) }
-    if (list.length < 50) break
-  }
-  log(`Articoli a pagamento su Wix: ${paid.size / 2}`)
-  let n = 0
-  for await (const p of queryAll('Blog/Posts', 20)) {
-    const slug = str(p.slug) ?? slugify(p.title)
-    const data = {
-      slug, legacyPath: `/post/${slug}`,
-      categoryId: catByWix.get(typeof p.mainCategory === 'string' ? p.mainCategory : p.mainCategory?._id) ?? null,
-      coverUrl: img(p.coverImage),
-      access: (paid.has(p.uuid) || paid.has(slug) ? 'PRO' : 'FREE') as Access,
-      featured: !!p.featured, pinned: !!p.pinned,
-      status: 'PUBLISHED' as PublishStatus,
-      publishedAt: date(p.publishedDate), viewCount: p.viewCount ?? 0,
-    }
-    const post = await db.post.upsert({ where: { wixId: p._id }, update: data, create: { ...data, wixId: p._id } })
-    // TODO: richContent (Ricos JSON) -> Markdown. Per ora si usa il testo semplice.
-    const tr = { title: p.title, excerpt: str(p.excerpt), contentMd: p.plainContent ?? '' }
-    await db.postTranslation.upsert({
-      where: { postId_locale: { postId: post.id, locale: 'EN' } },
-      update: tr, create: { postId: post.id, locale: 'EN', ...tr },
-    })
-    for (const t of Array.isArray(p.tags) ? p.tags : []) {
-      const tagId = tagByWix.get(typeof t === 'string' ? t : t?._id)
-      if (tagId) await db.postTag.upsert({
-        where: { postId_tagId: { postId: post.id, tagId } }, update: {}, create: { postId: post.id, tagId },
+    for (const p of list) {
+      const slug: string = p.slug ?? slugify(p.title)
+      const isPro = Array.isArray(p.pricingPlanIds) && p.pricingPlanIds.length > 0
+      if (isPro) proCount++
+      const imgMap = new Map<string, string>()
+      for (const id of ricosImageIds(p.richContent?.nodes)) { imgMap.set(id, await mirrorImage(wixImageUrl(id))); images++ }
+      const coverSrc: string | undefined = p.media?.wixMedia?.image?.url
+      const coverUrl = coverSrc ? await mirrorImage(coverSrc) : null
+      if (coverSrc) images++
+      const contentMd = ricosToMarkdown(p.richContent?.nodes, imgMap) || (p.excerpt ?? '')
+      const data = {
+        slug, wixId: p.id as string, legacyPath: `/post/${slug}`,
+        categoryId: catByWix.get((p.categoryIds ?? [])[0]) ?? null,
+        coverUrl,
+        access: (isPro ? 'PRO' : 'FREE') as Access,
+        featured: !!p.featured, pinned: !!p.pinned,
+        status: 'PUBLISHED' as PublishStatus,
+        publishedAt: date(p.firstPublishedDate),
+      }
+      const post = await db.post.upsert({ where: { slug }, update: data, create: data })
+      const tr = { title: p.title as string, excerpt: str(p.excerpt), contentMd }
+      await db.postTranslation.upsert({
+        where: { postId_locale: { postId: post.id, locale: 'EN' } },
+        update: tr, create: { postId: post.id, locale: 'EN', ...tr },
       })
+      for (const tid of Array.isArray(p.tagIds) ? p.tagIds : []) {
+        const tagId = tagByWix.get(tid)
+        if (tagId) await db.postTag.upsert({
+          where: { postId_tagId: { postId: post.id, tagId } }, update: {}, create: { postId: post.id, tagId },
+        })
+      }
+      n++
     }
-    n++
+    if (list.length < 10) break
   }
+  log(`Articoli a pagamento su Wix: ${proCount}; immagini copiate: ${images}`)
   log(`Articoli importati: ${n}`)
 }
 

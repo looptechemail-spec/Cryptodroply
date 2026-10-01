@@ -27,7 +27,8 @@ export default async function Blog() {
           const t = pick(p.translations)
           const cat = p.category ? pick(p.category.translations)?.name : null
           return (
-            <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
+            <Link key={p.id} href={`/post/${p.slug}`} className="post-row has-thumb">
+              {p.coverUrl && <img src={p.coverUrl} alt="" className="post-thumb" loading="lazy" />}
               <span className="t">{t?.title}</span>
               <span className="m">{[cat, fmt(p.publishedAt)].filter(Boolean).join(', ')}</span>
             </Link>
