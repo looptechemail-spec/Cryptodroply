@@ -9,7 +9,7 @@ export async function mainList() {
 
 const unsubLink = (subId: string) => `${siteUrl()}/api/newsletter/unsubscribe?t=${signToken({ sub: subId, act: 'unsub' }, 60 * 60 * 24 * 365 * 3)}`
 
-function wrap(bodyHtml: string, subId: string) {
+export function wrap(bodyHtml: string, subId: string) {
   const u = unsubLink(subId)
   return emailShell(`${bodyHtml}<hr style="border:0;border-top:1px solid #eee;margin:28px 0 12px"><p style="font-size:12px;color:#777">You receive this because you subscribed on cryptodroply.com. <a href="${u}">Unsubscribe</a>.</p>`)
 }

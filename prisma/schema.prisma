@@ -453,3 +453,27 @@ model JobRun {
   ranAt  DateTime @default(now())
   note   String?
 }
+
+// Email della sequenza di benvenuto già inviate (una riga per iscritto e passo)
+model EmailSent {
+  subscriberId String
+  step         String
+  sentAt       DateTime @default(now())
+
+  @@id([subscriberId, step])
+}
+
+// Pagine SEO generate dai tool ("Best wallets", "Free ..."): nascono in bozza, le pubblica l'admin
+model SeoPage {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  metaDescription String
+  intro           String
+  categorySlug    String
+  facetId         String? // campo della categoria su cui filtrare, se serve
+  facetValue      String?
+  status          String   @default("DRAFT") // DRAFT, PUBLISHED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
