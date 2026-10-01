@@ -530,3 +530,10 @@ body { background: var(--paper); }
   .filters-body.open { display: block; }
   .filter-label { flex-basis: 100%; }
 }
+
+/* tabelle negli articoli */
+.md-table { overflow-x: auto; margin: 24px 0; border-radius: 14px; border: 1px solid var(--line); }
+.md table { border-collapse: collapse; width: 100%; font-size: 16px; line-height: 1.45; }
+.md th, .md td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.md th { background: var(--tint); font-weight: 800; color: #000; }
+.md tr:last-child td { border-bottom: 0; }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
+import { cleanText } from '@/lib/clean'
 import BlogTabs from '@/components/BlogTabs'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ export default async function Blog() {
           return (
             <Link key={p.id} href={`/post/${p.slug}`} className="post-row has-thumb">
               {p.coverUrl && <img src={p.coverUrl} alt="" className="post-thumb" loading="lazy" />}
-              <span className="t">{t?.title}</span>
+              <span className="t">{cleanText(t?.title)}</span>
               <span className="m">{[cat, fmt(p.publishedAt)].filter(Boolean).join(', ')}</span>
             </Link>
           )

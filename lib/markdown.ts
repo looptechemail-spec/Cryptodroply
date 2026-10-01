@@ -1,3 +1,5 @@
+import { cleanText } from './clean'
+
 /** Piccolo convertitore Markdown -> HTML per gli articoli (titoli, paragrafi, elenchi, immagini, link, grassetto, corsivo, citazioni, codice). */
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const safeUrl = (u: string) => (/^(https?:\/\/|\/|mailto:|#)/i.test(u.trim()) ? esc(u.trim()) : '#')
@@ -5,7 +7,7 @@ const safeUrl = (u: string) => (/^(https?:\/\/|\/|mailto:|#)/i.test(u.trim()) ? 
 function inline(src: string): string {
   const keep: string[] = []
   // caratteri protetti con la barra inversa
-  let s = src.replace(/\\([\\`*\[\]#+\->.\d])/g, (_m, c) => `\u0000${keep.push(c) - 1}\u0001`)
+  let s = cleanText(src).replace(/\\([\\`*\[\]#+\->.\d|])/g, (_m, c) => `\u0000${keep.push(c) - 1}\u0001`)
   s = esc(s)
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>')
   s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_m, alt, url) => `<img src="${safeUrl(url.replace(/&amp;/g, '&'))}" alt="${alt}" loading="lazy">`)
@@ -30,7 +32,7 @@ function renderItems(items: Item[]): string {
 export function renderMarkdown(md: string): string {
   const lines = md.replace(/\r/g, '').split('\n')
   const out: string[] = []
-  const isBlockStart = (l: string) => /^(#{1,6}\s|```|>|\s*([-*+]|\d+\.)\s|-{3,}\s*$)/.test(l)
+  const isBlockStart = (l: string) => /^(#{1,6}\s|```|>|\||\s*([-*+]|\d+\.)\s|-{3,}\s*$)/.test(l)
   let i = 0
   while (i < lines.length) {
     const l = lines[i]
@@ -41,6 +43,17 @@ export function renderMarkdown(md: string): string {
       while (i < lines.length && !lines[i].startsWith('```')) code.push(lines[i++])
       i++
       out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`)
+      continue
+    }
+    if (l.trim().startsWith('|')) {
+      const rows: string[][] = []
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        const cells = lines[i].trim().replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map((c) => c.trim())
+        if (!cells.every((c) => /^:?-{2,}:?$/.test(c))) rows.push(cells)
+        i++
+      }
+      const [head, ...body] = rows
+      out.push(`<div class="md-table"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`)
       continue
     }
     const h = l.match(/^(#{1,6})\s+(.*)$/)

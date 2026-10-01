@@ -1,7 +1,7 @@
 /** Conversione del contenuto degli articoli Wix (Ricos, JSON) in Markdown. Le immagini passano da imgMap (id Wix -> indirizzo). */
 type N = { type: string; nodes?: N[]; [k: string]: any }
 
-const escapeText = (t: string) => t.replace(/([\\`*\[\]])/g, '\\$1')
+const escapeText = (t: string) => t.replace(/([\\`*\[\]|])/g, '\\$1')
 
 function text(n: N): string {
   const raw: string = n.textData?.text ?? ''
@@ -103,8 +103,12 @@ export function ricosToMarkdown(nodes: N[] = [], imgMap = new Map<string, string
         break
       }
       case 'TABLE': {
-        const rows = (n.nodes ?? []).map((r) => (r.nodes ?? []).map((c) => inline(c.nodes?.[0]?.nodes).trim()).join(' | '))
-        blocks.push(rows.join('\n\n'))
+        const rows = (n.nodes ?? []).map((r) => (r.nodes ?? []).map((c) => inline((c.nodes ?? []).flatMap((x) => x.nodes ?? [])).replace(/\s+/g, ' ').trim() || ' '))
+        if (rows.length) {
+          const cols = Math.max(...rows.map((r) => r.length))
+          const line = (r: string[]) => `| ${Array.from({ length: cols }, (_, i) => r[i] ?? ' ').join(' | ')} |`
+          blocks.push([line(rows[0]), `| ${Array(cols).fill('---').join(' | ')} |`, ...rows.slice(1).map(line)].join('\n'))
+        }
         break
       }
       default:

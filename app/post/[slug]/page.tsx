@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
 import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 import { renderMarkdown } from '@/lib/markdown'
+import { cleanText } from '@/lib/clean'
 import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +48,7 @@ export default async function PostPage({ params }: Props) {
   return (
     <div className="container" style={{ maxWidth: 820 }}>
       <div className="page-head">
-        <h1 style={{ fontSize: 44 }}>{t?.title}</h1>
+        <h1 style={{ fontSize: 44 }}>{cleanText(t?.title)}</h1>
         <p style={{ color: 'var(--muted)', marginTop: 12 }}>
           {[post.category ? pick(post.category.translations)?.name : null, post.publishedAt?.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })]
             .filter(Boolean)

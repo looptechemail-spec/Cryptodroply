@@ -36,7 +36,7 @@ export default async function Home() {
       {p.coverUrl && <img src={p.coverUrl} alt="" className="post-thumb" loading="lazy" />}
       <span className="t">
         {locked && <span className="lock" aria-hidden="true">&#128274;</span>}
-        {pick(p.translations)?.title}
+        {cleanText(pick(p.translations)?.title)}
       </span>
       <span className="m">{p.publishedAt?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
     </Link>

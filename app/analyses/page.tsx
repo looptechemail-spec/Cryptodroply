@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
+import { cleanText } from '@/lib/clean'
 import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 import BlogTabs from '@/components/BlogTabs'
 
@@ -53,7 +54,7 @@ export default async function Analyses() {
             const cat = p.category ? pick(p.category.translations)?.name : null
             return (
               <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
-                <span className="t">{t?.title}</span>
+                <span className="t">{cleanText(t?.title)}</span>
                 <span className="m">{[cat, fmt(p.publishedAt)].filter(Boolean).join(', ')}</span>
               </Link>
             )

@@ -8,6 +8,7 @@ import { Paywall } from '@/components/Paywall'
 import { getUser } from '@/lib/auth'
 import { FavButton } from '@/components/FavButton'
 import { toolTags } from '@/lib/tags'
+import { cleanText, cleanHtml } from '@/lib/clean'
 
 export const dynamic = 'force-dynamic'
 
@@ -119,7 +120,7 @@ export default async function ToolPage({ params }: Props) {
                   ))}
                 </div>
               )}
-              {t?.description && <p>{t.description}</p>}
+              {t?.description && <p>{cleanText(t.description)}</p>}
             </div>
             <div className="tool-actions">
               {(tool.refLink || tool.websiteUrl) && (
@@ -142,12 +143,12 @@ export default async function ToolPage({ params }: Props) {
             <div key={s.title} className="sec">
               <h2>{s.title}</h2>
               {/* contenuto scritto dall'amministratore (pannello admin o API con chiave) */}
-              <div dangerouslySetInnerHTML={{ __html: s.html! }} />
+              <div dangerouslySetInnerHTML={{ __html: cleanHtml(s.html) }} />
             </div>
           ))}
           {t?.fullDescription && !sections.length && (
             <div className="sec">
-              <div dangerouslySetInnerHTML={{ __html: t.fullDescription }} />
+              <div dangerouslySetInnerHTML={{ __html: cleanHtml(t.fullDescription) }} />
             </div>
           )}
 

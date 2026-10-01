@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { AppTool } from '@/lib/content'
+import { cleanText } from '@/lib/clean'
 
 export function AppIcon({ tool, size = 72 }: { tool: Pick<AppTool, 'title' | 'logoUrl'>; size?: number }) {
   return (
@@ -25,7 +26,7 @@ export function AppCard({ tool, pro = false, base }: { tool: AppTool; pro?: bool
             ))}
           </div>
         )}
-        <div className="app-desc">{tool.description}</div>
+        <div className="app-desc">{cleanText(tool.description)}</div>
       </div>
       <div className="app-card-foot">
         <span className="app-chip">{tool.categoryName}</span>
@@ -43,7 +44,7 @@ export function AppRow({ tool, rank, pro = false }: { tool: AppTool; rank?: numb
       <AppIcon tool={tool} size={60} />
       <div className="app-row-body">
         <div className="app-name">{tool.title}</div>
-        <div className="app-desc">{tool.description}</div>
+        <div className="app-desc">{cleanText(tool.description)}</div>
       </div>
       <span className={`app-get ${pro ? 'is-pro' : ''}`}>{pro ? 'PRO' : 'View'}</span>
     </Link>
@@ -57,7 +58,7 @@ export function FeatureCard({ tool, tone }: { tool: AppTool; tone: 'blue' | 'yel
       <div className="feature-copy">
         <span className="feature-kicker">{tool.categoryName}</span>
         <h3>{tool.title}</h3>
-        <p>{tool.description}</p>
+        <p>{cleanText(tool.description)}</p>
         <span className="feature-cta">
           <AppIcon tool={tool} size={44} />
           <span className="app-get">View</span>

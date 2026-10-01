@@ -248,3 +248,13 @@ export async function runWixImport(logger: (m: string) => void = console.log) {
   await importBlog()
   log('Import completato.')
 }
+
+/** Solo gli articoli (testo formattato e immagini): si usa all'avvio se il blog è ancora quello del primo import. */
+export async function runBlogSync(logger: (m: string) => void = console.log) {
+  log = logger
+  KEY = process.env.WIX_API_KEY ?? ''
+  SITE = process.env.WIX_SITE_ID ?? ''
+  if (!KEY || !SITE) return
+  await importBlog()
+  await applyCatalogTweaks(log)
+}
