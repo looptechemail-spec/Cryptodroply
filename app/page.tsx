@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
 import { SECTIONS, sectionHref } from '@/lib/sections'
-import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
+import { PRO_PRICE_LABEL } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,22 +18,19 @@ const ICONS: Record<string, React.ReactNode> = {
 }
 
 export default async function Home() {
-  const member = await hasPro()
   const [posts, sectionTools] = await Promise.all([
     db.post.findMany({
-      where: { status: 'PUBLISHED' },
+      where: { status: 'PUBLISHED', access: 'FREE' },
       orderBy: { publishedAt: 'desc' },
       take: 40,
       include: { translations: true, category: { include: { translations: true } } },
     }),
-    Promise.all(SECTIONS.map((s) => (s.pro && !member ? Promise.resolve([]) : getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12)))),
+    Promise.all(SECTIONS.map((s) => (s.pro ? Promise.resolve([]) : getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12)))),
   ])
   const bySection = Object.fromEntries(SECTIONS.map((s, i) => [s.key, sectionTools[i]]))
   const telegram = process.env.NEXT_PUBLIC_TELEGRAM_URL ?? '#'
 
   const freePosts = posts.filter((p) => p.access === 'FREE').slice(0, 4)
-  const proAll = posts.filter((p) => p.access === 'PRO')
-  const proPosts = member ? proAll.slice(0, 4) : []
   const PostLink = ({ p, locked = false }: { p: (typeof posts)[number]; locked?: boolean }) => (
     <Link href={`/post/${p.slug}`} className="post-row">
       <span className="t">
@@ -95,7 +92,7 @@ export default async function Home() {
           <h2>Start here</h2>
           <p className="lead">Choose what you want to do. Each section opens the tools for it, with a plain explanation of every one.</p>
           <div className="start-grid">
-            {SECTIONS.map((s) => (
+            {SECTIONS.filter((s) => !s.pro).map((s) => (
               <Link key={s.key} href={sectionHref(s.key)} className={`start-card ${s.pro ? 'is-pro' : ''}`}>
                 <span className="start-icon">
                   <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -131,26 +128,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {SECTIONS.filter((s) => !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
+      {SECTIONS.filter((s) => !s.pro && !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
         const list = bySection[s.key]
-        if (s.pro && !member) {
-          return (
-            <section key={s.key} className="block rail-block">
-              <div className="container">
-                <div className="row-head">
-                  <div>
-                    <h2>
-                      {s.title}
-                      <span className="badge-pro">PRO</span>
-                    </h2>
-                    <p className="lead" style={{ marginBottom: 0 }}>{s.description}</p>
-                  </div>
-                  <Link href="/pricing">Unlock with PRO</Link>
-                </div>
-              </div>
-            </section>
-          )
-        }
         if (!list.length) return null
         return (
           <section key={s.key} className="block rail-block">
@@ -233,42 +212,14 @@ export default async function Home() {
 
       <section className="block">
         <div className="container">
-          <div className="two-col">
-            <div>
-              <div className="row-head">
-                <h2 style={{ fontSize: 34 }}>Blog</h2>
-                <Link href="/blog">All articles</Link>
-              </div>
-              <div className="posts">
-                {freePosts.map((p) => (
-                  <PostLink key={p.id} p={p} />
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="row-head">
-                <h2 style={{ fontSize: 34 }}>
-                  Analyses <span className="badge-pro">PRO</span>
-                </h2>
-                <Link href="/analyses">All analyses</Link>
-              </div>
-              {member ? (
-                <div className="posts">
-                  {proPosts.map((p) => (
-                    <PostLink key={p.id} p={p} />
-                  ))}
-                </div>
-              ) : (
-                <div className="paywall paywall-sm">
-                  <span className="paywall-lock" aria-hidden="true">&#128274;</span>
-                  <h3>Weekly analyses for PRO members</h3>
-                  <p>In-depth analysis of price, on-chain data and fundamentals.</p>
-                  <Link href="/signup?plan=pro" className="btn btn-yellow btn-sm">
-                    Get PRO
-                  </Link>
-                </div>
-              )}
-            </div>
+          <div className="row-head">
+            <h2 style={{ fontSize: 34 }}>Blog</h2>
+            <Link href="/blog">All articles</Link>
+          </div>
+          <div className="posts">
+            {freePosts.map((p) => (
+              <PostLink key={p.id} p={p} />
+            ))}
           </div>
         </div>
       </section>

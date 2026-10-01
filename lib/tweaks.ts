@@ -39,4 +39,8 @@ export async function applyCatalogTweaks(log: (m: string) => void = () => {}) {
     await db.category.delete({ where: { id: from.id } })
     log(`Categoria ${fromId} unita in ${toId}: ${tools.length} tool spostati`)
   }
+
+  // le analisi delle monete (categoria "Weekly Crypto analysis") sono sempre riservate ai paganti
+  const r = await db.post.updateMany({ where: { category: { slug: 'weekly-crypto-analysis' }, NOT: { access: 'PRO' } }, data: { access: 'PRO' } })
+  if (r.count) log(`Analisi rese PRO: ${r.count}`)
 }

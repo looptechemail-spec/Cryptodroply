@@ -199,7 +199,7 @@ async function importBlog() {
     const list: any[] = r.posts ?? []
     for (const p of list) {
       const slug: string = p.slug ?? slugify(p.title)
-      const isPro = Array.isArray(p.pricingPlanIds) && p.pricingPlanIds.length > 0
+      const isPro = (Array.isArray(p.pricingPlanIds) && p.pricingPlanIds.length > 0) || (p.categoryIds ?? []).includes('af442e97-b6e8-4d97-9537-7223c4750dfc') // categoria Weekly Crypto analysis
       if (isPro) proCount++
       const imgMap = new Map<string, string>()
       for (const id of ricosImageIds(p.richContent?.nodes)) { imgMap.set(id, await mirrorImage(wixImageUrl(id))); images++ }
