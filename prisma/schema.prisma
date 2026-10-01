@@ -428,3 +428,21 @@ model Media {
   data        Bytes
   createdAt   DateTime @default(now())
 }
+
+// ---------------------------------------------------------------------------
+// Coda dei post social: li prepara l'automazione, li approva l'admin, li pubblica n8n/Pubblr
+// ---------------------------------------------------------------------------
+
+model SocialPost {
+  id          String    @id @default(cuid())
+  channel     String // telegram, x, instagram...
+  text        String
+  linkUrl     String?
+  imageUrl    String?
+  status      String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, scheduledAt])
+}

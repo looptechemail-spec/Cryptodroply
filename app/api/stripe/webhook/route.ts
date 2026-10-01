@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { stripe } from '@/lib/stripe'
+import { purchaseEmail, renewalEmail, paymentFailedEmail, canceledEmail } from '@/lib/emails'
 import { COMMISSION_RATE, RECURRING } from '@/lib/referral'
 
 export const dynamic = 'force-dynamic'
@@ -30,7 +31,27 @@ async function syncSubscription(sub: Stripe.Subscription) {
     currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
     cancelAtPeriodEnd: sub.cancel_at_period_end,
   }
+  const before = await db.subscription.findUnique({ where: { userId: user.id } })
   await db.subscription.upsert({ where: { userId: user.id }, update: data, create: { userId: user.id, ...data } })
+  // email di disdetta: solo la prima volta che l'abbonamento passa a "non si rinnova"
+  const nowEnding = sub.cancel_at_period_end || sub.status === 'canceled'
+  if (nowEnding && !(before?.cancelAtPeriodEnd || before?.status === 'CANCELED')) await canceledEmail(user.email, user.name, data.currentPeriodEnd)
+}
+
+async function userOf(customer: unknown) {
+  const id = typeof customer === 'string' ? customer : (customer as { id?: string } | null)?.id
+  return id ? db.user.findUnique({ where: { stripeCustomerId: id } }) : null
+}
+
+/** Email di acquisto (primo pagamento) o di rinnovo (pagamenti successivi). */
+async function notifyInvoice(inv: Stripe.Invoice) {
+  if (!inv.amount_paid || inv.amount_paid <= 0) return
+  const u = await userOf(inv.customer)
+  if (!u) return
+  const sub = await db.subscription.findUnique({ where: { userId: u.id } })
+  const next = sub?.currentPeriodEnd ?? null
+  if (inv.billing_reason === 'subscription_create') await purchaseEmail(u.email, u.name, inv.amount_paid, inv.currency, next)
+  else if (inv.billing_reason === 'subscription_cycle') await renewalEmail(u.email, u.name, inv.amount_paid, inv.currency, next)
 }
 
 /** Commissione referral su un pagamento riuscito (una sola volta per fattura). */
@@ -72,7 +93,13 @@ export async function POST(req: Request) {
   ) {
     await syncSubscription(event.data.object as Stripe.Subscription)
   } else if (event.type === 'invoice.paid') {
-    await commissionForInvoice(event.data.object as Stripe.Invoice)
+    const inv = event.data.object as Stripe.Invoice
+    await commissionForInvoice(inv)
+    await notifyInvoice(inv)
+  } else if (event.type === 'invoice.payment_failed') {
+    const inv = event.data.object as Stripe.Invoice
+    const u = await userOf(inv.customer)
+    if (u) await paymentFailedEmail(u.email, u.name)
   } else if (event.type === 'charge.refunded') {
     const inv = (event.data.object as any).invoice
     const id = typeof inv === 'string' ? inv : inv?.id

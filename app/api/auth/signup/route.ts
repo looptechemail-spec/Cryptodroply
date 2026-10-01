@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { SESSION_COOKIE, cookieOptions, signToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { REF_COOKIE } from '@/lib/referral'
+import { welcomeEmail } from '@/lib/emails'
 
 const schema = z.object({
   email: z.string().email(),
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
       passwordHash: await bcrypt.hash(parsed.data.password, 12),
     },
   })
+  await welcomeEmail(user.email, user.name)
   // chi si registra ha già accettato le condizioni: non iscriviamo alla newsletter senza un consenso esplicito.
   const res = NextResponse.redirect(absUrl(parsed.data.plan === 'pro' ? '/account?checkout=1' : '/account', req), 303)
   res.cookies.set(SESSION_COOKIE, signToken({ uid: user.id }, 60 * 60 * 24 * 30), cookieOptions(60 * 60 * 24 * 30))
