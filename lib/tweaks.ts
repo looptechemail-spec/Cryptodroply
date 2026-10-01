@@ -5,6 +5,7 @@
  */
 import { db } from './db'
 import { CATEGORY_NAMES, MERGED_INTO } from './sections'
+import { applyExtraTools } from './extra-tools'
 
 export async function applyCatalogTweaks(log: (m: string) => void = () => {}) {
   for (const [wixId, name] of Object.entries(CATEGORY_NAMES)) {
@@ -43,4 +44,5 @@ export async function applyCatalogTweaks(log: (m: string) => void = () => {}) {
   // le analisi delle monete (categoria "Weekly Crypto analysis") sono sempre riservate ai paganti
   const r = await db.post.updateMany({ where: { category: { slug: 'weekly-crypto-analysis' }, NOT: { access: 'PRO' } }, data: { access: 'PRO' } })
   if (r.count) log(`Analisi rese PRO: ${r.count}`)
+  await applyExtraTools(log)
 }
