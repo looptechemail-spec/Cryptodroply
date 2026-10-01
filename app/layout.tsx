@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import AdminBar from '@/components/AdminBar'
 import CookieBanner from '@/components/CookieBanner'
 import { PageViews } from '@/components/PageViews'
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={font.className}>
       <body>
+        <AdminBar />
         <Header />
         <main>{children}</main>
         <Footer />

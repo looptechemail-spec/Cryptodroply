@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { getUser, isAdmin } from './auth'
 import { SECTIONS } from './sections'
 
@@ -9,6 +10,7 @@ export const PRO_PRICE_LABEL = '€14 per month'
  */
 export async function hasPro(): Promise<boolean> {
   try {
+    if ((await cookies()).get('cd_preview')?.value === 'visitor') return false // admin che guarda come visitatore
     if (await isAdmin()) return true
     const user = await getUser()
     if (!user) return false
