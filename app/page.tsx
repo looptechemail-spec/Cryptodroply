@@ -94,7 +94,7 @@ export default async function Home() {
           <h2>Start here</h2>
           <p className="lead">Choose what you want to do. Each section opens the tools for it, with a plain explanation of every one.</p>
           <div className="start-grid">
-            {SECTIONS.filter((s) => !s.pro).map((s) => (
+            {SECTIONS.map((s) => (
               <Link key={s.key} href={sectionHref(s.key)} className={`start-card ${s.pro ? 'is-pro' : ''}`}>
                 <span className="start-icon">
                   <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
