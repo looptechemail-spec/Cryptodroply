@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
-import { pick, youtubeEmbed } from '@/lib/content'
+import { pick, youtubeEmbed, getSectionTools } from '@/lib/content'
+import { SECTIONS, sectionHref } from '@/lib/sections'
+import { AppCard } from '@/components/AppCard'
 import { hasPro, isProCollection, PRO_PRICE_LABEL } from '@/lib/access'
 import { Paywall } from '@/components/Paywall'
 import { getUser } from '@/lib/auth'
@@ -91,6 +93,14 @@ export default async function ToolPage({ params }: Props) {
     .map((a) => ({ label: a.labelEn, value: values[a.key] }))
     .filter((f) => f.value)
   const tags = toolTags(tool.category.attributes, tool.attributes)
+  // sotto la scheda: gli altri strumenti della stessa sezione (es. wallet = cold + hot), prima quelli della stessa categoria
+  const section = SECTIONS.find((x) => tool.category.wixId && x.collections.includes(tool.category.wixId))
+  const related = section
+    ? (await getSectionTools(section.collections, 60))
+        .filter((x) => x.id !== tool.id)
+        .sort((a, b) => Number(b.categorySlug === tool.category.slug) - Number(a.categorySlug === tool.category.slug))
+        .slice(0, 14)
+    : []
   const sections = [
     { title: 'What it is', html: t?.whatIs },
     { title: 'How it works', html: t?.howItWorks },
@@ -217,6 +227,28 @@ export default async function ToolPage({ params }: Props) {
           )}
         </aside>
       </div>
+
+      {section && related.length > 0 && (
+        <section className="block rail-block">
+          <div className="container">
+            <div className="row-head">
+              <div>
+                <h2>
+                  More in {section.title}
+                  {section.pro && <span className="badge-pro">PRO</span>}
+                </h2>
+                <p className="lead" style={{ marginBottom: 0 }}>{section.description}</p>
+              </div>
+              <Link href={sectionHref(section.key)}>See all</Link>
+            </div>
+          </div>
+          <div className="rail rail-small" role="list">
+            {related.map((x) => (
+              <AppCard key={x.id} tool={x} pro={section.pro} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {!viewer && (
         <section className="cta-band" style={{ marginTop: 0 }}>
