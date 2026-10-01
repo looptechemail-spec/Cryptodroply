@@ -49,7 +49,7 @@ export default function Footer() {
           Not financial advice. Crypto is risky and you can lose your money. Some links are affiliate links.{' '}
           <Link href="/disclaimer">Read more</Link>
         </p>
-        <p>© {new Date().getFullYear()} Cryptodroply</p>
+        <p>© {new Date().getFullYear()} Cryptodroply · VAT 04210160133</p>
       </div>
     </footer>
   )
