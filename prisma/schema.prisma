@@ -446,3 +446,10 @@ model SocialPost {
 
   @@index([status, scheduledAt])
 }
+
+// Registro delle automazioni già eseguite (evita doppioni: una chiave per giorno o settimana)
+model JobRun {
+  key    String   @id
+  ranAt  DateTime @default(now())
+  note   String?
+}

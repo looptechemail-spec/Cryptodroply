@@ -7,6 +7,10 @@ export async function register() {
     setInterval(() => {
       import('./lib/social-publisher').then((m) => m.publishDueTelegram((x) => console.log('[social] ' + x))).catch((e) => console.error('social:', e))
     }, 5 * 60 * 1000)
+    // ogni ora: automazioni di contenuto (solo se AUTOMATION_ENABLED=true), sempre in bozza
+    setInterval(() => {
+      import('./lib/ai-content').then((m) => m.tickAutomation((x) => console.log('[auto] ' + x))).catch((e) => console.error('auto:', e))
+    }, 60 * 60 * 1000)
     void (async () => {
       try {
         const { db } = await import('./lib/db')

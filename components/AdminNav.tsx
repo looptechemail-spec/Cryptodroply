@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const LINKS = [
   ['/admin', 'Dashboard'], ['/admin/tools', 'Tools'], ['/admin/users', 'Users'],
-  ['/admin/referrals', 'Referrals'], ['/admin/subscribers', 'Subscribers'], ['/admin/newsletter', 'Campaigns'], ['/admin/social', 'Social'], ['/admin/messages', 'Messages'], ['/admin/import', 'Import'],
+  ['/admin/referrals', 'Referrals'], ['/admin/subscribers', 'Subscribers'], ['/admin/newsletter', 'Campaigns'], ['/admin/social', 'Social'], ['/admin/automation', 'Automation'], ['/admin/messages', 'Messages'], ['/admin/import', 'Import'],
 ] as const
 
 export function AdminNav() {
