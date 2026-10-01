@@ -32,7 +32,8 @@ export default async function Home() {
 
   const freePosts = posts.filter((p) => p.access === 'FREE').slice(0, 4)
   const PostLink = ({ p, locked = false }: { p: (typeof posts)[number]; locked?: boolean }) => (
-    <Link href={`/post/${p.slug}`} className="post-row">
+    <Link href={`/post/${p.slug}`} className={`post-row${p.coverUrl ? ' has-thumb' : ''}`}>
+      {p.coverUrl && <img src={p.coverUrl} alt="" className="post-thumb" loading="lazy" />}
       <span className="t">
         {locked && <span className="lock" aria-hidden="true">&#128274;</span>}
         {pick(p.translations)?.title}
@@ -216,7 +217,7 @@ export default async function Home() {
             <h2 style={{ fontSize: 34 }}>Blog</h2>
             <Link href="/blog">All articles</Link>
           </div>
-          <div className="posts">
+          <div className="posts posts-home">
             {freePosts.map((p) => (
               <PostLink key={p.id} p={p} />
             ))}

@@ -486,3 +486,16 @@ body { background: var(--paper); }
   .post-row .m { white-space: normal; padding: 0 18px 18px; font-size: 14px; }
   .post-row:not(.has-thumb) .t { padding-top: 18px; }
 }
+
+/* home, sezione blog: immagine a sinistra e titolo più piccolo (anche su mobile, dove le schede dell'elenco restano) */
+.posts-home .post-row.has-thumb { flex-direction: row; align-items: center; gap: 14px; }
+.posts-home .post-row .post-thumb { width: 120px; height: 68px; object-fit: cover; border-radius: 12px; flex: none; }
+.posts-home .post-row .t { font-size: 19px; line-height: 1.3; flex: 1; }
+.posts-home .post-row .m { white-space: nowrap; }
+@media (max-width: 900px) {
+  .posts-home { display: block; border-top: 2px solid #000; }
+  .posts-home .post-row, .posts-home .post-row.has-thumb { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px 14px; padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+  .posts-home .post-row .post-thumb { width: 96px; height: 64px; aspect-ratio: auto; border-radius: 12px; }
+  .posts-home .post-row .t, .posts-home .post-row.has-thumb .t { flex: 1 1 0; min-width: 0; font-size: 16px; line-height: 1.3; padding: 0; }
+  .posts-home .post-row .m { flex-basis: 100%; padding: 0 0 0 110px; font-size: 13px; white-space: normal; }
+}
