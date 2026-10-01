@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 import { getCategories, getSectionTools } from '@/lib/content'
 import CategoryAccordion, { type Group } from '@/components/CategoryAccordion'
 import { SECTIONS, CATEGORY_BLURBS, CATEGORY_INTROS } from '@/lib/sections'
+import { hasPro } from '@/lib/access'
+import { Paywall } from '@/components/Paywall'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +14,7 @@ type Props = { params: Promise<{ key: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { key } = await params
   const s = SECTIONS.find((x) => x.key === key)
-  return s ? { title: s.title, description: s.description } : {}
+  return s ? { title: s.title, description: s.description, ...(s.pro ? { robots: { index: false, follow: false } } : {}) } : {}
 }
 
 export default async function SectionPage({ params }: Props) {
@@ -20,8 +22,9 @@ export default async function SectionPage({ params }: Props) {
   const section = SECTIONS.find((s) => s.key === key)
   if (!section) notFound()
 
-  const cats = (await getCategories()).filter((c) => c.wixId && section.collections.includes(c.wixId))
-  const tools = await getSectionTools(section.collections, 300)
+  const locked = section.pro && !(await hasPro())
+  const cats = locked ? [] : (await getCategories()).filter((c) => c.wixId && section.collections.includes(c.wixId))
+  const tools = locked ? [] : await getSectionTools(section.collections, 300)
   const groups: Group[] = cats
     .map((c) => ({
       slug: c.slug,
@@ -47,7 +50,11 @@ export default async function SectionPage({ params }: Props) {
         </h1>
         <p className="section-intro">{section.intro}</p>
       </div>
-      <CategoryAccordion groups={groups} pro={section.pro} />
+      {locked ? (
+        <Paywall title={`${section.title} is for PRO members`} text={`${section.description}`} />
+      ) : (
+        <CategoryAccordion groups={groups} pro={section.pro} />
+      )}
     </div>
   )
 }

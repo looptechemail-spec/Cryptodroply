@@ -6,6 +6,8 @@
 import { Access, PublishStatus } from '@prisma/client'
 import { db } from './db'
 import { importCsvFiles } from './csv-import'
+import { applyCatalogTweaks } from './tweaks'
+import { CATEGORY_NAMES, MERGED_INTO } from './sections'
 
 const API = 'https://www.wixapis.com'
 let KEY = ''
@@ -89,12 +91,17 @@ async function importTools() {
     const base = patternOf(linkOf(false))?.split('/')[1] ?? slugify(col.displayName)
     const proBase = patternOf(linkOf(true))?.split('/')[1] ?? null
 
-    const category = await db.category.upsert({
-      where: { wixId: id },
-      update: { slug: base, sortOrder: order },
-      create: { wixId: id, slug: base, sortOrder: order,
-        translations: { create: { locale: 'EN', name: col.displayName } } },
-    })
+    // categorie assorbite (Testnet -> Airdrop): i tool vanno direttamente nella categoria di destinazione
+    const mergedInto = MERGED_INTO[id]
+    const category = mergedInto
+      ? await db.category.findUnique({ where: { wixId: mergedInto } })
+      : await db.category.upsert({
+          where: { wixId: id },
+          update: { slug: base, sortOrder: order },
+          create: { wixId: id, slug: base, sortOrder: order,
+            translations: { create: { locale: 'EN', name: CATEGORY_NAMES[id] ?? col.displayName } } },
+        })
+    if (!category) { log(`Categoria di destinazione ${mergedInto} non trovata, salto ${id}`); continue }
 
     // campi specifici della categoria -> AttributeDef (l'etichetta è il nome del campo nel CMS)
     const attrFields = col.fields.filter((f: any) =>
@@ -102,7 +109,7 @@ async function importTools() {
     for (const [i, f] of attrFields.entries()) {
       await db.attributeDef.upsert({
         where: { categoryId_key: { categoryId: category.id, key: f.key } },
-        update: { labelEn: f.displayName, sortOrder: i },
+        update: mergedInto ? {} : { labelEn: f.displayName, sortOrder: i },
         create: { categoryId: category.id, key: f.key, labelEn: f.displayName, sortOrder: i },
       })
     }
@@ -230,6 +237,7 @@ export async function runWixImport(logger: (m: string) => void = console.log) {
   if (!KEY || !SITE) throw new Error('Imposta WIX_API_KEY e WIX_SITE_ID')
   await importTools()
   await importCsvFiles(log)
+  await applyCatalogTweaks(log)
   await importBlog()
   log('Import completato.')
 }

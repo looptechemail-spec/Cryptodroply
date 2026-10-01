@@ -16,10 +16,10 @@ export const SECTIONS: Section[] = [
   {
     key: 'free-earn',
     title: 'Free earn',
-    description: 'Ways to earn crypto through airdrops, testnets and faucets.',
-    intro: 'Start here if you want to earn crypto without putting money in. Airdrops reward early users of a new project, testnets let you try unfinished networks that often reward testers, faucets hand out small free amounts, task platforms pay for simple jobs and games can pay out in tokens.',
+    description: 'Ways to earn crypto through airdrops, faucets, tasks and games.',
+    intro: 'Start here if you want to earn crypto without putting money in. Airdrops reward early users of a new project, including people who test unfinished networks, faucets hand out small free amounts, task platforms pay for simple jobs and games can pay out in tokens.',
     pro: false,
-    collections: ['Import7', 'Import8', 'Faucet', 'TaskPlatform', 'Gaming'],
+    collections: ['Import7', 'Faucet', 'TaskPlatform', 'Gaming'],
   },
   {
     key: 'wallet',
@@ -67,8 +67,7 @@ export const sectionHref = (key: string) => `/s/${key}`
 
 /** Spiegazione breve di ogni sottocategoria (chiave = id collezione Wix). Modificabile qui. */
 export const CATEGORY_BLURBS: Record<string, string> = {
-  Import7: 'Free token drops from new projects. Find the active ones and how to qualify.',
-  Import8: 'Test unfinished networks and apps. Testers are often rewarded when the project launches.',
+  Import7: 'Free token drops from new projects, including rewards for testing new networks. Find the active ones and how to qualify.',
   Faucet: 'Sites that give small amounts of free crypto, usually to try a network.',
   TaskPlatform: 'Platforms that pay you in crypto for quests, surveys and simple jobs.',
   Gaming: 'Play-to-earn games and metaverse events with token or NFT rewards.',
@@ -90,8 +89,7 @@ export const CATEGORY_BLURBS: Record<string, string> = {
 
 /** Spiegazione più completa di ogni sottocategoria, sotto il titolo della pagina e del pannello. */
 export const CATEGORY_INTROS: Record<string, string> = {
-  Import7: 'An airdrop is a free distribution of tokens from a project to its early users. Here you find the airdrops worth your time, what you need to do to qualify and the risks to watch for, such as fake claim sites.',
-  Import8: 'A testnet is a trial version of a network where nothing you use has real value. Projects often reward people who test them early, so these are low-risk ways to position yourself for a future token.',
+  Import7: 'An airdrop is a free distribution of tokens from a project to its early users. Here you find the airdrops worth your time, including testnets: trial versions of a network where nothing has real value and early testers are often rewarded. Each listing shows what you need to do to qualify and the risks to watch for, such as fake claim sites.',
   Faucet: 'A faucet gives out small amounts of crypto for free, usually so you can pay fees on a new network. The amounts are small, so use them to learn and to get started rather than to earn a living.',
   TaskPlatform: 'Platforms that pay you in crypto for completing quests, learning tasks, surveys or small jobs. Payouts vary a lot, so each listing shows what to expect and what the platform asks from you.',
   Gaming: 'Games and metaverse worlds where you can earn tokens or NFTs by playing or joining events. Check the time and money each one asks for before you start.',
@@ -109,4 +107,14 @@ export const CATEGORY_INTROS: Record<string, string> = {
   Import2: 'Tools to manage your coins with more privacy: wallets with coin control, mixing and ways to avoid linking your activity. Each one explains what it hides and what it does not.',
   Import4: 'Cards you can get without handing over identity documents. Limits are usually lower and rules change by country, so each listing shows what you can expect.',
   toolsanalysis: 'Data tools that show what is happening on chain and in the market: who moves funds, where liquidity flows and which projects are growing. Use them to research before you commit money.',
+}
+
+/** Nome inglese forzato per le categorie il cui nome su Wix è in italiano (chiave = id collezione Wix). */
+export const CATEGORY_NAMES: Record<string, string> = {
+  Import2: 'Privacy Management',
+}
+
+/** Categorie assorbite in un'altra: tutti i loro tool passano nella categoria di destinazione. */
+export const MERGED_INTO: Record<string, string> = {
+  Import8: 'Import7', // Testnet -> Airdrop
 }

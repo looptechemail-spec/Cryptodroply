@@ -7,7 +7,7 @@ import { FREE_FEATURES, PRO_FEATURES, FAQ } from '@/lib/plans'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Pricing | Cryptodroply',
-  description: 'Cryptodroply is free to start. PRO is €14 per month and unlocks the Grow and Privacy sections, video tutorials and full analyses.',
+  description: 'Cryptodroply is free to start. PRO is €14 per month and unlocks the Grow and Privacy sections and full analyses.',
 }
 
 export default async function Pricing() {

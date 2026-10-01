@@ -1,4 +1,5 @@
 import { getUser, isAdmin } from './auth'
+import { SECTIONS } from './sections'
 
 export const PRO_PRICE_LABEL = '€14 per month'
 
@@ -21,3 +22,7 @@ export async function hasPro(): Promise<boolean> {
     return false
   }
 }
+
+/** Collezioni (Category.wixId) delle sezioni PRO: Grow e Privacy. Si vedono solo con PRO. */
+export const PRO_COLLECTIONS: string[] = SECTIONS.filter((s) => s.pro).flatMap((s) => s.collections)
+export const isProCollection = (wixId?: string | null) => !!wixId && PRO_COLLECTIONS.includes(wixId)

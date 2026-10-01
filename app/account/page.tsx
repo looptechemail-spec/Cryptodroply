@@ -68,7 +68,7 @@ export default async function Account({ searchParams }: { searchParams: Promise<
                   : sub?.currentPeriodEnd
                     ? `Next payment on ${fmt(sub.currentPeriodEnd)}.`
                     : 'All sections are open to you.'
-                : `PRO is ${PRO_PRICE_LABEL}: Grow and Privacy sections, video tutorials and full analyses.`}
+                : `PRO is ${PRO_PRICE_LABEL}: Grow and Privacy sections and full analyses.`}
             </p>
             {!pro && (
               <form method="post" action="/api/stripe/checkout">

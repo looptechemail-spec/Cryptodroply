@@ -26,7 +26,7 @@ export default async function Home() {
       take: 40,
       include: { translations: true, category: { include: { translations: true } } },
     }),
-    Promise.all(SECTIONS.map((s) => getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12))),
+    Promise.all(SECTIONS.map((s) => (s.pro && !member ? Promise.resolve([]) : getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12)))),
   ])
   const bySection = Object.fromEntries(SECTIONS.map((s, i) => [s.key, sectionTools[i]]))
   const telegram = process.env.NEXT_PUBLIC_TELEGRAM_URL ?? '#'
@@ -133,6 +133,24 @@ export default async function Home() {
 
       {SECTIONS.filter((s) => !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
         const list = bySection[s.key]
+        if (s.pro && !member) {
+          return (
+            <section key={s.key} className="block rail-block">
+              <div className="container">
+                <div className="row-head">
+                  <div>
+                    <h2>
+                      {s.title}
+                      <span className="badge-pro">PRO</span>
+                    </h2>
+                    <p className="lead" style={{ marginBottom: 0 }}>{s.description}</p>
+                  </div>
+                  <Link href="/pricing">Unlock with PRO</Link>
+                </div>
+              </div>
+            </section>
+          )
+        }
         if (!list.length) return null
         return (
           <section key={s.key} className="block rail-block">

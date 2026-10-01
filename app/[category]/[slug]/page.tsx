@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick, youtubeEmbed } from '@/lib/content'
-import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
+import { hasPro, isProCollection, PRO_PRICE_LABEL } from '@/lib/access'
+import { Paywall } from '@/components/Paywall'
 import { getUser } from '@/lib/auth'
 import { FavButton } from '@/components/FavButton'
 
@@ -32,13 +33,24 @@ async function load(categoryParam: string, slug: string) {
       },
     },
   })
-  return { tool, pro }
+  if (tool) return { tool, pro }
+  // vecchi indirizzi (es. categorie unite): si cerca per percorso originale
+  const legacy = await db.tool.findFirst({
+    where: { status: 'PUBLISHED', OR: [{ legacyPath: `/${categoryParam}/${slug}` }, { legacyProPath: `/${categoryParam}/${slug}` }] },
+    include: {
+      translations: true,
+      videos: { orderBy: { sortOrder: 'asc' } },
+      category: { include: { translations: true, attributes: { orderBy: { sortOrder: 'asc' } }, tools: { where: { status: 'PUBLISHED', NOT: { slug } }, take: 3, orderBy: { sortOrder: 'asc' } } } },
+    },
+  })
+  return { tool: legacy, pro }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category, slug } = await params
   const { tool } = await load(category, slug)
   if (!tool) return {}
+  if (isProCollection(tool.category.wixId)) return { title: tool.title, robots: { index: false, follow: false } }
   const t = pick(tool.translations)
   const description = t?.seoDescription ?? t?.description ?? undefined
   // l'anteprima quando il link viene condiviso è il logo dello strumento
@@ -57,6 +69,16 @@ export default async function ToolPage({ params }: Props) {
   if (!tool) notFound()
 
   const isMember = await hasPro()
+  if (isProCollection(tool.category.wixId) && !isMember) {
+    return (
+      <div className="container">
+        <div className="crumbs" style={{ marginTop: 28 }}>
+          <Link href="/">Home</Link>
+        </div>
+        <Paywall title="This tool is for PRO members" text="The Grow and Privacy sections are included with PRO." />
+      </div>
+    )
+  }
   const viewer = await getUser()
   const saved = viewer ? !!(await db.favorite.findUnique({ where: { userId_toolId: { userId: viewer.id, toolId: tool.id } } })) : false
   const t = pick(tool.translations)
@@ -72,8 +94,8 @@ export default async function ToolPage({ params }: Props) {
     { title: 'When to use it', html: t?.whenToUse },
   ].filter((s) => s.html)
 
-  // video gratis visibili a tutti; i PRO solo ai membri (e solo sulla pagina PRO)
-  const canWatch = (access: string) => access === 'FREE' || (pro && isMember)
+  // i tutorial sono per chi ha un account (gratuito o PRO); chi non è registrato non li vede
+  const canWatch = !!viewer || isMember
 
   return (
     <>
@@ -121,34 +143,38 @@ export default async function ToolPage({ params }: Props) {
           {tool.videos.length > 0 && (
             <>
               <h2 style={{ marginBottom: 20 }}>Video tutorials</h2>
-              <div className="videos">
-                {tool.videos.map((v) => {
-                  const embed = youtubeEmbed(v.youtubeUrl)
-                  const title = v.titleEn ?? 'Video tutorial'
-                  return (
-                    <div key={v.id}>
-                      {canWatch(v.access) && embed ? (
-                        <div className="video-frame">
-                          <iframe src={embed} title={title} loading="lazy" allowFullScreen />
-                        </div>
-                      ) : (
-                        <div className="video-locked">
-                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffd300" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <rect x="4" y="11" width="16" height="10" rx="2" />
-                            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                          </svg>
-                          <b>Included with PRO</b>
-                          <Link href="/signup?plan=pro" className="btn btn-yellow btn-sm">
-                            Get PRO for {PRO_PRICE_LABEL}
-                          </Link>
-                        </div>
-                      )}
-                      <div className="video-title">{title}</div>
-                      <div className="video-note">{v.access === 'FREE' ? 'Free to watch' : 'PRO members'}</div>
-                    </div>
-                  )
-                })}
-              </div>
+              {canWatch ? (
+                <div className="videos">
+                  {tool.videos.map((v) => {
+                    const embed = youtubeEmbed(v.youtubeUrl)
+                    const title = v.titleEn ?? 'Video tutorial'
+                    return (
+                      <div key={v.id}>
+                        {embed && (
+                          <div className="video-frame">
+                            <iframe src={embed} title={title} loading="lazy" allowFullScreen />
+                          </div>
+                        )}
+                        <div className="video-title">{title}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="video-locked" style={{ aspectRatio: 'auto', padding: 36 }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffd300" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="4" y="11" width="16" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                  </svg>
+                  <b>Video tutorials are free for registered members</b>
+                  <Link href="/signup" className="btn btn-yellow btn-sm">
+                    Create a free account
+                  </Link>
+                  <Link href="/login" className="paywall-login">
+                    Already registered? Log in
+                  </Link>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -180,17 +206,19 @@ export default async function ToolPage({ params }: Props) {
         </aside>
       </div>
 
-      <section className="cta-band" style={{ marginTop: 0 }}>
-        <div className="container">
-          <div>
-            <h2>Unlock every video tutorial with PRO</h2>
-            <p>{PRO_PRICE_LABEL}, cancel any time.</p>
+      {!viewer && (
+        <section className="cta-band" style={{ marginTop: 0 }}>
+          <div className="container">
+            <div>
+              <h2>Watch the video tutorials, free</h2>
+              <p>Create a free account to unlock every tutorial.</p>
+            </div>
+            <Link href="/signup" className="btn btn-black">
+              Create a free account
+            </Link>
           </div>
-          <Link href="/signup?plan=pro" className="btn btn-black">
-            Get PRO
-          </Link>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   )
 }
