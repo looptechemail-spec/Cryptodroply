@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /home/claude/cryptodroply; mkdir -p data/logos; cp /root/.claude/uploads/90acf0bd-4f6c-5a0c-becd-3d774461dc30/312c8e03-image.jpg data/logos/gmgn.jpg; sed -n 1,14p lib/media.ts; cat app/sitemap.ts | head -40; grep -n \"site-footer\" app/globals.css | head)"
+    ]
+  }
+}

@@ -10,7 +10,7 @@ type Extra = {
   collection: string // categoria (id della collezione Wix, es. "toolsanalysis")
   slug: string
   title: string
-  logoSource: string
+  logoSource: string // indirizzo web del logo
   websiteUrl: string
   refLink?: string
   attributes: Record<string, string>
@@ -78,7 +78,10 @@ const EXTRA_TOOLS: Extra[] = [
 
 export async function applyExtraTools(log: (m: string) => void = () => {}) {
   for (const x of EXTRA_TOOLS) {
-    if (await db.tool.findUnique({ where: { wixId: x.wixId } })) continue
+    const existing = await db.tool.findUnique({ where: { wixId: x.wixId } })
+    if (existing) {
+      continue
+    }
     const category = await db.category.findUnique({ where: { wixId: x.collection } })
     if (!category) { log(`Strumento ${x.title}: categoria ${x.collection} non trovata`); continue }
     const last = await db.tool.findFirst({ where: { categoryId: category.id }, orderBy: { sortOrder: 'desc' } })

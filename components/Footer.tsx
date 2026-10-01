@@ -37,7 +37,17 @@ export default function Footer() {
           <Link href="/affiliate">Earn 30%</Link>
           <Link href="/contact">Contact</Link>
           <Link href="/privacy-policy">Privacy policy</Link>
+          <Link href="/cookie-policy">Cookie policy</Link>
+          <Link href="/terms">Terms of use</Link>
+          <Link href="/disclaimer">Disclaimer</Link>
         </div>
+      </div>
+      <div className="container footer-legal">
+        <p>
+          Not financial advice. Crypto is risky and you can lose your money. Some links are affiliate links.{' '}
+          <Link href="/disclaimer">Read more</Link>
+        </p>
+        <p>© {new Date().getFullYear()} Cryptodroply</p>
       </div>
     </footer>
   )

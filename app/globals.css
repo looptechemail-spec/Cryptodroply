@@ -28,6 +28,7 @@ img { max-width: 100%; }
 /* header */
 .site-header { border-bottom: 1px solid var(--line); background: #fff; }
 .site-header .container { display: flex; align-items: center; gap: 32px; padding-top: 16px; padding-bottom: 16px; }
+.logo img { display: block; height: 36px; width: auto; }
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 22px; color: #000; }
 .nav { display: flex; gap: 22px; flex-grow: 1; font-size: 15px; font-weight: 500; flex-wrap: wrap; }
 .nav a:hover { text-decoration: underline; }
@@ -89,6 +90,18 @@ img { max-width: 100%; }
 .nl input { flex-grow: 1; padding: 13px 16px; border-radius: var(--radius); border: 2px solid #fff; background: #000; color: #fff; font-size: 16px; font-family: inherit; }
 .nl button { background: var(--yellow); color: #000; font-weight: 800; font-size: 16px; padding: 13px 22px; border-radius: var(--radius); border: 0; font-family: inherit; cursor: pointer; }
 .sr-only { position: absolute; left: -9999px; }
+
+.site-footer .footer-legal { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; grid-template-columns: none; border-top: 1px solid #333; padding-top: 20px; padding-bottom: 32px; font-size: 13px; opacity: 0.85; }
+.site-footer .footer-legal p { margin: 0; }
+.site-footer .footer-legal a { text-decoration: underline; }
+.legal .sec { max-width: 100%; }
+.legal h2 { font-size: 24px; }
+.legal p, .legal li { line-height: 1.65; }
+.legal a { text-decoration: underline; }
+.legal-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
+.legal-table th, .legal-table td { text-align: left; vertical-align: top; padding: 10px 12px; border: 1px solid var(--line); }
+.legal-table th { background: #f5f6fa; }
+@media (max-width: 640px) { .legal-table { display: block; overflow-x: auto; } }
 
 /* pagina tool */
 .tool-hero { background: var(--blue); color: #fff; }

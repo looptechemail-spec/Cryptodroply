@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { db } from './db'
 
 const WIX_MEDIA = 'https://static.wixstatic.com/media/'
@@ -24,5 +26,21 @@ export async function mirrorImage(sourceUrl: string): Promise<string> {
     return local
   } catch {
     return sourceUrl
+  }
+}
+
+/** L'indirizzo locale che mirrorImage darebbe a questo indirizzo sorgente (per riconoscere immagini già copiate). */
+export const mediaIdFor = (sourceUrl: string) => '/media/' + createHash('sha1').update(sourceUrl).digest('hex').slice(0, 24)
+
+/** Copia un'immagine del repository (es. data/logos/x.jpg) nel database e restituisce l'indirizzo locale (/media/<id>). */
+export async function mirrorLocalFile(relPath: string, contentType: string): Promise<string | null> {
+  const key = 'file:' + relPath
+  const id = createHash('sha1').update(key).digest('hex').slice(0, 24)
+  try {
+    const data = await readFile(path.join(process.cwd(), relPath))
+    await db.media.upsert({ where: { id }, update: { data, contentType }, create: { id, sourceUrl: key, contentType, data } })
+    return `/media/${id}`
+  } catch {
+    return null
   }
 }
