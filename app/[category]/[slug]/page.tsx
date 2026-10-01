@@ -215,16 +215,6 @@ export default async function ToolPage({ params }: Props) {
               </div>
             </div>
           )}
-          {tool.category.tools.length > 0 && (
-            <div className="more-box">
-              <h2>More {catName.toLowerCase()}</h2>
-              {tool.category.tools.map((o) => (
-                <Link key={o.id} href={`${base}/${o.slug}`}>
-                  {o.title}
-                </Link>
-              ))}
-            </div>
-          )}
         </aside>
       </div>
 
