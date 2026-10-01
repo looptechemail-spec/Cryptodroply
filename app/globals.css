@@ -473,29 +473,29 @@ body { background: var(--paper); }
 .post-row .post-thumb { width: 120px; height: 68px; object-fit: cover; border-radius: 12px; flex: none; background: var(--tint); }
 .post-row.has-thumb .t { flex: 1; }
 
-/* mobile: il menu scompare scorrendo in basso e torna scorrendo in alto */
+/* mobile: intestazione compatta con hamburger, sottomenu al tocco, si nasconde scorrendo in basso */
 .site-header { transition: transform 0.25s ease; }
-@media (max-width: 900px) { .site-header.is-hidden { transform: translateY(-100%); } }
-
-/* mobile: articoli a schede (immagine sopra, titolo, data) */
+.burger, .nav-mobile-only { display: none; }
 @media (max-width: 900px) {
-  .posts { border-top: 0; display: grid; gap: 18px; }
-  .post-row, .post-row.has-thumb { flex-direction: column; align-items: stretch; gap: 0; padding: 0; border: 1px solid var(--line); border-radius: 20px; background: #fff; overflow: hidden; box-shadow: 0 2px 10px rgba(20, 24, 60, 0.05); }
-  .post-row .post-thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 0; }
-  .post-row .t, .post-row.has-thumb .t, .two-col .post-row .t { flex: none; font-size: 21px; line-height: 1.25; padding: 16px 18px 6px; }
-  .post-row .m { white-space: normal; padding: 0 18px 18px; font-size: 14px; }
-  .post-row:not(.has-thumb) .t { padding-top: 18px; }
-}
-
-/* home, sezione blog: immagine a sinistra e titolo più piccolo (anche su mobile, dove le schede dell'elenco restano) */
-.posts-home .post-row.has-thumb { flex-direction: row; align-items: center; gap: 14px; }
-.posts-home .post-row .post-thumb { width: 120px; height: 68px; object-fit: cover; border-radius: 12px; flex: none; }
-.posts-home .post-row .t { font-size: 19px; line-height: 1.3; flex: 1; }
-.posts-home .post-row .m { white-space: nowrap; }
-@media (max-width: 900px) {
-  .posts-home { display: block; border-top: 2px solid #000; }
-  .posts-home .post-row, .posts-home .post-row.has-thumb { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px 14px; padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
-  .posts-home .post-row .post-thumb { width: 96px; height: 64px; aspect-ratio: auto; border-radius: 12px; }
-  .posts-home .post-row .t, .posts-home .post-row.has-thumb .t { flex: 1 1 0; min-width: 0; font-size: 16px; line-height: 1.3; padding: 0; }
-  .posts-home .post-row .m { flex-basis: 100%; padding: 0 0 0 110px; font-size: 13px; white-space: normal; }
+  .site-header.is-hidden { transform: translateY(-100%); }
+  .site-header .container { flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  .site-header .logo { margin-right: auto; }
+  .head-cta .nav-link { display: none; }
+  .site-header .btn-sm { padding: 9px 14px; font-size: 14px; }
+  .burger { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 0 11px; border: 0; border-radius: 14px; background: var(--tint); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .burger span { display: block; height: 2px; border-radius: 2px; background: #000; transition: transform 0.2s ease, opacity 0.2s ease; }
+  .site-header.nav-open .burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .site-header.nav-open .burger span:nth-child(2) { opacity: 0; }
+  .site-header.nav-open .burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .site-header .nav { display: none; order: 10; width: 100%; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 2px; max-height: calc(100vh - 90px); max-height: calc(100dvh - 90px); overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 10px; }
+  .site-header.nav-open .nav { display: flex; }
+  .nav-mobile-only { display: inline-flex; }
+  .nav-link { justify-content: space-between; padding: 14px 12px; font-size: 17px; }
+  /* niente apertura al passaggio del dito: i sottomenu si aprono solo con .open */
+  .nav-item:hover .menu, .nav-item:focus-within .menu { display: none; }
+  .nav-item.open .menu { display: block; }
+  .nav-item.open > .nav-link { background: var(--tint); }
+  .nav-item.open .nav-caret { transform: rotate(225deg); }
+  .nav-link:hover { background: transparent; }
+  .menu-right { right: auto; }
 }
