@@ -27,6 +27,7 @@ const LABEL_EMOJI: [RegExp, string][] = [
   [/claim/, '🖱️'], [/earning/, '💰'], [/referral/, '🤝'], [/open ?source/, '🔓'], [/free/, '🆓'], [/access/, '🌐'],
   [/browser/, '🌐'], [/mobile/, '📱'], [/^pc$|desktop/, '💻'], [/dapp/, '🧩'], [/iban/, '🏦'], [/sepa/, '🇪🇺'],
   [/deposit/, '💵'], [/virtual|physical/, '💳'], [/based in|sede/, '📍'], [/dex/, '⚖️'], [/card network/, '💠'],
+  [/real.?time/, '⚡'], [/alert/, '🔔'], [/^api$/, '🔌'], [/tracker/, '📡'], [/pro version/, '💎'], [/nft/, '🖼️'], [/governance/, '🗳️'], [/login/, '🔑'], [/connection/, '🔗'],
   [/chain|network/, '🔗'], [/coins|crypto/, '🪙'], [/monthly/, '📆'], [/type/, '🧩'],
 ]
 const labelEmoji = (label: string) => LABEL_EMOJI.find(([r]) => r.test(label.toLowerCase()))?.[1] ?? '🏷️'
@@ -121,7 +122,8 @@ export function analyze(defs: Def[], tools: { id: string; attributes: unknown }[
           o.count++
           opts.set(k, o)
         }
-        if (n < 2 && !out[t.id].tags.some((g) => g.label.toLowerCase() === k)) out[t.id].tags.push({ emoji: e, label: x.label })
+        const shown = /^(optional|required|partial|part|limited|mixed)$/i.test(x.label) ? `${label}: ${x.label}` : x.label
+        if (n < 2 && !out[t.id].tags.some((g) => g.label.toLowerCase() === shown.toLowerCase())) out[t.id].tags.push({ emoji: e, label: shown })
       })
       out[t.id].vals[d.key] = [...seen]
     })
