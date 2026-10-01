@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
+import { AdminNav } from '@/components/AdminNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,13 +48,8 @@ export default async function AdminHome() {
     <div className="container">
       <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 44 }}>Admin</h1>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Link href="/admin/import" className="btn btn-blue btn-sm">Import from Wix</Link>
-          <form method="post" action="/api/admin/logout">
-            <button className="btn btn-outline-dark btn-sm" type="submit">Log out</button>
-          </form>
-        </div>
       </div>
+      <AdminNav />
 
       <div className="stats">
         <Stat label="Affiliate clicks, 7 days" value={clicks7} note={`${clicks30} in 30 days`} />

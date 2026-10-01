@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { FREE_FEATURES, PRO_FEATURES } from '@/lib/plans'
 import { db } from '@/lib/db'
 import { getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
@@ -7,19 +8,6 @@ import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
 
-const FREE_FEATURES = [
-  'Free earn, Wallet, Exchange and Tools sections',
-  'Key facts for every tool, side by side',
-  'A plain guide to what each tool is, how it works and when to use it',
-  'The blog and the newsletter',
-]
-const PRO_FEATURES = [
-  'Everything in Free',
-  'The Grow and Privacy sections',
-  'Video tutorials for each tool',
-  'Full weekly analyses, not just the opening',
-  'Cancel any time',
-]
 const ICONS: Record<string, React.ReactNode> = {
   'free-earn': <path d="M12 3v18M3 12h18M6.5 6.5l11 11M17.5 6.5l-11 11" />,
   wallet: <path d="M3 7a2 2 0 0 1 2-2h13v4M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16 14.5h.01" />,

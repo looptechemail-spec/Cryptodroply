@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick, youtubeEmbed } from '@/lib/content'
 import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
+import { getUser } from '@/lib/auth'
+import { FavButton } from '@/components/FavButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +57,8 @@ export default async function ToolPage({ params }: Props) {
   if (!tool) notFound()
 
   const isMember = await hasPro()
+  const viewer = await getUser()
+  const saved = viewer ? !!(await db.favorite.findUnique({ where: { userId_toolId: { userId: viewer.id, toolId: tool.id } } })) : false
   const t = pick(tool.translations)
   const catName = pick(tool.category.translations)?.name ?? tool.category.slug
   const base = pro ? `/pro-${tool.category.slug}` : `/${tool.category.slug}`
@@ -90,6 +94,7 @@ export default async function ToolPage({ params }: Props) {
                   Visit {tool.title}
                 </a>
               )}
+              <FavButton toolId={tool.id} initial={saved} loggedIn={!!viewer} />
               <Link href={`/${tool.category.slug}`} className="btn btn-outline">
                 All {catName.toLowerCase()}
               </Link>

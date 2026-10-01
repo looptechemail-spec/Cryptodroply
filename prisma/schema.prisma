@@ -126,6 +126,7 @@ model Tool {
   translations ToolTranslation[]
   videos       ToolVideo[]
   events       Event[]
+  favorites    Favorite[]
 
   @@unique([categoryId, slug])
   @@index([categoryId, status, sortOrder])
@@ -260,6 +261,7 @@ model User {
 
   subscription Subscription?
   resetTokens  PasswordReset[]
+  favorites    Favorite[]
 }
 
 model Subscription {
@@ -377,4 +379,14 @@ model ApiKey {
   lastUsedAt DateTime?
   revokedAt  DateTime?
   createdAt  DateTime  @default(now())
+}
+
+model Favorite {
+  userId    String
+  toolId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@id([userId, toolId])
 }

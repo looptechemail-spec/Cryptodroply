@@ -65,6 +65,9 @@ export default async function Header() {
               </div>
             </div>
           </div>
+          <Link href="/pricing" className="nav-link">
+            Pricing
+          </Link>
         </nav>
         {user ? (
           <Link href="/account" className="btn btn-blue btn-sm">

@@ -1,69 +1,164 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { db } from '@/lib/db'
 import { getUser } from '@/lib/auth'
 import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
 import { stripeReady } from '@/lib/stripe'
+import { AppCard } from '@/components/AppCard'
+import { pick } from '@/lib/content'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Your account', robots: { index: false } }
 
-export default async function Account({ searchParams }: { searchParams: Promise<{ checkout?: string; welcome?: string; error?: string }> }) {
+type SP = { checkout?: string; welcome?: string; error?: string; saved?: string }
+
+export default async function Account({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await getUser()
   if (!user) redirect('/login')
-  const { checkout, welcome, error } = await searchParams
+  const { checkout, welcome, error, saved } = await searchParams
   const pro = await hasPro()
   const sub = user.subscription
   const fmt = (d: Date | null | undefined) => d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
+  const [favs, subscriber] = await Promise.all([
+    db.favorite.findMany({
+      where: { userId: user.id, tool: { status: 'PUBLISHED' } },
+      orderBy: { createdAt: 'desc' },
+      include: { tool: { include: { translations: true, category: { include: { translations: true } } } } },
+    }),
+    db.subscriber.findUnique({ where: { email: user.email.toLowerCase() } }),
+  ])
+  const newsletterOn = !!subscriber && !subscriber.unsubscribedAt && !!subscriber.confirmedAt
+
   return (
     <div className="container">
       <div className="page-head">
-        <h1>Your account</h1>
+        <h1>{user.name ? `Hi, ${user.name}` : 'Your account'}</h1>
         <p style={{ color: 'var(--muted)' }}>{user.email}</p>
       </div>
       {welcome && <div className="auth-ok">Thank you. Your PRO access is being activated and appears here within a minute.</div>}
+      {saved && <div className="auth-ok">Saved.</div>}
       {error === 'stripe' && <div className="auth-error">Payments are not available yet. Please try again soon.</div>}
-      <div className="account-grid">
-        <div className="plan">
-          <div className="plan-name">
-            Plan {pro && <span className="badge-pro pro-on-dark">PRO</span>}
+      {error === 'password' && <div className="auth-error">The current password is not correct.</div>}
+      {error === 'short' && <div className="auth-error">The new password must have at least 8 characters.</div>}
+
+      <div className="dash">
+        <aside className="dash-side">
+          <div className={`dash-card ${pro ? 'dash-pro' : ''}`}>
+            <h2>
+              {pro ? 'PRO' : 'Free plan'} {pro && <span className="badge-pro pro-on-dark">Active</span>}
+            </h2>
+            <p>
+              {pro
+                ? sub?.cancelAtPeriodEnd
+                  ? `PRO stays active until ${fmt(sub.currentPeriodEnd)} and will not renew.`
+                  : sub?.currentPeriodEnd
+                    ? `Next payment on ${fmt(sub.currentPeriodEnd)}.`
+                    : 'All sections are open to you.'
+                : `PRO is ${PRO_PRICE_LABEL}: Grow and Privacy sections, video tutorials and full analyses.`}
+            </p>
+            {!pro && (
+              <form method="post" action="/api/stripe/checkout">
+                <button className="btn btn-blue" type="submit" disabled={!stripeReady()}>
+                  {checkout ? 'Continue to payment' : 'Get PRO'}
+                </button>
+                {!stripeReady() && <p className="dash-stat">Payments are being set up.</p>}
+              </form>
+            )}
+            {user.stripeCustomerId && (
+              <form method="post" action="/api/stripe/portal" style={{ marginTop: 12 }}>
+                <button className={`btn ${pro ? 'btn-yellow' : 'btn-outline-dark'}`} type="submit">
+                  Billing and invoices
+                </button>
+              </form>
+            )}
           </div>
-          <p style={{ fontSize: 18 }}>
-            {pro
-              ? sub?.cancelAtPeriodEnd
-                ? `PRO is active until ${fmt(sub.currentPeriodEnd)} and will not renew.`
-                : sub?.currentPeriodEnd
-                  ? `PRO is active. Next payment on ${fmt(sub.currentPeriodEnd)}.`
-                  : 'PRO is active.'
-              : `You are on the free plan. PRO is ${PRO_PRICE_LABEL}: Grow and Privacy sections, video tutorials and full analyses.`}
-          </p>
-          {!pro && (
-            <form method="post" action="/api/stripe/checkout">
-              <button className="btn btn-blue" type="submit" disabled={!stripeReady()}>
-                {checkout ? 'Continue to payment' : 'Get PRO'}
-              </button>
-              {!stripeReady() && <p style={{ fontSize: 14, color: 'var(--muted)' }}>Payments are being set up.</p>}
-            </form>
-          )}
-          {user.stripeCustomerId && (
-            <form method="post" action="/api/stripe/portal">
+          <div className="dash-card">
+            <nav className="dash-nav">
+              <a href="#saved">Saved tools</a>
+              {pro && <Link href="/analyses">Analyses</Link>}
+              {pro && <Link href="/s/grow">Grow</Link>}
+              {pro && <Link href="/s/privacy">Privacy</Link>}
+              <a href="#profile">Profile</a>
+              <a href="#password">Password</a>
+              <a href="#newsletter">Newsletter</a>
+              <Link href="/contact">Help</Link>
+            </nav>
+            <form method="post" action="/api/auth/logout" style={{ marginTop: 14 }}>
               <button className="btn btn-outline-dark" type="submit">
-                Manage billing and invoices
+                Log out
               </button>
             </form>
-          )}
-        </div>
-        <div className="plan">
-          <div className="plan-name">Account</div>
-          <form method="post" action="/api/auth/logout">
-            <button className="btn btn-outline-dark" type="submit">
-              Log out
-            </button>
-          </form>
-          <p style={{ fontSize: 15, color: 'var(--muted)' }}>
-            Need help? <Link href="/contact">Contact us</Link>.
-          </p>
+          </div>
+        </aside>
+
+        <div className="dash-main">
+          <section className="dash-card" id="saved">
+            <h2>Saved tools</h2>
+            {favs.length === 0 ? (
+              <p style={{ color: 'var(--muted)' }}>
+                Nothing saved yet. Press Save on a tool page and it appears here. <Link href="/s/wallet">Browse the store</Link>.
+              </p>
+            ) : (
+              <div className="fav-grid">
+                {favs.map((f) => {
+                  const t = pick(f.tool.translations)
+                  return (
+                    <AppCard
+                      key={f.toolId}
+                      tool={{
+                        id: f.tool.id, slug: f.tool.slug, title: f.tool.title, logoUrl: f.tool.logoUrl, coverUrl: f.tool.coverUrl,
+                        description: t?.description ?? null, categorySlug: f.tool.category.slug,
+                        categoryName: pick(f.tool.category.translations)?.name ?? f.tool.category.slug,
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </section>
+
+          <section className="dash-card" id="profile">
+            <h2>Profile</h2>
+            <form method="post" action="/api/account/profile" className="row-form">
+              <label>
+                Your name
+                <input name="name" defaultValue={user.name ?? ''} maxLength={80} />
+              </label>
+              <button className="btn btn-blue" type="submit">
+                Save
+              </button>
+            </form>
+          </section>
+
+          <section className="dash-card" id="password">
+            <h2>Change password</h2>
+            <form method="post" action="/api/account/password" className="row-form">
+              <label>
+                Current password
+                <input name="current" type="password" required autoComplete="current-password" />
+              </label>
+              <label>
+                New password (8+ characters)
+                <input name="next" type="password" required minLength={8} autoComplete="new-password" />
+              </label>
+              <button className="btn btn-blue" type="submit">
+                Change
+              </button>
+            </form>
+          </section>
+
+          <section className="dash-card" id="newsletter">
+            <h2>Newsletter</h2>
+            <p style={{ color: 'var(--muted)' }}>{newsletterOn ? 'You receive our newsletter.' : 'You are not subscribed to the newsletter.'}</p>
+            <form method="post" action="/api/account/newsletter">
+              <input type="hidden" name="on" value={newsletterOn ? '0' : '1'} />
+              <button className="btn btn-outline-dark" type="submit">
+                {newsletterOn ? 'Unsubscribe' : 'Subscribe'}
+              </button>
+            </form>
+          </section>
         </div>
       </div>
     </div>
