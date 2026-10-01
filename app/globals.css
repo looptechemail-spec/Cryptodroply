@@ -473,3 +473,7 @@ body { background: var(--paper); }
 .post-row .post-thumb { width: 120px; height: 68px; object-fit: cover; border-radius: 12px; flex: none; background: var(--tint); }
 .post-row.has-thumb .t { flex: 1; }
 @media (max-width: 860px) { .post-row.has-thumb { flex-direction: row; } .post-row .post-thumb { width: 88px; height: 50px; } }
+
+/* mobile: il menu scompare scorrendo in basso e torna scorrendo in alto */
+.site-header { transition: transform 0.25s ease; }
+@media (max-width: 900px) { .site-header.is-hidden { transform: translateY(-100%); } }

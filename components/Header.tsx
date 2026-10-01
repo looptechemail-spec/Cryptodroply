@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Logo from './Logo'
+import HeaderAutoHide from './HeaderAutoHide'
 import { getCategories } from '@/lib/content'
 import { getUser } from '@/lib/auth'
 import { SECTIONS, sectionHref, CATEGORY_BLURBS } from '@/lib/sections'
@@ -9,6 +10,7 @@ export default async function Header() {
   const user = await getUser().catch(() => null)
   return (
     <header className="site-header">
+      <HeaderAutoHide />
       <div className="container">
         <Logo />
         <nav className="nav" aria-label="Main">
