@@ -61,6 +61,7 @@ export async function importCsvFiles(log: (m: string) => void) {
     const low = head.map((h) => h.toLowerCase().trim())
     let n = 0
     for (const r of rows) {
+     try {
       const get = (...names: string[]) => { for (const nm of names) { const i = low.indexOf(nm); if (i >= 0 && r[i]?.trim()) return r[i] } return null }
       const title = plain(get('title'))
       if (!title) continue
@@ -106,6 +107,9 @@ export async function importCsvFiles(log: (m: string) => void) {
         }
       }
       n++; total++
+     } catch (e) {
+      log(`ERRORE ${file} riga "${r[0]}": ${String((e as Error).message).slice(-300)}`)
+     }
     }
     log(`${file}: ${n} tool (categoria ${category.slug})`)
   }
