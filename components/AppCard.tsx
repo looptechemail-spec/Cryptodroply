@@ -16,6 +16,15 @@ export function AppCard({ tool, pro = false, base }: { tool: AppTool; pro?: bool
       <AppIcon tool={tool} />
       <div className="app-card-body">
         <div className="app-name">{tool.title}</div>
+        {!!tool.tags?.length && (
+          <div className="app-tags">
+            {tool.tags.slice(0, 4).map((g) => (
+              <span key={g.label} className="app-tag">
+                <span aria-hidden="true">{g.emoji}</span> {g.label}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="app-desc">{tool.description}</div>
       </div>
       <div className="app-card-foot">

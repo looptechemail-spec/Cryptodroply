@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getCategories, getSectionTools } from '@/lib/content'
+import { getCategories, getSectionData } from '@/lib/content'
 import CategoryAccordion, { type Group } from '@/components/CategoryAccordion'
 import { SECTIONS, CATEGORY_BLURBS, CATEGORY_INTROS } from '@/lib/sections'
 import { hasPro } from '@/lib/access'
@@ -24,7 +24,8 @@ export default async function SectionPage({ params }: Props) {
 
   const locked = section.pro && !(await hasPro())
   const cats = locked ? [] : (await getCategories()).filter((c) => c.wixId && section.collections.includes(c.wixId))
-  const tools = locked ? [] : await getSectionTools(section.collections, 300)
+  const data = locked ? { tools: [], facets: {} as Record<string, import('@/lib/tags').Facet[]> } : await getSectionData(section.collections, 300)
+  const tools = data.tools
   const groups: Group[] = cats
     .map((c) => ({
       slug: c.slug,
@@ -33,6 +34,7 @@ export default async function SectionPage({ params }: Props) {
       intro: CATEGORY_INTROS[c.wixId!] ?? '',
       count: c.count,
       tools: tools.filter((t) => t.categorySlug === c.slug),
+      facets: data.facets[c.slug] ?? [],
     }))
     .filter((g) => g.tools.length)
 

@@ -7,6 +7,7 @@ import { hasPro, isProCollection, PRO_PRICE_LABEL } from '@/lib/access'
 import { Paywall } from '@/components/Paywall'
 import { getUser } from '@/lib/auth'
 import { FavButton } from '@/components/FavButton'
+import { toolTags } from '@/lib/tags'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,6 +89,7 @@ export default async function ToolPage({ params }: Props) {
   const facts = tool.category.attributes
     .map((a) => ({ label: a.labelEn, value: values[a.key] }))
     .filter((f) => f.value)
+  const tags = toolTags(tool.category.attributes, tool.attributes)
   const sections = [
     { title: 'What it is', html: t?.whatIs },
     { title: 'How it works', html: t?.howItWorks },
@@ -108,6 +110,15 @@ export default async function ToolPage({ params }: Props) {
             <div className="tool-logo">{tool.logoUrl && <img src={tool.logoUrl} alt={`${tool.title} logo`} />}</div>
             <div style={{ flexGrow: 1 }}>
               <h1>{tool.title}</h1>
+              {tags.length > 0 && (
+                <div className="app-tags hero-tags">
+                  {tags.slice(0, 10).map((g) => (
+                    <span key={g.label} className="app-tag">
+                      <span aria-hidden="true">{g.emoji}</span> {g.label}
+                    </span>
+                  ))}
+                </div>
+              )}
               {t?.description && <p>{t.description}</p>}
             </div>
             <div className="tool-actions">

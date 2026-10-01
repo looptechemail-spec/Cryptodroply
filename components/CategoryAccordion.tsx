@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { AppCard } from './AppCard'
+import ToolExplorer from './ToolExplorer'
+import type { Facet } from '@/lib/tags'
 import type { AppTool } from '@/lib/content'
 
-export type Group = { slug: string; name: string; blurb: string; intro: string; count: number; tools: AppTool[] }
+export type Group = { slug: string; name: string; blurb: string; intro: string; count: number; tools: AppTool[]; facets: Facet[] }
 
 export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pro: boolean }) {
   const [open, setOpen] = useState<string | null>(groups[0]?.slug ?? null)
@@ -39,11 +40,7 @@ export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pr
             <Link href={`/${g.slug}`}>Open page</Link>
           </div>
           {g.intro && <p className="panel-intro">{g.intro}</p>}
-          <div className="app-grid">
-            {g.tools.map((t) => (
-              <AppCard key={t.id} tool={t} pro={pro} />
-            ))}
-          </div>
+          <ToolExplorer tools={g.tools} facets={g.facets} pro={pro} />
         </div>
       ))}
     </div>

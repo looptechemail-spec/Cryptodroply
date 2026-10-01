@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { analyze, type Tag, type Facet } from '@/lib/tags'
 
 export type CategoryInfo = { id: string; slug: string; wixId: string | null; name: string; count: number }
 
@@ -39,17 +40,27 @@ export type AppTool = {
   description: string | null
   categorySlug: string
   categoryName: string
+  tags?: Tag[]
+  vals?: Record<string, string[]>
 }
 
-/** I tool pubblicati di una sezione, nel formato usato dalle schede "app store". */
-export async function getSectionTools(collections: string[], take = 12): Promise<AppTool[]> {
+/** I tool pubblicati di una sezione, nel formato usato dalle schede "app store", con tag e filtri per categoria. */
+export async function getSectionData(collections: string[], take = 12): Promise<{ tools: AppTool[]; facets: Record<string, Facet[]> }> {
   const rows = await db.tool.findMany({
     where: { status: 'PUBLISHED', category: { wixId: { in: collections } } },
     orderBy: [{ category: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
     take,
-    include: { translations: true, category: { include: { translations: true } } },
+    include: { translations: true, category: { include: { translations: true, attributes: { orderBy: { sortOrder: 'asc' } } } } },
   })
-  return rows.map((t) => ({
+  const facets: Record<string, Facet[]> = {}
+  const info: Record<string, { tags: Tag[]; vals: Record<string, string[]> }> = {}
+  for (const slug of new Set(rows.map((r) => r.category.slug))) {
+    const group = rows.filter((r) => r.category.slug === slug)
+    const a = analyze(group[0].category.attributes, group.map((r) => ({ id: r.id, attributes: r.attributes })))
+    facets[slug] = a.facets
+    Object.assign(info, a.tools)
+  }
+  const tools = rows.map((t) => ({
     id: t.id,
     slug: t.slug,
     title: t.title,
@@ -58,5 +69,12 @@ export async function getSectionTools(collections: string[], take = 12): Promise
     description: pick(t.translations)?.description ?? null,
     categorySlug: t.category.slug,
     categoryName: pick(t.category.translations)?.name ?? t.category.slug,
+    tags: info[t.id]?.tags ?? [],
+    vals: info[t.id]?.vals ?? {},
   }))
+  return { tools, facets }
+}
+
+export async function getSectionTools(collections: string[], take = 12): Promise<AppTool[]> {
+  return (await getSectionData(collections, take)).tools
 }
