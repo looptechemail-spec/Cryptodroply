@@ -56,14 +56,17 @@ export default async function Analyses() {
           </Link>
         </div>
       ) : (
-        <div className="posts" style={{ margin: '28px 0 72px' }}>
+        <div className="post-grid">
           {posts.map((p) => {
             const t = pick(p.translations, loc)
             const cat = p.category ? pick(p.category.translations, loc)?.name : null
             return (
-              <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
-                <span className="t">{cleanText(t?.title)}</span>
-                <span className="m">{[cat, fmt(p.publishedAt)].filter(Boolean).join(', ')}</span>
+              <Link key={p.id} href={`/post/${p.slug}`} className="post-card">
+                {p.coverUrl ? <img src={p.coverUrl} alt="" className="post-card-img" loading="lazy" /> : <span className="post-card-img post-card-ph" aria-hidden="true"><img src="/logo.png" alt="" width={44} height={52} /></span>}
+                <span className="post-card-body">
+                  <span className="post-card-meta">{[cat, fmt(p.publishedAt)].filter(Boolean).join(' · ')}</span>
+                  <span className="post-card-title">{cleanText(t?.title)}</span>
+                </span>
               </Link>
             )
           })}
