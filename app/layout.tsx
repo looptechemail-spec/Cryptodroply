@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const clean = stripLang((h.get('x-pathname') ?? '/').split('?')[0].split('#')[0]).replace(/\/$/, '')
   const en = `${SITE}${clean || '/'}`
   const it = `${SITE}/it${clean}`
-  const noLang = /^\/(admin|account|login|signup|forgot|reset|s)(\/|$)/.test(clean)
+  const noLang = /^\/(admin|account|login|signup|forgot|reset)(\/|$)/.test(clean)
   return {
     metadataBase: new URL(SITE),
     alternates: noLang ? { canonical: lang === 'it' ? it : en } : { canonical: lang === 'it' ? it : en, languages: { en, it, 'x-default': en } },

@@ -7,7 +7,7 @@ export type Lang = 'en' | 'it'
 export function lp(path: string, lang: Lang): string {
   if (lang !== 'it' || !path.startsWith('/') || path.startsWith('//')) return path
   if (path === '/it' || path.startsWith('/it/') || path.startsWith('/it?') || path.startsWith('/it#')) return path
-  if (/^\/(api|admin|media|go|r|s)([/?#]|$)/.test(path)) return path
+  if (/^\/(api|admin|media|go|r)([/?#]|$)/.test(path)) return path
   if (path === '/') return '/it'
   if (path.startsWith('/?') || path.startsWith('/#')) return '/it' + path.slice(1)
   return '/it' + path
