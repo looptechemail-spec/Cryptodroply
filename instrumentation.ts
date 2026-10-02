@@ -16,6 +16,16 @@ export async function register() {
     setInterval(() => {
       import('./lib/ai-content').then((m) => m.tickAutomation((x) => console.log('[auto] ' + x))).catch((e) => console.error('auto:', e))
     }, 60 * 60 * 1000)
+    // lancio: si tolgono le bozze SEO automatiche (una volta sola) e si copiano sul sito le immagini rimaste su Wix
+    void (async () => {
+      try {
+        const m = await import('./lib/launch')
+        await m.clearSeoDraftsOnce((x) => console.log('[launch] ' + x))
+        await m.mirrorWixImages((x) => console.log('[launch] ' + x))
+      } catch (e) {
+        console.error('launch:', e)
+      }
+    })()
     void (async () => {
       try {
         const { db } = await import('./lib/db')

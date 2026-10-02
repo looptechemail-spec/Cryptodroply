@@ -297,6 +297,39 @@ ${source}`,
   return `${n} bozze create`
 }
 
+/** Pagina SEO pubblicata -> tre bozze (X, Telegram, Facebook) su Publer, con il link alla pagina. */
+export async function runSocialForSeoPage(slug: string, whenLocal?: string): Promise<string> {
+  const page = await db.seoPage.findUnique({ where: { slug } })
+  if (!page) throw new Error('pagina non trovata')
+  const link = `${siteUrl()}/best/${page.slug}`
+  const out = await ask({
+    model: FAST(), maxTokens: 1000,
+    system: `You write social posts for Cryptodroply, a directory of crypto tools. ${STYLE}`,
+    prompt: `Write three posts announcing this curated list page. Use only what the text says, invent nothing, no price talk.
+Title: ${page.title}
+Intro: ${clean(page.intro).slice(0, 1500)}
+Telegram: 3 to 5 short lines, one emoji allowed. X: under 250 characters before the link, at most 2 hashtags. Facebook: 3 to 4 short lines, no hashtags.
+Do not add the link, it is added later.
+Answer ONLY with:
+<tg>...</tg><x>...</x><fb>...</fb>`,
+  })
+  const when = whenLocal ? romeToDate(whenLocal) : tomorrowRome(12)
+  let n = 0
+  const errors: string[] = []
+  for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
+    const text = tag(out, tg)
+    if (text.length < 15) continue
+    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news' } })
+    try {
+      const job = await sendToPubler(row, 'draft')
+      await db.socialPost.update({ where: { id: row.id }, data: { status: 'PUBLER', publerRef: `draft:${job}`, sentAt: new Date() } })
+      n++
+    } catch (e) { errors.push((e as Error).message.slice(0, 120)) }
+  }
+  if (!n) throw new Error(errors[0] ?? 'nessun post nella risposta')
+  return `${n} bozze su Publer${errors.length ? ` (errori: ${[...new Set(errors)].join('; ')})` : ''}`
+}
+
 /** Un articolo per il blog, in bozza, su un tema di attualità utile ai principianti. */
 export async function runWeeklyArticle(topicHint?: string): Promise<string> {
   const recent = await db.postTranslation.findMany({ where: { locale: 'EN' }, orderBy: { post: { createdAt: 'desc' } }, take: 25, select: { title: true } })
