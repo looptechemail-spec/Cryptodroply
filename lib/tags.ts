@@ -25,8 +25,8 @@ export const labelOf = (raw: string) => cap(LABELS[raw.trim().toLowerCase()] ?? 
 // etichette dei campi in italiano (chiave = etichetta inglese in minuscolo)
 const LABELS_IT: Record<string, string> = {
   difficulty: 'Difficoltà', platform: 'Piattaforma', platforms: 'Piattaforme', custody: 'Custodia', kyc: 'KYC', cashback: 'Cashback',
-  fees: 'Commissioni', fee: 'Commissione', risk: 'Rischio', yield: 'Rendimento', assets: 'Asset', asset: 'Asset', reward: 'Ricompensa', rewards: 'Ricompense',
-  frequency: 'Frequenza', requirements: 'Requisiti', requirement: 'Requisito', claim: 'Riscossione', earnings: 'Guadagni', earning: 'Guadagno',
+  fees: 'Commissioni', fee: 'Commissione', risk: 'Rischio', yield: 'Ricompense', assets: 'Asset', asset: 'Asset', reward: 'Ricompensa', rewards: 'Ricompense',
+  frequency: 'Frequenza', requirements: 'Requisiti', requirement: 'Requisito', claim: 'Riscossione', earnings: 'Ricompense', earning: 'Ricompensa',
   referral: 'Referral', 'open source': 'Open source', free: 'Gratis', 'free / paid': 'Gratis / A pagamento', access: 'Accesso', browser: 'Browser',
   mobile: 'Mobile', pc: 'PC', desktop: 'Desktop', dapp: 'dApp', dapps: 'dApp', iban: 'IBAN', sepa: 'SEPA', deposit: 'Deposito',
   'card network': 'Circuito', 'based in': 'Sede', 'supported coins': 'Monete supportate', 'monthly fees': 'Spese mensili',

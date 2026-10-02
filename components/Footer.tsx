@@ -39,7 +39,7 @@ export default async function Footer() {
           <b>{t('Company', 'Azienda')}</b>
           <Link href="/best">{t('Best lists', 'Le migliori liste')}</Link>
           <Link href="/blog">Blog</Link>
-          <Link href="/affiliate">{t('Earn 30%', 'Guadagna il 30%')}</Link>
+          <Link href="/affiliate">{t('Earn 30%', 'Affiliati 30%')}</Link>
           <Link href="/contact">{t('Contact', 'Contatti')}</Link>
           <Link href="/privacy-policy">{t('Privacy policy', 'Privacy policy')}</Link>
           <Link href="/cookie-policy">{t('Cookie policy', 'Cookie policy')}</Link>

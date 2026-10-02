@@ -94,7 +94,7 @@ export default async function Account({ searchParams }: { searchParams: Promise<
           <div className="dash-card">
             <nav className="dash-nav">
               <a href="#saved">{t('Saved tools', 'Strumenti salvati')}</a>
-              <a href="#earn">{t('Earn 30%', 'Guadagna il 30%')}</a>
+              <a href="#earn">{t('Earn 30%', 'Affiliati 30%')}</a>
               {pro && <Link href="/analyses">{t('Analyses', 'Analisi')}</Link>}
               {pro && <Link href="/s/grow">Grow</Link>}
               {pro && <Link href="/s/privacy">Privacy</Link>}
@@ -139,11 +139,11 @@ export default async function Account({ searchParams }: { searchParams: Promise<
           </section>
 
           <section className="dash-card" id="earn">
-            <h2>{t(`Earn ${COMMISSION_RATE * 100}% on every PRO you bring`, `Guadagna il ${COMMISSION_RATE * 100}% su ogni PRO che porti`)}</h2>
+            <h2>{t(`Earn ${COMMISSION_RATE * 100}% on every PRO you bring`, `Ricevi il ${COMMISSION_RATE * 100}% su ogni PRO che porti`)}</h2>
             <p style={{ color: 'var(--muted)' }}>
               {t(
                 `Share your personal link. When someone signs up through it and subscribes to PRO, you earn ${COMMISSION_RATE * 100}% of what they pay (${euro(1400 * COMMISSION_RATE)} on each €14 payment${RECURRING ? ', every month they stay' : ', on the first payment'}).`,
-                `Condividi il tuo link personale. Quando qualcuno si registra con quel link e sottoscrive PRO, guadagni il ${COMMISSION_RATE * 100}% di ciò che paga (${euro(1400 * COMMISSION_RATE)} su ogni pagamento da €14${RECURRING ? ', ogni mese in cui resta iscritto' : ', sul primo pagamento'}).`,
+                `Condividi il tuo link personale. Quando qualcuno si registra con quel link e sottoscrive PRO, ricevi il ${COMMISSION_RATE * 100}% di ciò che paga (${euro(1400 * COMMISSION_RATE)} su ogni pagamento da €14${RECURRING ? ', ogni mese in cui resta iscritto' : ', sul primo pagamento'}).`,
               )}
             </p>
             <CopyLink value={refLink} lang={lang} />

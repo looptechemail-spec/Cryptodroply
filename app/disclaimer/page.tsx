@@ -14,14 +14,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Disclaimer() {
   const { t, it } = await i18n()
   return (
-    <LegalPage title="Disclaimer" intro={t('Not financial advice, and how we earn money.', 'Nessuna consulenza finanziaria, e come guadagniamo.')}>
+    <LegalPage title="Disclaimer" intro={t('Not financial advice, and how we earn money.', 'Nessuna consulenza finanziaria, e come si sostiene il sito.')}>
       <div className="sec">
         <h2>{t('Not financial advice', 'Nessuna consulenza finanziaria')}</h2>
         <p>{t('Cryptodroply provides information and education only. Nothing on this site, including analyses, tutorials and tool reviews, is investment, financial, tax or legal advice, or an invitation to buy or sell any asset. Do your own research and talk to a qualified professional before you decide.', 'Cryptodroply offre solo informazione ed educazione. Nulla su questo sito, comprese analisi, tutorial e recensioni degli strumenti, costituisce consulenza in materia di investimenti, finanza, fisco o legge, né un invito ad acquistare o vendere alcun asset. Fai le tue ricerche e parla con un professionista qualificato prima di decidere.')}</p>
       </div>
       <div className="sec">
         <h2>{t('Crypto is risky', 'Le crypto sono rischiose')}</h2>
-        <p>{t('Crypto assets are volatile and you can lose all the money you put in. Airdrops, meme tokens and new protocols carry extra risk, including scams and smart contract failures. Past results do not guarantee future results. Only use money you can afford to lose and never share your seed phrase.', 'Le crypto-attività sono volatili e puoi perdere tutto il denaro che investi. Airdrop, meme token e nuovi protocolli comportano rischi aggiuntivi, tra cui truffe e guasti degli smart contract. I risultati passati non garantiscono risultati futuri. Usa solo denaro che puoi permetterti di perdere e non condividere mai la tua seed phrase.')}</p>
+        <p>{t('Crypto assets are volatile and you can lose all the money you put in. Airdrops, meme tokens and new protocols carry extra risk, including scams and smart contract failures. Past results do not guarantee future results. Only use money you can afford to lose and never share your seed phrase.', 'Le crypto-attività sono volatili e puoi perdere tutto ciò che hai messo. Airdrop, meme token e nuovi protocolli comportano rischi aggiuntivi, tra cui truffe e guasti degli smart contract. I risultati passati non garantiscono risultati futuri. Usa solo denaro che puoi permetterti di perdere e non condividere mai la tua seed phrase.')}</p>
       </div>
       <div className="sec">
         <h2>{t('Affiliate disclosure', 'Informativa sull\'affiliazione')}</h2>

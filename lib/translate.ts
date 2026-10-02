@@ -10,7 +10,7 @@ const FAST = () => process.env.AI_MODEL ?? 'claude-haiku-4-5-20251001'
 const WRITER = () => process.env.AI_MODEL_ARTICLE ?? 'claude-sonnet-5-5'
 
 const SYSTEM = `You are a professional translator for Cryptodroply, a crypto tools directory. Translate from English to natural, clear Italian for crypto beginners and intermediate users. Keep the same tone, sentence length and structure.
-Rules: keep Markdown, HTML, links, image URLs, line breaks and emphasis exactly as they are, translating only the visible words. Do not translate brand names, product names, tickers, URLs, email addresses or code. Keep numbers, prices and symbols. Use "crypto", "wallet", "exchange", "airdrop", "staking", "blockchain" as Italians do (do not translate them). Never add comments or explanations. Never use long dashes. Answer ONLY with the requested blocks.`
+Rules: keep Markdown, HTML, links, image URLs, line breaks and emphasis exactly as they are, translating only the visible words. Do not translate brand names, product names, tickers, URLs, email addresses or code. Keep numbers, prices and symbols. Use "crypto", "wallet", "exchange", "airdrop", "staking", "blockchain" as Italians do (do not translate them). Never add comments or explanations. Never use long dashes. Avoid explicit financial or promotional wording in Italian: never write guadagnare, guadagno, guadagni, investire, investimento, investi, rendimento, profitto, soldi or denaro. Use neutral words instead: ottenere, ricevere, usare, valutare, decidere, ricompense, fondi, costi. Never promise returns or results. Answer ONLY with the requested blocks.`
 
 async function ask(model: string, prompt: string, maxTokens: number): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY
@@ -57,6 +57,13 @@ export async function translateMissing(log: (m: string) => void = () => {}, limi
   if (!process.env.ANTHROPIC_API_KEY) { log('ANTHROPIC_API_KEY mancante: traduzione non avviata'); return stats }
   running = true
   try {
+    // una volta sola: si cancellano le traduzioni fatte prima della regola sul linguaggio non finanziario, così vengono rifatte
+    if (!(await db.jobRun.findUnique({ where: { key: 'translate-it-purge-2' } }))) {
+      await db.toolTranslation.deleteMany({ where: { locale: 'IT' } })
+      await db.postTranslation.deleteMany({ where: { locale: 'IT' } })
+      await db.jobRun.create({ data: { key: 'translate-it-purge-2', note: 'rifatte senza termini finanziari' } })
+      log('traduzioni precedenti cancellate, si rifanno con il nuovo linguaggio')
+    }
     // categorie: nome italiano fisso (non serve l'IA)
     const cats = await db.category.findMany({ include: { translations: true } })
     for (const c of cats) {
