@@ -456,6 +456,13 @@ model JobRun {
   note   String?
 }
 
+// Interruttori delle email automatiche (se manca la riga, l'email è attiva)
+model EmailFlow {
+  key       String   @id
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
 // Email della sequenza di benvenuto già inviate (una riga per iscritto e passo)
 model EmailSent {
   subscriberId String

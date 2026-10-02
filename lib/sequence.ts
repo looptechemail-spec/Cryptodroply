@@ -1,6 +1,8 @@
 /** Sequenza di benvenuto per gli iscritti alla newsletter: giorno 0, 2 e 5. Parte da sola ogni ora, solo se le email sono configurate. */
 import { db } from './db'
-import { sendEmail, siteUrl, button } from './email'
+import { siteUrl, button } from './email'
+import { flowEnabled, sendFlow } from './email-gate'
+import { tplOnboarding2, tplOnboarding3 } from './email-templates'
 import { wrap } from './newsletter'
 import { cleanText } from './clean'
 
@@ -13,7 +15,7 @@ const STEPS = [
 
 const link = (href: string, label: string) => `<a href="${siteUrl()}${href}" style="color:#3c53f4;font-weight:700;text-decoration:none">${label}</a>`
 
-async function welcome() {
+export async function welcome() {
   const posts = await db.post.findMany({
     where: { status: 'PUBLISHED', access: 'FREE' }, orderBy: { publishedAt: 'desc' }, take: 3,
     include: { translations: { where: { locale: 'EN' } } },
@@ -29,7 +31,7 @@ async function welcome() {
   }
 }
 
-const usecase = () => ({
+export const usecase = () => ({
   subject: 'How to choose your wallet in 5 minutes',
   html: `<h2>How to choose your wallet in 5 minutes</h2><p>The wallet is where your crypto really lives, so it is the first choice that matters.</p><ol>
 <li><b>How much do you hold?</b> Small amounts to try things: a hot wallet (app or browser) is enough. Larger amounts you plan to keep: a cold wallet, a device that keeps your keys offline.</li>
@@ -44,7 +46,7 @@ function teaser(md: string) {
   return cleanText(words.slice(0, 130).join(' ')) + (words.length > 130 ? '...' : '')
 }
 
-async function pro() {
+export async function pro() {
   const slug = process.env.SAMPLE_ANALYSIS_SLUG
   const post =
     (slug ? await db.post.findUnique({ where: { slug }, include: { translations: { where: { locale: 'EN' } } } }) : null) ??
@@ -59,8 +61,46 @@ async function pro() {
   }
 }
 
+const NL_FLOW: Record<string, string> = { welcome: 'newsletter-welcome', usecase: 'newsletter-usecase', pro: 'newsletter-pro' }
+
+/** Benvenuto per chi si registra sul sito: l'email 1 parte alla registrazione, la 2 dopo 2 giorni e la 3 dopo 5. Solo a chi non ha PRO e non ha chiesto di fermarle. */
+async function tickOnboarding(log: (m: string) => void) {
+  const since = new Date(Math.max(Date.now() - 9 * DAY, new Date(process.env.ONBOARDING_FROM ?? '2026-10-02T16:00:00Z').getTime()))
+  const steps = [
+    { key: 'onboarding-2', day: 2, build: tplOnboarding2 },
+    { key: 'onboarding-3', day: 5, build: tplOnboarding3 },
+  ]
+  const active = []
+  for (const st of steps) if (await flowEnabled(st.key)) active.push(st)
+  if (!active.length) return
+  const users = await db.user.findMany({
+    where: { createdAt: { gte: since }, wixMemberId: null, role: 'USER' },
+    select: { id: true, email: true, name: true, createdAt: true, subscription: { select: { status: true } } },
+    take: 500,
+  })
+  const sent = await db.emailSent.findMany({ where: { subscriberId: { in: users.map((u) => u.id) } } })
+  const done = new Set(sent.map((e) => `${e.subscriberId}:${e.step}`))
+  const now = Date.now()
+  for (const u of users) {
+    if (done.has(`${u.id}:onboarding-optout`)) continue
+    if (u.subscription && ['ACTIVE', 'TRIALING'].includes(u.subscription.status)) continue
+    const age = now - u.createdAt.getTime()
+    for (const st of active) {
+      if (done.has(`${u.id}:${st.key}`) || age < st.day * DAY || age > (st.day + 4) * DAY) continue
+      const ok = await sendFlow(st.key, { to: u.email, ...st.build(u.name, u.id) }).catch(() => false)
+      if (ok) { await db.emailSent.create({ data: { subscriberId: u.id, step: st.key } }).catch(() => undefined); log(`${st.key} -> ${u.email}`) }
+      break // un solo passo per giro
+    }
+  }
+}
+
 export async function tickSequence(log: (m: string) => void = () => {}) {
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) return
+  await tickOnboarding(log).catch((e) => console.error('onboarding:', e))
+  await tickNewsletterSequence(log)
+}
+
+async function tickNewsletterSequence(log: (m: string) => void) {
   const now = Date.now()
   const subs = await db.subscriber.findMany({
     where: { confirmedAt: { gte: new Date(now - 10 * DAY) }, unsubscribedAt: null },
@@ -75,8 +115,9 @@ export async function tickSequence(log: (m: string) => void = () => {}) {
     const age = now - s.confirmedAt!.getTime()
     for (const st of STEPS) {
       if (done.has(`${s.id}:${st.key}`) || age < st.day * DAY || age > (st.day + 4) * DAY) continue
+      if (!(await flowEnabled(NL_FLOW[st.key]))) break
       const c = await content[st.key]()
-      const ok = await sendEmail({ to: s.email, subject: c.subject, html: wrap(c.html, s.id) }).catch(() => false)
+      const ok = await sendFlow(NL_FLOW[st.key], { to: s.email, subject: c.subject, html: wrap(c.html, s.id) }).catch(() => false)
       if (ok) { await db.emailSent.create({ data: { subscriberId: s.id, step: st.key } }).catch(() => undefined); log(`sequenza ${st.key} -> ${s.email}`) }
       break // un solo passo per giro
     }

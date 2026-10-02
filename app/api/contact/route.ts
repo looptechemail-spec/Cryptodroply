@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { absUrl } from '@/lib/url'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { sendEmail } from '@/lib/email'
+import { sendFlow } from '@/lib/email-gate'
+import { tplContact } from '@/lib/email-templates'
 
 const TYPES = { contact: 'CONTACT', project: 'LIST_PROJECT', collab: 'COLLAB' } as const
 
@@ -23,8 +24,7 @@ export async function POST(req: Request) {
   await db.formSubmission.create({ data: { type: TYPES[d.topic], email: d.email, payload: { name: d.name, message: d.message } } })
   const to = process.env.CONTACT_TO ?? process.env.EMAIL_FROM
   if (to) {
-    const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
-    await sendEmail({ to, subject: `New message (${d.topic}) from ${d.name || d.email}`, html: `<p><b>${esc(d.name)}</b> &lt;${esc(d.email)}&gt;</p><p>${esc(d.message).replace(/\n/g, '<br>')}</p>` }).catch(() => false)
+    await sendFlow('contact-notify', { to, ...tplContact(d) }).catch(() => false)
   }
   return NextResponse.redirect(absUrl('/contact?sent=1', req), 303)
 }
