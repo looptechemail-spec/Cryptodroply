@@ -7,14 +7,16 @@ import { importCsv, prepareWeek, sendAll } from '@/lib/social-actions'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-export default async function ToolPosts({ searchParams }: { searchParams: Promise<{ v?: string }> }) {
+export default async function ToolPosts({ searchParams }: { searchParams: Promise<{ v?: string; msg?: string }> }) {
   await requireAdmin()
-  const view = (await searchParams).v === 'sent' ? 'sent' : 'review'
+  const sp = await searchParams
+  const view = sp.v === 'sent' ? 'sent' : 'review'
   const runs = await db.jobRun.findMany({ where: { OR: [{ key: { startsWith: 'manual-week' } }, { key: { startsWith: 'manual-csv' } }, { key: { startsWith: 'weekplan' } }] }, orderBy: { ranAt: 'desc' }, take: 5 })
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
       <h1>Tool posts</h1>
       <AdminNav />
+      {sp.msg && <div style={{ background: /error/i.test(sp.msg) ? '#fde8ea' : '#e6f6ea', borderRadius: 12, padding: '12px 16px', margin: '12px 0', fontWeight: 600 }}>{sp.msg}</div>}
       <p>
         One tool or article per day on X, Telegram and Facebook, at 10:00. Every Friday from 09:00 the next week is prepared on its own and lands on Publer as drafts.
         You can also prepare a week now, or upload a Publer CSV.

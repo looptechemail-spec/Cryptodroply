@@ -7,14 +7,16 @@ import { findNews, newsFromText, sendAll } from '@/lib/social-actions'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-export default async function News({ searchParams }: { searchParams: Promise<{ v?: string }> }) {
+export default async function News({ searchParams }: { searchParams: Promise<{ v?: string; msg?: string }> }) {
   await requireAdmin()
-  const view = (await searchParams).v === 'sent' ? 'sent' : 'review'
+  const sp = await searchParams
+  const view = sp.v === 'sent' ? 'sent' : 'review'
   const runs = await db.jobRun.findMany({ where: { OR: [{ key: { startsWith: 'manual-news' } }, { key: { startsWith: 'social-' } }] }, orderBy: { ranAt: 'desc' }, take: 5 })
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
       <h1>News posts</h1>
       <AdminNav />
+      {sp.msg && <div style={{ background: /error/i.test(sp.msg) ? '#fde8ea' : '#e6f6ea', borderRadius: 12, padding: '12px 16px', margin: '12px 0', fontWeight: 600 }}>{sp.msg}</div>}
       <p>
         Every day the site looks for the most useful crypto news of the last 24 hours and writes posts for X, Telegram and Facebook.
         Or paste a text or a link yourself and it writes the posts. Everything goes to Publer when you say so.
