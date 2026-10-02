@@ -1,7 +1,7 @@
 /** Versione italiana di sezioni, categorie e descrizioni (stessa chiave dei testi inglesi in sections.ts). */
 export const SECTION_IT: Record<string, { title: string; description: string; intro: string }> = {
   'free-earn': {
-    title: 'Crypto gratis',
+    title: 'Gratis',
     description: 'Modi per ricevere crypto con airdrop, faucet, attività e giochi.',
     intro: 'Parti da qui se vuoi ricevere crypto senza spendere nulla. Gli airdrop premiano i primi utenti di un nuovo progetto, anche chi prova reti ancora in sviluppo, i faucet regalano piccole somme gratuite, le piattaforme di attività pagano per lavoretti semplici e i giochi possono pagare in token.',
   },
