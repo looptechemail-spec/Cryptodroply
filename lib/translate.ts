@@ -35,12 +35,12 @@ async function ask(model: string, prompt: string, maxTokens: number): Promise<st
 async function translateFields(model: string, fields: Record<string, string | null | undefined>, maxTokens: number): Promise<Record<string, string>> {
   const entries = Object.entries(fields).filter(([, v]) => v && v.trim())
   if (!entries.length) return {}
-  const prompt = `Translate each block to Italian. Reply with the same blocks, same names, in the same order:\n<f name="NAME">translated text</f>\n\n` + entries.map(([k, v]) => `<f name="${k}">${v}</f>`).join('\n\n')
+  const prompt = `Translate each block to Italian. Reply with the same blocks, same names, in the same order:\n<f name="field_name">translated text</f>\n\n` + entries.map(([k, v]) => `<f name="${k}">${v}</f>`).join('\n\n')
   const out = await ask(model, prompt, maxTokens)
   const res: Record<string, string> = {}
   for (const m of out.matchAll(/<f name="([\w]+)">([\s\S]*?)<\/f>/g)) {
     const text = m[2].trim()
-    if (text) res[m[1]] = text
+    if (text && entries.some(([k]) => k === m[1])) res[m[1]] = text // solo i campi richiesti (mai il segnaposto dell'esempio)
   }
   return res
 }
