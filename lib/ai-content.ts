@@ -99,7 +99,7 @@ Answer ONLY with these blocks:
   for (const m of out.matchAll(/<post channel="(telegram|x|facebook)">([\s\S]*?)<\/post>/gi)) {
     const text = m[2].trim().replace(/\s*https?:\/\/\S+\s*$/, '')
     if (text.length < 10) continue
-    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3000), linkUrl: link, scheduledAt: when } })
+    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'tool' } })
     n++
   }
   if (!n) throw new Error('nessun post nella risposta')
@@ -200,7 +200,7 @@ ${brief}`,
     for (const [ch, tagName] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
       const text = tag(m[3], tagName)
       if (text.length < 20) continue
-      const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: cand.link, scheduledAt: when } })
+      const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: cand.link, scheduledAt: when, source: 'tool' } })
       n++
       try {
         const job = await sendToPubler(row, 'draft')
@@ -246,7 +246,7 @@ Answer ONLY with:
   for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
     const text = tag(out, tg)
     if (text.length < 20) continue
-    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when } })
+    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'article' } })
     try {
       const job = await sendToPubler(row, 'scheduled')
       await db.socialPost.update({ where: { id: row.id }, data: { status: 'PUBLER', publerRef: `scheduled:${job}`, sentAt: new Date() } })
@@ -257,6 +257,44 @@ Answer ONLY with:
     }
   }
   return `Pubblicato. ${ok} post programmati su Publer per ${when.toISOString()}${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''}`
+}
+
+
+/** Notizia o contenuto incollato (testo o indirizzo web) -> tre bozze (X, Telegram, Facebook) per Publer. */
+export async function runNewsFromText(input: string, whenLocal?: string): Promise<string> {
+  const raw = input.trim()
+  if (raw.length < 15) throw new Error('Incolla un testo o un indirizzo web')
+  let source = raw, link: string | null = null
+  if (/^https?:\/\/\S+$/.test(raw)) {
+    link = raw
+    const res = await fetch(raw, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; CryptodroplyBot)' } }).catch(() => null)
+    if (!res?.ok) throw new Error('Non riesco ad aprire quell\'indirizzo, incolla il testo')
+    source = (await res.text()).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 7000)
+  } else {
+    link = raw.match(/https?:\/\/\S+/)?.[0] ?? null
+  }
+  const out = await ask({
+    model: FAST(), maxTokens: 1200,
+    system: `You write social posts for Cryptodroply, a directory of crypto tools. ${STYLE}`,
+    prompt: `Write three posts about the content below for ordinary crypto users. Use only what the content says, invent nothing, no price talk.
+Telegram: 3 to 5 short lines, one emoji allowed. X: under 250 characters before the link, at most 2 hashtags. Facebook: 3 to 4 short lines, no hashtags.
+Do not add any link, it is added later.
+Answer ONLY with:
+<tg>...</tg><x>...</x><fb>...</fb>
+
+CONTENT:
+${source}`,
+  })
+  const when = whenLocal ? romeToDate(whenLocal) : tomorrowRome(12)
+  let n = 0
+  for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
+    const text = tag(out, tg)
+    if (text.length < 15) continue
+    await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news' } })
+    n++
+  }
+  if (!n) throw new Error('nessun post nella risposta')
+  return `${n} bozze create`
 }
 
 /** Un articolo per il blog, in bozza, su un tema di attualità utile ai principianti. */

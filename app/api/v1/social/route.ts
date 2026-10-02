@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const p = z.array(item).max(50).safeParse(Array.isArray(json) ? json : [json])
   if (!p.success) return NextResponse.json({ error: p.error.flatten() }, { status: 400 })
   const rows = await Promise.all(p.data.map((x) => db.socialPost.create({ data: { ...x, scheduledAt: x.scheduledAt ? new Date(x.scheduledAt) : null } })))
-  return NextResponse.json({ created: rows.map((r) => r.id), review: '/admin/social' })
+  return NextResponse.json({ created: rows.map((r) => r.id), review: '/admin/news' })
 }
 
 /** n8n: legge i post APPROVATI il cui orario è arrivato (?channel=telegram per filtrare). */

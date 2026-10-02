@@ -72,6 +72,7 @@ export default async function Articles() {
           {runs.map((r) => <li key={r.key}>{r.ranAt.toISOString().slice(0, 16).replace('T', ' ')}: {r.note}</li>)}
         </ul>
       )}
+      <p><a href="/admin/seo">Best-of pages (SEO)</a> are managed here too.</p>
       {drafts.length === 0 && <p>No drafts.</p>}
       {drafts.map((p) => {
         const t = p.translations.find((x) => x.locale === 'EN')

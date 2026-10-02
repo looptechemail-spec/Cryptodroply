@@ -442,6 +442,7 @@ model SocialPost {
   status      String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
   scheduledAt DateTime?
   sentAt      DateTime?
+  source      String    @default("news") // tool (post giornalieri sugli strumenti), news (notizie), article (nuovo articolo)
   publerRef   String? // stato e id del lavoro su Publer (es. "draft:6810dec6...")
   createdAt   DateTime  @default(now())
 
