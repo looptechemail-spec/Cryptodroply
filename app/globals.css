@@ -181,7 +181,7 @@ body { background: var(--paper); }
 .hero-chips.dark a { background: #fff; border-color: var(--line); color: #000; box-shadow: var(--shadow-1); }
 .hero-chips.dark a:hover { background: var(--tint); }
 
-.stack { position: relative; height: 500px; }
+.stack { position: relative; height: 560px; }
 .stack-card { position: absolute; width: 132px; height: 132px; border-radius: 32px; background: #fff; padding: 12px; box-shadow: 0 30px 60px -20px rgba(6, 12, 80, 0.6), 0 8px 18px rgba(6, 12, 80, 0.25); transition: transform 0.3s ease; }
 .stack-card img { width: 100%; height: 100%; object-fit: contain; border-radius: 22px; }
 .stack-0 { left: 6%; top: 4%; transform: rotate(-8deg); }
@@ -258,6 +258,8 @@ body { background: var(--paper); }
 .h3d-key { width: 112px; right: -7%; bottom: 1%; z-index: 5; animation-delay: -1.5s; }
 .h3d-chart { width: 112px; left: 2%; bottom: 4%; z-index: 5; animation-delay: -3.5s; }
 .h3d-lock { width: 84px; left: 64%; top: 31%; z-index: 5; animation-delay: -4.5s; }
+.h3d-airdrop { width: 118px; left: 21%; top: -8%; z-index: 5; animation-delay: -2.2s; }
+.h3d-faucet { width: 112px; left: 21%; bottom: -8%; z-index: 5; animation-delay: -4.2s; }
 .h3d-gear { width: 90px; left: -9%; bottom: -5%; animation-delay: -5.5s; }
 @keyframes h3d-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
 @media (prefers-reduced-motion: reduce) { .h3d { animation: none; } }
@@ -265,6 +267,8 @@ body { background: var(--paper); }
   .hero-icons { inset: 0; }
   .h3d { transform: scale(0.62); transform-origin: center; }
   .h3d-lock, .h3d-gear, .h3d-chart, .h3d-gem, .h3d-shield { display: none; }
+  .h3d-airdrop { width: 84px; top: -10%; }
+  .h3d-faucet { width: 80px; bottom: -8%; }
   .h3d-coin { z-index: 5; left: -3%; top: -4%; }
 }
 

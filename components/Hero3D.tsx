@@ -172,11 +172,44 @@ function Gem() {
   )
 }
 
+function Airdrop() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="ha1" a="#fff0a0" b="#f2a800" /><Grad id="ha2" a="#8fa0ff" b="#3a4cd8" /></defs>
+      <g stroke="#fff" strokeOpacity=".85" strokeWidth="2.500" strokeLinecap="round"><path d="M16 56 52 94M42 58 54 94M78 58 66 94M104 56 68 94" /></g>
+      <path d="M8 58C8 28 32 10 60 10s52 18 52 48c-8-9-18-9-26 0-8-9-18-9-26 0-8-9-18-9-26 0-8-9-18-9-26 0z" transform="translate(0 6)" fill="#b87400" />
+      <path d="M8 58C8 28 32 10 60 10s52 18 52 48c-8-9-18-9-26 0-8-9-18-9-26 0-8-9-18-9-26 0-8-9-18-9-26 0z" fill="url(#ha1)" />
+      <path d="M60 10C44 20 38 38 42 58M60 10C76 20 82 38 78 58" fill="none" stroke="#d98a00" strokeWidth="3" />
+      <path d="M22 40a40 32 0 0 1 22-24" fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="6" strokeLinecap="round" />
+      <rect x="44" y="98" width="32" height="22" rx="6" fill="#1f2c9c" />
+      <rect x="44" y="93" width="32" height="22" rx="6" fill="url(#ha2)" />
+      <circle cx="60" cy="104" r="6" fill="#ffd23d" /><circle cx="60" cy="104" r="3" fill="#c98a00" />
+    </svg>
+  )
+}
+
+function Faucet() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hf1" a="#f4f7ff" b="#8596d6" /><Grad id="hf2" a="#ff9a8a" b="#e03a3a" /><Grad id="hf3" a="#fff0a0" b="#f0a400" x2={0.6} y2={1} /></defs>
+      <g fill="#4d5fb0" transform="translate(0 6)"><rect x="6" y="28" width="76" height="26" rx="12" /><rect x="58" y="46" width="26" height="30" rx="9" /><rect x="34" y="16" width="10" height="14" rx="3" /></g>
+      <rect x="6" y="28" width="76" height="26" rx="12" fill="url(#hf1)" /><rect x="58" y="46" width="26" height="30" rx="9" fill="url(#hf1)" />
+      <rect x="34" y="16" width="10" height="14" rx="3" fill="#b8c4f0" />
+      <rect x="20" y="6" width="38" height="12" rx="6" fill="url(#hf2)" />
+      <path d="M12 36h50" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeOpacity=".8" />
+      <path d="M71 80c0 5-4 8-4 11" fill="none" stroke="#7fb4ff" strokeWidth="5" strokeLinecap="round" strokeOpacity=".8" />
+      <circle cx="71" cy="106" r="13" fill="#a86b00" transform="translate(0 4)" /><circle cx="71" cy="106" r="13" fill="url(#hf3)" /><circle cx="71" cy="106" r="8" fill="none" stroke="#c98200" strokeWidth="2.500" />
+      <path d="M96 66c0 4-3 6-3 9a3 3 0 0 0 6 0c0-3-3-5-3-9z" fill="#7fb4ff" />
+    </svg>
+  )
+}
+
 const ICONS: { cls: string; el: ReactNode }[] = [
   { cls: 'coin', el: <Coin /> }, { cls: 'wallet', el: <Wallet /> }, { cls: 'exchange', el: <Exchange /> },
   { cls: 'magnifier', el: <Magnifier /> }, { cls: 'shield', el: <Shield /> }, { cls: 'gift', el: <Gift /> },
   { cls: 'key', el: <Key /> }, { cls: 'chart', el: <Chart /> }, { cls: 'lock', el: <Lock /> },
   { cls: 'gear', el: <Gear /> }, { cls: 'gem', el: <Gem /> },
+  { cls: 'airdrop', el: <Airdrop /> }, { cls: 'faucet', el: <Faucet /> },
 ]
 
 export function Hero3D() {
