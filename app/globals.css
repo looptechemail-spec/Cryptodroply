@@ -250,9 +250,10 @@ body { background: var(--paper); }
 .h3d svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .h3d-coin { width: 132px; left: -7%; top: -6%; transform: rotate(-12deg); animation-delay: -1s; }
 .h3d-wallet { width: 142px; left: 60%; top: -10%; z-index: 5; animation-delay: -3s; }
-.h3d-gem { width: 84px; right: 6%; top: -9%; z-index: 5; animation-delay: -2s; }
+.h3d-rocket { width: 124px; right: 0%; top: -9%; z-index: 5; animation-delay: -2s; }
+.h3d-card { width: 112px; right: -8%; top: 14%; z-index: 5; animation-delay: -3.3s; }
 .h3d-exchange { width: 122px; right: -9%; top: 37%; z-index: 5; animation-delay: -4s; }
-.h3d-gift { width: 114px; left: -6%; top: 36%; z-index: 5; animation-delay: -5s; }
+.h3d-device { width: 112px; left: -5%; top: 33%; z-index: 5; animation-delay: -5s; }
 .h3d-magnifier { width: 150px; right: 20%; bottom: -3%; z-index: 6; animation-delay: -2.5s; }
 .h3d-shield { width: 106px; left: 41%; bottom: -9%; z-index: 5; animation-delay: -6s; }
 .h3d-key { width: 112px; right: -7%; bottom: 1%; z-index: 5; animation-delay: -1.5s; }
@@ -266,7 +267,7 @@ body { background: var(--paper); }
 @media (max-width: 900px) {
   .hero-icons { inset: 0; }
   .h3d { transform: scale(0.62); transform-origin: center; }
-  .h3d-lock, .h3d-gear, .h3d-chart, .h3d-gem, .h3d-shield { display: none; }
+  .h3d-lock, .h3d-gear, .h3d-chart, .h3d-rocket, .h3d-shield { display: none; }
   .h3d-airdrop { width: 84px; top: -10%; }
   .h3d-faucet { width: 80px; bottom: -8%; }
   .h3d-coin { z-index: 5; left: -3%; top: -4%; }

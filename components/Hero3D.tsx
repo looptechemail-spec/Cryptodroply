@@ -83,21 +83,6 @@ function Shield() {
   )
 }
 
-function Gift() {
-  return (
-    <svg viewBox="0 0 120 120">
-      <defs><Grad id="hg1" a="#ff9db3" b="#e0305a" /><Grad id="hg2" a="#ffb2c4" b="#f04a72" /><Grad id="hg3" a="#fff0a0" b="#f4b400" x2={1} y2={0} /></defs>
-      <rect x="20" y="58" width="80" height="54" rx="9" fill="#a81d41" />
-      <rect x="20" y="53" width="80" height="54" rx="9" fill="url(#hg1)" />
-      <rect x="13" y="36" width="94" height="24" rx="8" fill="#c22a4f" />
-      <rect x="13" y="32" width="94" height="24" rx="8" fill="url(#hg2)" />
-      <rect x="53" y="32" width="14" height="75" fill="url(#hg3)" />
-      <path d="M60 32C44 30 34 20 42 13c8-6 18 6 18 19zM60 32c16-2 26-12 18-19-8-6-18 6-18 19z" fill="none" stroke="#f4b400" strokeWidth="7" strokeLinejoin="round" />
-      <path d="M24 66v36" stroke="#fff" strokeOpacity=".35" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 function Key() {
   return (
     <svg viewBox="0 0 120 120">
@@ -160,18 +145,6 @@ function Gear() {
   )
 }
 
-function Gem() {
-  return (
-    <svg viewBox="0 0 120 120">
-      <defs><Grad id="hd1" a="#c9d3ff" b="#6a7cf0" /><Grad id="hd2" a="#9fb0ff" b="#4a5de0" /></defs>
-      <path d="M60 10 24 62l36 20z" fill="url(#hd1)" /><path d="M60 10 96 62 60 82z" fill="url(#hd2)" />
-      <path d="M24 70 60 92 96 70 60 114z" fill="#3946b8" transform="translate(0 -2)" />
-      <path d="M24 70 60 90v24z" fill="#8c9cff" transform="translate(0 -2)" /><path d="M96 70 60 90v24z" fill="#5063e0" transform="translate(0 -2)" />
-      <path d="M60 10 24 62 60 50z" fill="#fff" fillOpacity=".3" />
-    </svg>
-  )
-}
-
 function Airdrop() {
   return (
     <svg viewBox="0 0 120 120">
@@ -204,11 +177,63 @@ function Faucet() {
   )
 }
 
+function Device() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hv1" a="#5b6390" b="#1d2244" x2={0.4} y2={1} /><Grad id="hv2" a="#f4f6ff" b="#98a4d8" /></defs>
+      <g transform="rotate(-10 60 60)">
+        <rect x="46" y="96" width="28" height="20" rx="5" fill="url(#hv2)" />
+        <rect x="32" y="12" width="56" height="92" rx="15" fill="#0d1130" />
+        <rect x="32" y="8" width="56" height="92" rx="15" fill="url(#hv1)" />
+        <rect x="40" y="18" width="40" height="30" rx="6" fill="#070a24" />
+        <path d="M51 34l6 6 11-12" fill="none" stroke="#5cf0a0" strokeWidth="4.500" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="48" cy="68" r="6" fill="#aab4e8" /><circle cx="72" cy="68" r="6" fill="#aab4e8" />
+        <rect x="46" y="82" width="28" height="5" rx="2.500" fill="#ffd23d" />
+        <path d="M36 24v50" stroke="#fff" strokeOpacity=".28" strokeWidth="3.500" strokeLinecap="round" />
+      </g>
+    </svg>
+  )
+}
+
+function Card() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hd1" a="#b58cff" b="#3f4fe8" x2={1} y2={1} /><Grad id="hd2" a="#fff0a0" b="#e8a000" /></defs>
+      <g transform="rotate(-14 60 60)">
+        <rect x="6" y="36" width="108" height="70" rx="13" fill="#212e9c" />
+        <rect x="6" y="28" width="108" height="70" rx="13" fill="url(#hd1)" />
+        <rect x="6" y="44" width="108" height="12" fill="#1b2488" fillOpacity=".7" />
+        <rect x="18" y="62" width="26" height="19" rx="5" fill="url(#hd2)" />
+        <path d="M18 71h26M31 62v19" stroke="#b87a00" strokeWidth="1.500" />
+        <circle cx="86" cy="76" r="11" fill="#ffd23d" fillOpacity=".95" /><circle cx="97" cy="76" r="11" fill="#fff" fillOpacity=".55" />
+        <path d="M14 34a10 10 0 0 1 9-5" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="4" strokeLinecap="round" />
+      </g>
+    </svg>
+  )
+}
+
+function Rocket() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hr2" a="#ffffff" b="#aebcf5" x2={1} y2={0} /><Grad id="hr3" a="#fff1a0" b="#ff6a1a" /></defs>
+      <g transform="rotate(38 60 60)">
+        <path d="M51 88Q60 124 69 88Z" fill="url(#hr3)" />
+        <path d="M50 70 31 92l19-5zM70 70l19 22-19-5z" fill="#c92c4c" />
+        <path d="M60 6c20 18 22 50 11 82H49C38 56 40 24 60 6z" transform="translate(0 4)" fill="#6a78c8" />
+        <path d="M60 6c20 18 22 50 11 82H49C38 56 40 24 60 6z" fill="url(#hr2)" />
+        <path d="M60 6C40 24 38 56 49 88H56C48 56 50 26 60 6z" fill="#fff" fillOpacity=".55" />
+        <circle cx="60" cy="44" r="11" fill="#2a3ccf" /><circle cx="60" cy="44" r="7" fill="#7fa0ff" /><circle cx="57" cy="41" r="2.500" fill="#fff" />
+        <path d="M44 62h32" stroke="#e03450" strokeWidth="5" />
+      </g>
+    </svg>
+  )
+}
+
 const ICONS: { cls: string; el: ReactNode }[] = [
   { cls: 'coin', el: <Coin /> }, { cls: 'wallet', el: <Wallet /> }, { cls: 'exchange', el: <Exchange /> },
-  { cls: 'magnifier', el: <Magnifier /> }, { cls: 'shield', el: <Shield /> }, { cls: 'gift', el: <Gift /> },
+  { cls: 'magnifier', el: <Magnifier /> }, { cls: 'shield', el: <Shield /> }, { cls: 'device', el: <Device /> },
   { cls: 'key', el: <Key /> }, { cls: 'chart', el: <Chart /> }, { cls: 'lock', el: <Lock /> },
-  { cls: 'gear', el: <Gear /> }, { cls: 'gem', el: <Gem /> },
+  { cls: 'gear', el: <Gear /> }, { cls: 'rocket', el: <Rocket /> }, { cls: 'card', el: <Card /> },
   { cls: 'airdrop', el: <Airdrop /> }, { cls: 'faucet', el: <Faucet /> },
 ]
 
