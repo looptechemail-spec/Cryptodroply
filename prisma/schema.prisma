@@ -442,6 +442,7 @@ model SocialPost {
   status      String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
   scheduledAt DateTime?
   sentAt      DateTime?
+  publerRef   String? // stato e id del lavoro su Publer (es. "draft:6810dec6...")
   createdAt   DateTime  @default(now())
 
   @@index([status, scheduledAt])

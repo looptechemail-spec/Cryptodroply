@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
-import { runDailySocial, runWeeklyArticle, runWeeklyDigest } from '@/lib/ai-content'
+import { runDailySocial, runToolSocial, runWeeklyArticle, runWeeklyDigest } from '@/lib/ai-content'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -14,6 +14,7 @@ async function run(fd: FormData) {
   let note = ''
   try {
     if (job === 'social') note = `${await runDailySocial()} social drafts created`
+    else if (job === 'tool') note = await runToolSocial(String(fd.get('tool') ?? '').trim() || undefined)
     else if (job === 'article') note = `Article draft: ${await runWeeklyArticle(String(fd.get('topic') ?? '').trim() || undefined)}`
     else if (job === 'digest') note = `Newsletter draft ${await runWeeklyDigest()}`
   } catch (e) {
@@ -39,6 +40,10 @@ export default async function Automation() {
       <form action={run} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '16px 0' }}>
         <button name="job" value="social" className="btn btn-sm">Run now: social drafts</button>
         <button name="job" value="digest" className="btn btn-sm">Run now: newsletter draft</button>
+        <span style={{ display: 'flex', gap: 6 }}>
+          <input name="tool" placeholder="tool name (optional)" style={{ padding: 8 }} />
+          <button name="job" value="tool" className="btn btn-sm">Tool posts for tomorrow 12:00</button>
+        </span>
         <span style={{ display: 'flex', gap: 6 }}>
           <input name="topic" placeholder="optional topic" style={{ padding: 8 }} />
           <button name="job" value="article" className="btn btn-sm">Run now: article draft</button>

@@ -6,7 +6,10 @@ import { db } from './db'
 import { siteUrl } from './email'
 import { buildDigest, mainList } from './newsletter'
 import { slugify } from './v1'
+import { SECTIONS } from './sections'
+import { tomorrowRome } from './time'
 
+const PRO_COLLECTIONS = SECTIONS.filter((x) => x.pro).flatMap((x) => x.collections)
 const FAST = () => process.env.AI_MODEL ?? 'claude-haiku-4-5-20251001'
 const WRITER = () => process.env.AI_MODEL_ARTICLE ?? 'claude-sonnet-5-5'
 
@@ -53,6 +56,53 @@ Answer ONLY with blocks in this exact format, nothing else:
   }
   if (!n) throw new Error('nessun post nella risposta')
   return n
+}
+
+
+/** Post su uno strumento (Telegram, X, Facebook) programmati per domani alle 12:00 ora di Roma, in bozza. Senza nome sceglie uno strumento gratuito non ancora usato. */
+export async function runToolSocial(query?: string, when: Date = tomorrowRome(12)): Promise<string> {
+  const base = {
+    status: 'PUBLISHED' as const,
+    category: { wixId: { notIn: PRO_COLLECTIONS } },
+  }
+  let tool = query
+    ? await db.tool.findFirst({ where: { ...base, title: { contains: query, mode: 'insensitive' } }, include: { translations: true, category: true } })
+    : null
+  if (query && !tool) throw new Error(`Strumento "${query}" non trovato`)
+  if (!tool) {
+    const used = await db.socialPost.findMany({ where: { linkUrl: { not: null } }, select: { linkUrl: true }, take: 500 })
+    const usedSet = new Set(used.map((u) => u.linkUrl))
+    const all = await db.tool.findMany({ where: base, include: { translations: true, category: true }, take: 300 })
+    const fresh = all.filter((t) => !usedSet.has(`${siteUrl()}/${t.category.slug}/${t.slug}`) && t.translations.some((x) => x.locale === 'EN' && x.description))
+    if (!fresh.length) throw new Error('Nessuno strumento nuovo da proporre')
+    tool = fresh[Math.floor(Math.random() * fresh.length)]
+  }
+  const t = tool.translations.find((x) => x.locale === 'EN') ?? tool.translations[0]
+  const link = `${siteUrl()}/${tool.category.slug}/${tool.slug}`
+  const facts = [t?.description, t?.whatIs, t?.fullDescription].filter(Boolean).join('\n').replace(/<[^>]+>/g, ' ').slice(0, 2500)
+  const out = await ask({
+    model: FAST(), maxTokens: 1200,
+    system: `You write social posts for Cryptodroply, a directory of crypto tools. ${STYLE}`,
+    prompt: `Write three posts presenting this tool to ordinary users. Use only the facts below, invent nothing.
+Tool: ${tool.title}
+Facts:
+${facts}
+Link to put at the end of each post: ${link}
+Telegram: 3 to 5 short lines, one emoji allowed. X: under 250 characters before the link, at most 2 hashtags. Facebook: 3 to 4 short lines, friendly, no hashtags.
+Answer ONLY with these blocks:
+<post channel="telegram">text</post>
+<post channel="x">text</post>
+<post channel="facebook">text</post>`,
+  })
+  let n = 0
+  for (const m of out.matchAll(/<post channel="(telegram|x|facebook)">([\s\S]*?)<\/post>/gi)) {
+    const text = m[2].trim().replace(/\s*https?:\/\/\S+\s*$/, '')
+    if (text.length < 10) continue
+    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3000), linkUrl: link, scheduledAt: when } })
+    n++
+  }
+  if (!n) throw new Error('nessun post nella risposta')
+  return `${n} bozze su ${tool.title}, programmate ${when.toISOString()}`
 }
 
 /** Un articolo per il blog, in bozza, su un tema di attualità utile ai principianti. */
