@@ -6,6 +6,7 @@ import { getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
 import { SECTIONS, sectionHref } from '@/lib/sections'
 import { PRO_PRICE_LABEL } from '@/lib/access'
+import { Hero3D } from '@/components/Hero3D'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +87,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="stack" aria-hidden="true">
+            <Hero3D />
             {floaters.map((t, i) => (
               <div key={t.id} className={`stack-card stack-${i}`}>
                 <img src={t.logoUrl!} alt="" />

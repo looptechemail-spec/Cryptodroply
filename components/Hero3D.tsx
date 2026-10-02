@@ -1,0 +1,188 @@
+import React from 'react'
+/** Icone crypto in stile 3D per la home: disegnate in SVG (spessore, luce e ombra), nessuna immagine da caricare. */
+import type { ReactNode } from 'react'
+
+const Grad = ({ id, a, b, x2 = 0, y2 = 1 }: { id: string; a: string; b: string; x2?: number; y2?: number }) => (
+  <linearGradient id={id} x1="0" y1="0" x2={x2} y2={y2}>
+    <stop offset="0" stopColor={a} />
+    <stop offset="1" stopColor={b} />
+  </linearGradient>
+)
+
+function Coin() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hc1" a="#fff0a8" b="#f2a100" x2={0.6} y2={1} /></defs>
+      <circle cx="60" cy="70" r="42" fill="#a86b00" />
+      <circle cx="60" cy="63" r="42" fill="#d98a00" />
+      <circle cx="60" cy="60" r="42" fill="url(#hc1)" />
+      <circle cx="60" cy="60" r="32" fill="none" stroke="#c98200" strokeWidth="3.5" />
+      <rect x="49" y="32" width="5" height="9" rx="2" fill="#a86400" /><rect x="63" y="32" width="5" height="9" rx="2" fill="#a86400" />
+      <rect x="49" y="79" width="5" height="9" rx="2" fill="#a86400" /><rect x="63" y="79" width="5" height="9" rx="2" fill="#a86400" />
+      <path d="M46 40h16c9 0 13 4 13 10 0 5-3 8-8 9 6 1 10 4 10 10 0 7-5 11-15 11H46z M56 48v8h6c3 0 5-1.500 5-4s-2-4-5-4z M56 63v9h7c4 0 6-2 6-4.500S67 63 63 63z" fill="#a86400" fillRule="evenodd" />
+      <path d="M26 46a36 36 0 0 1 30-22" fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Wallet() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hw1" a="#a9b6ff" b="#4a5ff0" /><Grad id="hw2" a="#ffe566" b="#f2b800" /><Grad id="hw3" a="#fff6c4" b="#ffd23d" /></defs>
+      <rect x="22" y="22" width="62" height="30" rx="7" fill="url(#hw3)" transform="rotate(-8 50 40)" />
+      <rect x="12" y="44" width="96" height="62" rx="15" fill="#25309f" />
+      <rect x="12" y="38" width="96" height="62" rx="15" fill="url(#hw1)" />
+      <path d="M20 52a10 10 0 0 1 10-8h60" fill="none" stroke="#fff" strokeOpacity=".45" strokeWidth="4" strokeLinecap="round" />
+      <rect x="76" y="58" width="38" height="26" rx="11" fill="#b88a00" />
+      <rect x="76" y="55" width="38" height="26" rx="11" fill="url(#hw2)" />
+      <circle cx="91" cy="68" r="5" fill="#8a6500" />
+    </svg>
+  )
+}
+
+function Exchange() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="he1" a="#9ff7da" b="#0fae83" x2={0.5} y2={1} /></defs>
+      <circle cx="60" cy="70" r="42" fill="#0a7f61" />
+      <circle cx="60" cy="63" r="42" fill="#0c9873" />
+      <circle cx="60" cy="60" r="42" fill="url(#he1)" />
+      <g fill="none" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M34 48h50M70 34l15 14-15 14" />
+        <path d="M86 74H36M50 60 35 74l15 14" />
+      </g>
+      <path d="M26 44a36 36 0 0 1 28-20" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Magnifier() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hm1" a="#6f82ff" b="#1c2a9e" /><Grad id="hm2" a="#ffe566" b="#f0a800" x2={1} y2={1} /><Grad id="hm3" a="#e9f0ff" b="#8fb4ff" /></defs>
+      <line x1="80" y1="86" x2="106" y2="112" stroke="#a87300" strokeWidth="17" strokeLinecap="round" />
+      <line x1="78" y1="82" x2="104" y2="108" stroke="url(#hm2)" strokeWidth="16" strokeLinecap="round" />
+      <circle cx="52" cy="56" r="34" fill="#141e78" />
+      <circle cx="52" cy="52" r="34" fill="url(#hm1)" />
+      <circle cx="52" cy="52" r="25" fill="url(#hm3)" fillOpacity=".92" />
+      <path d="M34 46a19 19 0 0 1 14-14" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+      <circle cx="62" cy="64" r="3.500" fill="#fff" fillOpacity=".7" />
+    </svg>
+  )
+}
+
+function Shield() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hs1" a="#8bf5b4" b="#12a152" x2={0.4} y2={1} /></defs>
+      <path d="M60 16 100 30v30c0 25-17 42-40 52C37 102 20 85 20 60V30z" transform="translate(0 7)" fill="#0b6e36" />
+      <path d="M60 14 100 28v30c0 25-17 42-40 52C37 100 20 83 20 58V28z" fill="url(#hs1)" />
+      <path d="M60 14 20 28v30c0 25 17 42 40 52z" fill="#fff" fillOpacity=".16" />
+      <path d="M41 58l13 13 26-27" fill="none" stroke="#fff" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function Gift() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hg1" a="#ff9db3" b="#e0305a" /><Grad id="hg2" a="#ffb2c4" b="#f04a72" /><Grad id="hg3" a="#fff0a0" b="#f4b400" x2={1} y2={0} /></defs>
+      <rect x="20" y="58" width="80" height="54" rx="9" fill="#a81d41" />
+      <rect x="20" y="53" width="80" height="54" rx="9" fill="url(#hg1)" />
+      <rect x="13" y="36" width="94" height="24" rx="8" fill="#c22a4f" />
+      <rect x="13" y="32" width="94" height="24" rx="8" fill="url(#hg2)" />
+      <rect x="53" y="32" width="14" height="75" fill="url(#hg3)" />
+      <path d="M60 32C44 30 34 20 42 13c8-6 18 6 18 19zM60 32c16-2 26-12 18-19-8-6-18 6-18 19z" fill="none" stroke="#f4b400" strokeWidth="7" strokeLinejoin="round" />
+      <path d="M24 66v36" stroke="#fff" strokeOpacity=".35" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Key() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hk1" a="#fff0a0" b="#eea500" x2={1} y2={1} /></defs>
+      <g transform="rotate(-35 60 60)">
+        <g fill="#a87300" transform="translate(0 6)"><circle cx="30" cy="60" r="24" /><rect x="46" y="54" width="68" height="13" rx="6" /><rect x="88" y="64" width="10" height="17" rx="3" /><rect x="102" y="64" width="9" height="12" rx="3" /></g>
+        <g fill="url(#hk1)"><circle cx="30" cy="60" r="24" /><rect x="46" y="54" width="68" height="13" rx="6" /><rect x="88" y="64" width="10" height="17" rx="3" /><rect x="102" y="64" width="9" height="12" rx="3" /></g>
+        <circle cx="30" cy="60" r="9" fill="#2533b8" />
+        <path d="M14 50a20 20 0 0 1 12-10" fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="5" strokeLinecap="round" />
+      </g>
+    </svg>
+  )
+}
+
+function Chart() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hh1" a="#3a4bd0" b="#141e78" /><Grad id="hh2" a="#7bf2b0" b="#14a85a" /><Grad id="hh3" a="#ff9aa8" b="#e03450" /></defs>
+      <rect x="10" y="22" width="100" height="90" rx="16" fill="#0d1450" />
+      <rect x="10" y="16" width="100" height="90" rx="16" fill="url(#hh1)" />
+      <path d="M22 88 46 66l16 10 30-30" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="3" strokeDasharray="1 7" strokeLinecap="round" />
+      <g strokeLinecap="round"><line x1="34" y1="42" x2="34" y2="92" stroke="#14a85a" strokeWidth="3" /><line x1="60" y1="34" x2="60" y2="84" stroke="#e03450" strokeWidth="3" /><line x1="86" y1="28" x2="86" y2="76" stroke="#14a85a" strokeWidth="3" /></g>
+      <rect x="27" y="54" width="14" height="30" rx="4" fill="url(#hh2)" />
+      <rect x="53" y="44" width="14" height="30" rx="4" fill="url(#hh3)" />
+      <rect x="79" y="36" width="14" height="30" rx="4" fill="url(#hh2)" />
+    </svg>
+  )
+}
+
+function Lock() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hl1" a="#d3b8ff" b="#7440f0" /></defs>
+      <path d="M40 58V42a20 20 0 0 1 40 0v16" fill="none" stroke="#9aa0bd" strokeWidth="11" strokeLinecap="round" />
+      <path d="M40 58V42a20 20 0 0 1 40 0v16" fill="none" stroke="#e6e9f7" strokeWidth="8" strokeLinecap="round" />
+      <rect x="22" y="58" width="76" height="56" rx="14" fill="#4a24b0" />
+      <rect x="22" y="52" width="76" height="56" rx="14" fill="url(#hl1)" />
+      <circle cx="60" cy="76" r="8" fill="#3a1b8c" /><rect x="56.500" y="78" width="7" height="14" rx="3" fill="#3a1b8c" />
+      <path d="M30 66a8 8 0 0 1 8-6" fill="none" stroke="#fff" strokeOpacity=".55" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Gear() {
+  const teeth = [0, 45, 90, 135, 180, 225, 270, 315]
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hr1" a="#e4ebff" b="#7d92e8" /></defs>
+      <g transform="translate(0 6)" fill="#3e4fb0">
+        {teeth.map((a) => <rect key={a} x="50" y="10" width="20" height="24" rx="5" transform={`rotate(${a} 60 60)`} />)}
+        <circle cx="60" cy="60" r="34" />
+      </g>
+      <g fill="url(#hr1)">
+        {teeth.map((a) => <rect key={a} x="50" y="10" width="20" height="24" rx="5" transform={`rotate(${a} 60 60)`} />)}
+        <circle cx="60" cy="60" r="34" />
+      </g>
+      <circle cx="60" cy="60" r="14" fill="#2533b8" /><circle cx="60" cy="60" r="14" fill="none" stroke="#fff" strokeOpacity=".5" strokeWidth="3" />
+      <path d="M32 48a30 30 0 0 1 14-14" fill="none" stroke="#fff" strokeOpacity=".8" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Gem() {
+  return (
+    <svg viewBox="0 0 120 120">
+      <defs><Grad id="hd1" a="#c9d3ff" b="#6a7cf0" /><Grad id="hd2" a="#9fb0ff" b="#4a5de0" /></defs>
+      <path d="M60 10 24 62l36 20z" fill="url(#hd1)" /><path d="M60 10 96 62 60 82z" fill="url(#hd2)" />
+      <path d="M24 70 60 92 96 70 60 114z" fill="#3946b8" transform="translate(0 -2)" />
+      <path d="M24 70 60 90v24z" fill="#8c9cff" transform="translate(0 -2)" /><path d="M96 70 60 90v24z" fill="#5063e0" transform="translate(0 -2)" />
+      <path d="M60 10 24 62 60 50z" fill="#fff" fillOpacity=".3" />
+    </svg>
+  )
+}
+
+const ICONS: { cls: string; el: ReactNode }[] = [
+  { cls: 'coin', el: <Coin /> }, { cls: 'wallet', el: <Wallet /> }, { cls: 'exchange', el: <Exchange /> },
+  { cls: 'magnifier', el: <Magnifier /> }, { cls: 'shield', el: <Shield /> }, { cls: 'gift', el: <Gift /> },
+  { cls: 'key', el: <Key /> }, { cls: 'chart', el: <Chart /> }, { cls: 'lock', el: <Lock /> },
+  { cls: 'gear', el: <Gear /> }, { cls: 'gem', el: <Gem /> },
+]
+
+export function Hero3D() {
+  return (
+    <div className="hero-icons" aria-hidden="true">
+      {ICONS.map((i) => <span key={i.cls} className={`h3d h3d-${i.cls}`}>{i.el}</span>)}
+    </div>
+  )
+}
