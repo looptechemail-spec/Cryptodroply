@@ -13,6 +13,7 @@ const font = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '700
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? 'https://www.cryptodroply.com'),
+  alternates: { canonical: './' }, // ogni pagina indica il proprio indirizzo ufficiale (senza ?ref= e simili)
   title: {
     default: 'Cryptodroply | Curated Crypto Tools and Privacy Solutions',
     template: '%s | Cryptodroply',

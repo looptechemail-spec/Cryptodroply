@@ -52,8 +52,14 @@ export default async function Home() {
     .slice(0, 3)
   const tones = ['blue', 'yellow', 'ink'] as const
 
+  const siteBase = (process.env.SITE_URL ?? 'https://www.cryptodroply.com').replace(/\/$/, '')
+  const siteLd = [
+    { '@context': 'https://schema.org', '@type': 'Organization', name: 'Cryptodroply', url: siteBase, logo: `${siteBase}/icon.png` },
+    { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Cryptodroply', url: siteBase },
+  ]
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteLd) }} />
       <section className="hero">
         <div className="hero-glow" aria-hidden="true" />
         <div className="container">

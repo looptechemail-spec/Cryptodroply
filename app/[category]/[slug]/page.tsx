@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // l'anteprima quando il link viene condiviso è il logo dello strumento
   const image = tool.logoUrl ?? tool.coverUrl ?? undefined
   return {
-    title: t?.seoTitle ?? tool.title,
+    title: t?.seoTitle ?? `${tool.title}: what it is and how to use it`,
     description,
     openGraph: { title: tool.title, description, images: image ? [image] : undefined },
     twitter: { card: 'summary', title: tool.title, description, images: image ? [image] : undefined },

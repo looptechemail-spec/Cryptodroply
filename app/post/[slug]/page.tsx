@@ -73,6 +73,21 @@ export default async function PostPage({ params }: Props) {
           <div className="md" style={{ margin: '32px 0 72px' }} dangerouslySetInnerHTML={{ __html: html }} />
         </>
       )}
+      {!locked && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org', '@type': 'Article',
+              headline: cleanText(t?.title), description: t?.seoDescription ?? t?.excerpt ?? undefined,
+              image: post.coverUrl ? [post.coverUrl.startsWith('/') ? `${(process.env.SITE_URL ?? 'https://www.cryptodroply.com').replace(/\/$/, '')}${post.coverUrl}` : post.coverUrl] : undefined,
+              datePublished: post.publishedAt?.toISOString(), dateModified: post.updatedAt.toISOString(),
+              author: { '@type': 'Organization', name: 'Cryptodroply' },
+              publisher: { '@type': 'Organization', name: 'Cryptodroply' },
+            }),
+          }}
+        />
+      )}
     </div>
   )
 }
