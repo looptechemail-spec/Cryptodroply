@@ -56,8 +56,8 @@ export const SECTIONS: Section[] = [
   {
     key: 'privacy',
     title: 'Privacy',
-    description: 'Privacy tools, a no-KYC card and services.',
-    intro: 'For people who want to keep their financial activity private. Buy and sell without handing over documents, manage your coins so they are harder to trace and pay with cards that do not ask who you are.',
+    description: 'Tools and guides to protect your personal data and understand how privacy works in crypto.',
+    intro: 'For people who want to understand and protect their personal data when using crypto. Learn how privacy works on public blockchains, which tools help keep your information safe and what the rules are where you live. Always follow the laws and the platform rules of your country.',
     pro: true,
     collections: ['Import1', 'Import2', 'Import4'],
   },
@@ -81,9 +81,9 @@ export const CATEGORY_BLURBS: Record<string, string> = {
   Growth: 'Staking, lending and liquidity tools to earn yield on what you hold.',
   Launchpad: 'Platforms where new tokens are offered before they are widely listed.',
   Trading: 'Trading platforms and tools for spot, futures and charting.',
-  Import1: 'Buy and sell crypto with little or no identity checks.',
-  Import2: 'Tools to manage your coins privately and reduce traceability.',
-  Import4: 'Cards you can get without identity verification.',
+  Import1: 'Peer-to-peer markets and services, explained: how they work, which checks they apply and which rules to follow.',
+  Import2: 'Wallet features and habits that help protect your personal data on public blockchains.',
+  Import4: 'Payment cards that limit the personal data you share, with checks, limits and fees explained.',
   toolsanalysis: 'On-chain and market data to research projects before you invest.',
 }
 
@@ -103,15 +103,17 @@ export const CATEGORY_INTROS: Record<string, string> = {
   Growth: 'Ways to put the crypto you hold to work: staking, lending and liquidity pools pay a yield in return for locking or lending your funds. Yield always comes with risk, and each listing explains what can go wrong.',
   Launchpad: 'Launchpads offer early access to new tokens before they are widely listed. They can be attractive, but early projects are risky, so each listing shows how to join and what to check first.',
   Trading: 'Platforms and tools for active trading, from spot and futures markets to charts and bots. Trading can lose money quickly, so start small and learn how each platform works first.',
-  Import1: 'Ways to buy and sell crypto with little or no identity checks, such as peer-to-peer markets and light-KYC services. Rules differ by country, so check what is allowed where you live.',
-  Import2: 'Tools to manage your coins with more privacy: wallets with coin control, mixing and ways to avoid linking your activity. Each one explains what it hides and what it does not.',
-  Import4: 'Cards you can get without handing over identity documents. Limits are usually lower and rules change by country, so each listing shows what you can expect.',
+  Import1: 'Peer-to-peer markets let people trade directly with each other. Here you learn how they work, how to protect your personal data while using them and how to stay within the rules of your country and of each platform. Always check your local regulations before using any service.',
+  Import2: 'Blockchains are public, so addresses and transactions can be seen by anyone. These tools and guides explain how to protect your data: good wallet habits, careful use of addresses and ways to limit what you share. Each one explains what it protects and what it does not.',
+  Import4: 'Some payment cards ask for fewer personal details and apply lower limits. Each listing explains what the issuer checks, the limits, the fees and the rules that apply by country, so you can decide if it fits your needs. Always follow the rules of your country and of the issuer.',
   toolsanalysis: 'Data tools that show what is happening on chain and in the market: who moves funds, where liquidity flows and which projects are growing. Use them to research before you commit money.',
 }
 
 /** Nome inglese forzato per le categorie il cui nome su Wix è in italiano (chiave = id collezione Wix). */
 export const CATEGORY_NAMES: Record<string, string> = {
+  Import1: 'Peer-to-Peer Markets',
   Import2: 'Privacy Management',
+  Import4: 'Privacy Cards',
 }
 
 /** Categorie assorbite in un'altra: tutti i loro tool passano nella categoria di destinazione. */

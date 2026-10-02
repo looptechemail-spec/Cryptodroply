@@ -27,8 +27,8 @@ export const SECTION_IT: Record<string, { title: string; description: string; in
   },
   privacy: {
     title: 'Privacy',
-    description: 'Strumenti per la privacy, una carta senza KYC e servizi.',
-    intro: 'Per chi vuole tenere privata la propria attività finanziaria. Compra e vendi senza consegnare documenti, gestisci le tue monete in modo che siano più difficili da tracciare e paga con carte che non chiedono chi sei.',
+    description: 'Strumenti e guide per proteggere i tuoi dati personali e capire come funziona la privacy nelle crypto.',
+    intro: 'Per chi vuole capire e proteggere i propri dati personali quando usa le crypto. Scopri come funziona la privacy sulle blockchain pubbliche, quali strumenti aiutano a tenere al sicuro le tue informazioni e quali sono le regole dove vivi. Segui sempre le leggi e le regole delle piattaforme del tuo paese.',
   },
 }
 
@@ -48,9 +48,9 @@ export const CATEGORY_NAMES_IT: Record<string, string> = {
   Growth: 'Crescita',
   Launchpad: 'Launchpad',
   Trading: 'Trading',
-  Import1: 'Acquisto e vendita privati',
+  Import1: 'Mercati peer-to-peer',
   Import2: 'Gestione della privacy',
-  Import4: 'Carte senza KYC',
+  Import4: 'Carte per la privacy',
   toolsanalysis: 'Strumenti di analisi',
 }
 
@@ -69,9 +69,9 @@ export const CATEGORY_BLURBS_IT: Record<string, string> = {
   Growth: 'Strumenti di staking, prestito e liquidità.',
   Launchpad: 'Piattaforme dove i nuovi token vengono offerti prima di essere quotati ovunque.',
   Trading: 'Piattaforme e strumenti di trading per spot, futures e grafici.',
-  Import1: 'Compra e vendi crypto con pochi o nessun controllo d’identità.',
-  Import2: 'Strumenti per gestire le tue monete in privato e ridurre la tracciabilità.',
-  Import4: 'Carte che puoi ottenere senza verifica d’identità.',
+  Import1: 'Mercati e servizi peer-to-peer spiegati: come funzionano, quali controlli applicano e quali regole seguire.',
+  Import2: 'Funzioni e buone abitudini dei wallet che aiutano a proteggere i tuoi dati personali sulle blockchain pubbliche.',
+  Import4: 'Carte di pagamento che limitano i dati personali condivisi, con controlli, limiti e costi spiegati.',
   toolsanalysis: 'Dati on-chain e di mercato per studiare i progetti prima di decidere.',
 }
 
@@ -90,9 +90,9 @@ export const CATEGORY_INTROS_IT: Record<string, string> = {
   Growth: 'Strumenti per approfondire staking, prestiti e pool di liquidità, che funzionano bloccando o prestando i propri fondi. Comportano sempre dei rischi e ogni scheda spiega cosa può andare storto.',
   Launchpad: 'I launchpad offrono accesso anticipato a nuovi token prima che siano quotati ovunque. Possono essere interessanti, ma i progetti nuovi sono rischiosi, quindi ogni scheda mostra come partecipare e cosa controllare prima.',
   Trading: 'Piattaforme e strumenti per il trading attivo, dai mercati spot e futures ai grafici e ai bot. Il trading comporta rischi, quindi inizia in piccolo e impara prima come funziona ogni piattaforma.',
-  Import1: 'Modi per comprare e vendere crypto con pochi o nessun controllo d’identità, come i mercati peer-to-peer e i servizi con KYC leggero. Le regole cambiano da paese a paese, quindi verifica cosa è consentito dove vivi.',
-  Import2: 'Strumenti per gestire le tue monete con più privacy: wallet con controllo delle monete, mixing e modi per evitare di collegare la tua attività. Ognuno spiega cosa nasconde e cosa no.',
-  Import4: 'Carte che puoi ottenere senza consegnare documenti d’identità. I limiti sono di solito più bassi e le regole cambiano da paese a paese, quindi ogni scheda mostra cosa aspettarti.',
+  Import1: 'I mercati peer-to-peer permettono alle persone di scambiare direttamente tra loro. Qui impari come funzionano, come proteggere i tuoi dati personali mentre li usi e come restare nelle regole del tuo paese e di ogni piattaforma. Verifica sempre le norme locali prima di usare un servizio.',
+  Import2: 'Le blockchain sono pubbliche: indirizzi e transazioni possono essere visti da chiunque. Questi strumenti e queste guide spiegano come proteggere i tuoi dati: buone abitudini con il wallet, uso attento degli indirizzi e modi per limitare ciò che condividi. Ognuno spiega cosa protegge e cosa no.',
+  Import4: 'Alcune carte di pagamento chiedono meno dati personali e applicano limiti più bassi. Ogni scheda spiega cosa controlla l’emittente, i limiti, i costi e le regole che valgono nei vari paesi, così puoi decidere se fa per te. Segui sempre le regole del tuo paese e dell’emittente.',
   toolsanalysis: 'Strumenti di dati che mostrano cosa succede on-chain e sul mercato: chi muove i fondi, dove scorre la liquidità e quali progetti crescono. Usali per informarti prima di decidere.',
 }
 
