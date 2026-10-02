@@ -7,7 +7,8 @@ import { siteUrl } from './email'
 import { buildDigest, mainList } from './newsletter'
 import { slugify } from './v1'
 import { SECTIONS } from './sections'
-import { tomorrowRome } from './time'
+import { tomorrowRome, romeToDate } from './time'
+import { sendToPubler } from './publer'
 
 const PRO_COLLECTIONS = SECTIONS.filter((x) => x.pro).flatMap((x) => x.collections)
 const FAST = () => process.env.AI_MODEL ?? 'claude-haiku-4-5-20251001'
@@ -105,6 +106,116 @@ Answer ONLY with these blocks:
   return `${n} bozze su ${tool.title}, programmate ${when.toISOString()}`
 }
 
+
+// --- piano settimanale social: 7 giorni, X + Telegram + Facebook, bozze su Publer ---------------
+
+/** Già pubblicati o caricati a mano su Publer prima dell'automazione: non si ripropongono. */
+const ALREADY_USED = ['safepal-wallet', 'htx', 'phalcon-expl', 'airdrops-io', 'oobit', 'rabby-wallet', 'jupiter', 'goplus', 'galxe', 'travala', 'defillama', 'trezor-wallet', 'uniswap', 'pocket-universe', 'layer3', 'kast', 'dexscreener', 'mica-is-here-which-exchange-and-wallet-to-choose-to-stay-operational-and-keep-control-of-your-funds', 'how-to-prepare-for-crypto-airdrops-full-setup-guide-2026', 'cex-vs-dex-how-crypto-exchanges-work-and-how-to-use-them-safely']
+
+const WEEK_SLOTS: { label: string; cats: string[] }[] = [
+  { label: 'Wallet', cats: ['cold-wallet', 'hot-wallet'] },
+  { label: 'Exchange', cats: ['exchange-cex', 'exchange-dex'] },
+  { label: 'Tools', cats: ['tools-security'] },
+  { label: 'Free Crypto', cats: ['airdrop', 'task-platform', 'faucet', 'gaming-metaverse'] },
+  { label: 'Spend', cats: ['crypto-card', 'spending-tools'] },
+  { label: 'Blog', cats: [] },
+  { label: 'Tools', cats: ['tools-analysis'] },
+]
+
+const shuffle = <T,>(a: T[]) => a.map((x) => [Math.random(), x] as const).sort((p, q) => p[0] - q[0]).map((x) => x[1])
+const clean = (t?: string | null) => (t ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
+/** Lunedì successivo (ora di Roma) come YYYY-MM-DD. */
+export function nextMondayRome(): string {
+  const d = new Date(Date.now() + 2 * 3600000) // ora di Roma approssimata, basta per il giorno
+  const wd = (d.getUTCDay() + 6) % 7 // lun=0
+  d.setUTCDate(d.getUTCDate() + (7 - wd))
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Prepara la settimana che inizia al lunedì indicato: 7 giorni alle 10:00 ora di Roma, un post per X, Telegram e Facebook.
+ * Sceglie strumenti gratuiti non ancora usati, controlla sul web notizie recenti negative, scrive i testi e li manda a Publer come BOZZE.
+ */
+export async function runWeekPlan(monday: string): Promise<string> {
+  const used = await db.socialPost.findMany({ where: { linkUrl: { not: null } }, select: { linkUrl: true }, take: 1000 })
+  const usedLinks = used.map((u) => u.linkUrl ?? '')
+  const isUsed = (slug: string) => ALREADY_USED.includes(slug) || usedLinks.some((l) => l.endsWith('/' + slug))
+
+  type Cand = { key: string; title: string; link: string; facts: string }
+  const slots: Cand[][] = []
+  for (const slot of WEEK_SLOTS) {
+    let cands: Cand[] = []
+    if (!slot.cats.length) {
+      const posts = await db.post.findMany({ where: { status: 'PUBLISHED', access: 'FREE' }, include: { translations: true }, orderBy: { publishedAt: 'desc' }, take: 60 })
+      cands = shuffle(posts.filter((p) => !isUsed(p.slug))).slice(0, 2).map((p) => {
+        const t = p.translations.find((x) => x.locale === 'EN') ?? p.translations[0]
+        return { key: p.slug, title: clean(t?.title), link: `${siteUrl()}/post/${p.slug}`, facts: clean(t?.excerpt) }
+      })
+    } else {
+      const tools = await db.tool.findMany({
+        where: { status: 'PUBLISHED', category: { slug: { in: slot.cats }, wixId: { notIn: PRO_COLLECTIONS } } },
+        include: { translations: true, category: true }, take: 200,
+      })
+      cands = shuffle(tools.filter((t) => !isUsed(t.slug) && t.translations.some((x) => x.locale === 'EN' && x.description))).slice(0, 2).map((t) => {
+        const x = t.translations.find((y) => y.locale === 'EN')!
+        return { key: t.slug, title: t.title, link: `${siteUrl()}/${t.category.slug}/${t.slug}`, facts: [x.description, x.whatIs, x.fullDescription].map(clean).filter(Boolean).join(' ').slice(0, 1800) }
+      })
+    }
+    slots.push(cands)
+  }
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  const brief = slots.map((c, i) => `SLOT ${i} (${days[i]}, ${WEEK_SLOTS[i].label}):\n` + (c.length ? c.map((x, j) => `  OPTION ${'AB'[j]}: ${x.title}\n  Facts: ${x.facts}`).join('\n') : '  (no option available, skip this slot)')).join('\n\n')
+
+  const out = await ask({
+    model: FAST(), maxTokens: 6000, searches: 10,
+    system: `You prepare the weekly social posts of Cryptodroply, a directory of crypto tools. ${STYLE}`,
+    prompt: `For each SLOT below pick ONE option and write three versions of its post. Before choosing, search the web for the last 30 days: if an option had a hack, exploit, shutdown, regulatory action or major scam reports, skip it and take the other option. If both are risky, skip the slot.
+Use only the facts given, invent nothing. For tool slots find the official X handle with a web search (@name) and use it only if you are sure, otherwise leave the handle line out. For the blog slot there is no handle.
+Format of each version (exact, keep the blank lines):
+EMOJI Name (or "📖 Blog: title")
+
+2 to 3 short lines of plain facts.
+
+(X version only) @handle
+
+#Tag1 #Tag2 #Tag3 #Tag4
+
+Do NOT add the link, it is added later. The X version is under 280 characters without hashtags and link where possible. Telegram and Facebook versions are the same text without the @handle line.
+Answer ONLY with blocks like this, one per slot you keep, plus one <note> at the end with the options you skipped and why:
+<slot n="0" pick="A"><x>...</x><tg>...</tg><fb>...</fb></slot>
+<note>...</note>
+
+${brief}`,
+  })
+
+  let n = 0, sent = 0
+  const errors: string[] = []
+  for (const m of out.matchAll(/<slot n="(\d)" pick="([AB])">([\s\S]*?)<\/slot>/g)) {
+    const i = Number(m[1]); const cand = slots[i]?.['AB'.indexOf(m[2])]
+    if (!cand) continue
+    const dayDate = new Date(`${monday}T00:00:00Z`); dayDate.setUTCDate(dayDate.getUTCDate() + i)
+    const when = romeToDate(`${dayDate.toISOString().slice(0, 10)}T10:00`)
+    for (const [ch, tagName] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
+      const text = tag(m[3], tagName)
+      if (text.length < 20) continue
+      const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: cand.link, scheduledAt: when } })
+      n++
+      try {
+        const job = await sendToPubler(row, 'draft')
+        await db.socialPost.update({ where: { id: row.id }, data: { status: 'PUBLER', publerRef: `draft:${job}`, sentAt: new Date() } })
+        sent++
+      } catch (e) {
+        errors.push((e as Error).message.slice(0, 120))
+        await db.socialPost.update({ where: { id: row.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
+      }
+    }
+  }
+  if (!n) throw new Error('nessun post nella risposta')
+  return `Settimana ${monday}: ${n} post creati, ${sent} bozze su Publer${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''} | ${tag(out, 'note').slice(0, 200)}`
+}
+
 /** Un articolo per il blog, in bozza, su un tema di attualità utile ai principianti. */
 export async function runWeeklyArticle(topicHint?: string): Promise<string> {
   const recent = await db.postTranslation.findMany({ where: { locale: 'EN' }, orderBy: { post: { createdAt: 'desc' } }, take: 25, select: { title: true } })
@@ -164,4 +275,9 @@ export async function tickAutomation(log: (m: string) => void = () => {}) {
   if (hour >= 8 && hour < 14) await once(`social-${date}`, runDailySocial, log)
   if (wd === 'Mon' && hour >= 9 && hour < 15) await once(`article-${date}`, () => runWeeklyArticle(), log)
   if (wd === 'Fri' && hour >= 10 && hour < 16) await once(`digest-${date}`, runWeeklyDigest, log)
+  if (wd === 'Fri' && hour >= 9 && hour < 15 && process.env.PUBLER_API_KEY) {
+    const monday = nextMondayRome()
+    // le settimane già caricate a mano (fino al 18 ottobre) non si rifanno
+    if (monday >= (process.env.WEEKPLAN_FROM ?? '2026-10-19')) await once(`weekplan-${monday}`, () => runWeekPlan(monday), log)
+  }
 }

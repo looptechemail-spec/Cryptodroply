@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
-import { runDailySocial, runToolSocial, runWeeklyArticle, runWeeklyDigest } from '@/lib/ai-content'
+import { runDailySocial, runToolSocial, runWeekPlan, nextMondayRome, runWeeklyArticle, runWeeklyDigest } from '@/lib/ai-content'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -15,6 +15,7 @@ async function run(fd: FormData) {
   try {
     if (job === 'social') note = `${await runDailySocial()} social drafts created`
     else if (job === 'tool') note = await runToolSocial(String(fd.get('tool') ?? '').trim() || undefined)
+    else if (job === 'week') note = await runWeekPlan(/^\d{4}-\d{2}-\d{2}$/.test(String(fd.get('monday'))) ? String(fd.get('monday')) : nextMondayRome())
     else if (job === 'article') note = `Article draft: ${await runWeeklyArticle(String(fd.get('topic') ?? '').trim() || undefined)}`
     else if (job === 'digest') note = `Newsletter draft ${await runWeeklyDigest()}`
   } catch (e) {
@@ -35,11 +36,15 @@ export default async function Automation() {
       <AdminNav />
       <p>
         Scheduled runs: <b>{on && hasKey ? 'ON' : 'OFF'}</b> {!hasKey && '(ANTHROPIC_API_KEY missing)'} {hasKey && !on && '(set AUTOMATION_ENABLED=true in Railway to turn on)'}
-        <br />Schedule (Rome time): social drafts every day from 08:00, blog article draft on Monday from 09:00, newsletter draft on Friday from 10:00. Everything is created as a draft for you to approve.
+        <br />Schedule (Rome time): social drafts every day from 08:00, blog article draft on Monday from 09:00, newsletter draft on Friday from 10:00. Every Friday from 09:00 the next week's social plan (X, Telegram, Facebook, 10:00 each day) is created as drafts on Publer. Everything is created as a draft for you to approve.
       </p>
       <form action={run} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '16px 0' }}>
         <button name="job" value="social" className="btn btn-sm">Run now: social drafts</button>
         <button name="job" value="digest" className="btn btn-sm">Run now: newsletter draft</button>
+        <span style={{ display: 'flex', gap: 6 }}>
+          <input name="monday" placeholder="Monday YYYY-MM-DD (optional)" style={{ padding: 8 }} />
+          <button name="job" value="week" className="btn btn-sm">Run now: week plan to Publer (drafts)</button>
+        </span>
         <span style={{ display: 'flex', gap: 6 }}>
           <input name="tool" placeholder="tool name (optional)" style={{ padding: 8 }} />
           <button name="job" value="tool" className="btn btn-sm">Tool posts for tomorrow 12:00</button>
