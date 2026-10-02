@@ -34,10 +34,14 @@ export async function workspaceId(): Promise<string> {
 }
 
 export type PublerAccount = { id: string; provider: string; name: string; type?: string }
+let accCache: { at: number; list: PublerAccount[] } | null = null
 export async function listAccounts(): Promise<PublerAccount[]> {
+  if (accCache && Date.now() - accCache.at < 60000) return accCache.list
   const ws = await workspaceId()
   const list = await call('/accounts', { workspace: ws })
-  return Array.isArray(list) ? list : list?.accounts ?? []
+  const arr: PublerAccount[] = Array.isArray(list) ? list : list?.accounts ?? []
+  accCache = { at: Date.now(), list: arr }
+  return arr
 }
 
 async function accountFor(channel: string, accounts: PublerAccount[]): Promise<PublerAccount> {

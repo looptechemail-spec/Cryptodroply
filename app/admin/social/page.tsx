@@ -4,8 +4,10 @@ import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
 import { dateToRome, romeToDate } from '@/lib/time'
 import { sendToPubler } from '@/lib/publer'
+import { parseCsv } from '@/lib/csv'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 120
 
 async function save(fd: FormData) {
   'use server'
@@ -35,6 +37,42 @@ async function save(fd: FormData) {
   revalidatePath('/admin/social')
 }
 
+async function importCsv(fd: FormData) {
+  'use server'
+  await requireAdmin()
+  const f = fd.get('file')
+  if (!(f instanceof File) || !f.size) return
+  const rows = parseCsv(await f.text())
+  const head = rows.shift() ?? []
+  const iDate = head.indexOf('Date'), iText = head.indexOf('Text'), iLink = head.indexOf('Link(s)')
+  if (iDate < 0 || iText < 0) return
+  for (const r of rows) {
+    const when = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(r[iDate] ?? '') ? romeToDate(r[iDate].replace(' ', 'T')) : null
+    const text = (r[iText] ?? '').trim()
+    if (!text) continue
+    for (const channel of ['x', 'telegram', 'facebook']) {
+      await db.socialPost.create({ data: { channel, text, linkUrl: iLink >= 0 && r[iLink] ? r[iLink] : null, scheduledAt: when } })
+    }
+  }
+  revalidatePath('/admin/social')
+}
+
+async function sendAll(fd: FormData) {
+  'use server'
+  await requireAdmin()
+  const state = String(fd.get('state')) === 'scheduled' ? 'scheduled' : 'draft'
+  const list = await db.socialPost.findMany({ where: { status: { in: ['DRAFT', 'APPROVED'] }, channel: { in: ['x', 'telegram', 'facebook'] }, scheduledAt: { not: null } }, orderBy: { scheduledAt: 'asc' }, take: 60 })
+  for (const p of list) {
+    try {
+      const job = await sendToPubler(p, state)
+      await db.socialPost.update({ where: { id: p.id }, data: { status: 'PUBLER', publerRef: `${state}:${job}`, sentAt: new Date() } })
+    } catch (e) {
+      await db.socialPost.update({ where: { id: p.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
+    }
+  }
+  revalidatePath('/admin/social')
+}
+
 const TABS = ['DRAFT', 'APPROVED', 'PUBLER', 'SENT', 'REJECTED']
 
 export default async function AdminSocial({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -47,6 +85,17 @@ export default async function AdminSocial({ searchParams }: { searchParams: Prom
       <h1>Social posts</h1>
       <AdminNav />
       <p>{TABS.map((t) => <a key={t} href={`?s=${t}`} style={{ marginRight: 16, fontWeight: t === s ? 800 : 400 }}>{t}</a>)}</p>
+      <div style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: 'var(--shadow-1)' }}>
+        <b>Weekly plan</b>
+        <form action={importCsv} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', margin: '10px 0' }}>
+          <input type="file" name="file" accept=".csv" required />
+          <button className="btn btn-sm">Import CSV (creates X, Telegram and Facebook drafts for every row)</button>
+        </form>
+        <form action={sendAll} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button name="state" value="draft" className="btn btn-blue btn-sm">Send all dated drafts to Publer as drafts</button>
+          <button name="state" value="scheduled" className="btn btn-yellow btn-sm">Schedule them all on Publer</button>
+        </form>
+      </div>
       {rows.length === 0 && <p>Nothing here.</p>}
       {rows.map((r) => (
         <form key={r.id} action={save} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: 'var(--shadow-1)' }}>
