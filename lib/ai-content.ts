@@ -14,7 +14,7 @@ const PRO_COLLECTIONS = SECTIONS.filter((x) => x.pro).flatMap((x) => x.collectio
 const FAST = () => process.env.AI_MODEL ?? 'claude-haiku-4-5-20251001'
 const WRITER = () => process.env.AI_MODEL_ARTICLE ?? 'claude-sonnet-5-5'
 
-const STYLE = `Write in clear, plain English for crypto beginners and intermediate users. Short sentences. No hype, no price predictions, no financial advice, no promises of profit. Never use long dashes or " - " as punctuation, use commas or full stops. No emojis in articles. State only facts you found in the sources and never invent numbers, quotes or dates.`
+const STYLE = `Write in clear, plain English for crypto beginners and intermediate users. Short sentences. No hype, no price predictions, no financial advice, no promises of profit. Never use long dashes or " - " as punctuation, use commas or full stops. No emojis in articles. State only facts you found in the sources and never invent numbers, quotes or dates. When a tool is about privacy, describe it as protecting personal data and remind readers to follow the laws of their country; never suggest avoiding identity checks, taxes or authorities.`
 
 async function ask(opts: { model: string; system: string; prompt: string; maxTokens: number; searches?: number }): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY
