@@ -36,7 +36,7 @@ export default async function Automation() {
       <AdminNav />
       <p>
         Scheduled runs: <b>{on && hasKey ? 'ON' : 'OFF'}</b> {!hasKey && '(ANTHROPIC_API_KEY missing)'} {hasKey && !on && '(set AUTOMATION_ENABLED=true in Railway to turn on)'}
-        <br />Schedule (Rome time): social drafts every day from 08:00, blog article draft on Monday from 09:00, newsletter draft on Friday from 10:00. Every Friday from 09:00 the next week's social plan (X, Telegram, Facebook, 10:00 each day) is created as drafts on Publer. Everything is created as a draft for you to approve.
+        <br />Schedule (Rome time): social drafts every day from 08:00, blog article draft on Monday from 09:00 (review it in Articles), newsletter draft on Friday from 10:00. Every Friday from 09:00 the next week's social plan (X, Telegram, Facebook, 10:00 each day) is created as drafts on Publer. Everything is created as a draft for you to approve.
       </p>
       <form action={run} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '16px 0' }}>
         <button name="job" value="social" className="btn btn-sm">Run now: social drafts</button>

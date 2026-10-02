@@ -24,3 +24,14 @@ export function tomorrowRome(hour = 12, minute = 0): Date {
   const t = new Date(Date.now() + offsetMin(new Date()) * 60000 + 86400000).toISOString().slice(0, 10)
   return romeToDate(`${t}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`)
 }
+
+/** Prossimo martedì (2) o giovedì (4) alle HH:mm ora di Roma, almeno 30 minuti nel futuro. wd: 1=lun ... 4=gio. */
+export function nextWeekdayRome(wd: number, hour = 10, minute = 0): Date {
+  for (let add = 0; add < 8; add++) {
+    const base = new Date(Date.now() + offsetMin(new Date()) * 60000 + add * 86400000)
+    if (((base.getUTCDay() + 6) % 7) !== wd) continue
+    const cand = romeToDate(`${base.toISOString().slice(0, 10)}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`)
+    if (cand.getTime() > Date.now() + 30 * 60000) return cand
+  }
+  return tomorrowRome(hour, minute)
+}

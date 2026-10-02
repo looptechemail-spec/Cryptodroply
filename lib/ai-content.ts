@@ -7,7 +7,7 @@ import { siteUrl } from './email'
 import { buildDigest, mainList } from './newsletter'
 import { slugify } from './v1'
 import { SECTIONS } from './sections'
-import { tomorrowRome, romeToDate } from './time'
+import { tomorrowRome, romeToDate, nextWeekdayRome } from './time'
 import { sendToPubler } from './publer'
 
 const PRO_COLLECTIONS = SECTIONS.filter((x) => x.pro).flatMap((x) => x.collections)
@@ -216,6 +216,49 @@ ${brief}`,
   return `Settimana ${monday}: ${n} post creati, ${sent} bozze su Publer${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''} | ${tag(out, 'note').slice(0, 200)}`
 }
 
+
+/**
+ * Pubblica un articolo (da bozza) e programma su Publer i post per X, Telegram e Facebook
+ * nel prossimo martedì (day=1) o giovedì (day=3) alle 10:00 ora di Roma. day=null: solo pubblica.
+ */
+export async function publishArticle(postId: string, day: 'tue' | 'thu' | null): Promise<string> {
+  const post = await db.post.findUnique({ where: { id: postId }, include: { translations: true } })
+  if (!post) throw new Error('articolo non trovato')
+  const t = post.translations.find((x) => x.locale === 'EN') ?? post.translations[0]
+  if (!t) throw new Error('articolo senza testo')
+  await db.post.update({ where: { id: post.id }, data: { status: 'PUBLISHED', publishedAt: post.publishedAt ?? new Date() } })
+  if (!day) return 'Articolo pubblicato'
+  const link = `${siteUrl()}/post/${post.slug}`
+  const when = nextWeekdayRome(day === 'tue' ? 1 : 3, 10)
+  const out = await ask({
+    model: FAST(), maxTokens: 1200,
+    system: `You write social posts for Cryptodroply, a directory of crypto tools. ${STYLE}`,
+    prompt: `Write three posts announcing this new blog article. Use only what the article says, invent nothing.
+Title: ${t.title}
+Summary: ${t.excerpt ?? ''}
+Article start: ${clean(t.contentMd).slice(0, 2500)}
+Format of each post, keep the blank lines: "📖 Blog: <short title>" then a blank line, then 2 to 3 short lines saying what the reader learns, then a blank line, then 3 or 4 hashtags. Do not add the link, it is added later. One emoji at the start only.
+Answer ONLY with:
+<x>...</x><tg>...</tg><fb>...</fb>`,
+  })
+  const errors: string[] = []
+  let ok = 0
+  for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
+    const text = tag(out, tg)
+    if (text.length < 20) continue
+    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when } })
+    try {
+      const job = await sendToPubler(row, 'scheduled')
+      await db.socialPost.update({ where: { id: row.id }, data: { status: 'PUBLER', publerRef: `scheduled:${job}`, sentAt: new Date() } })
+      ok++
+    } catch (e) {
+      errors.push((e as Error).message.slice(0, 150))
+      await db.socialPost.update({ where: { id: row.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
+    }
+  }
+  return `Pubblicato. ${ok} post programmati su Publer per ${when.toISOString()}${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''}`
+}
+
 /** Un articolo per il blog, in bozza, su un tema di attualità utile ai principianti. */
 export async function runWeeklyArticle(topicHint?: string): Promise<string> {
   const recent = await db.postTranslation.findMany({ where: { locale: 'EN' }, orderBy: { post: { createdAt: 'desc' } }, take: 25, select: { title: true } })
@@ -237,7 +280,7 @@ Answer ONLY in this format:
   if (await db.post.findUnique({ where: { slug } })) slug += '-' + Date.now().toString(36).slice(-4)
   const post = await db.post.create({ data: { slug, legacyPath: `/post/${slug}`, access: 'FREE', status: 'DRAFT' } })
   await db.postTranslation.create({ data: { postId: post.id, locale: 'EN', title, excerpt, contentMd: body, seoTitle: title.slice(0, 60), seoDescription: excerpt.slice(0, 155) } })
-  return `${siteUrl()}/post/${slug}`
+  return `"${title}" -> ${siteUrl()}/admin/articles`
 }
 
 /** Bozza della newsletter settimanale con gli articoli gratuiti della settimana. */
