@@ -16,6 +16,10 @@ export async function register() {
     setInterval(() => {
       import('./lib/ai-content').then((m) => m.tickAutomation((x) => console.log('[auto] ' + x))).catch((e) => console.error('auto:', e))
     }, 60 * 60 * 1000)
+    // ogni minuto: pubblica gli articoli programmati dall'admin la cui ora è arrivata
+    setInterval(() => {
+      import('./lib/articles').then((m) => m.publishDueArticles((x) => console.log('[articles] ' + x))).catch((e) => console.error('articles:', e))
+    }, 60 * 1000)
     // traduzione italiana di strumenti e articoli: dopo l'avvio traduce tutto ciò che manca, poi ogni ora i contenuti nuovi
     // prima si riscrivono in tono neutro le schede della sezione Privacy (una volta per scheda), poi si traduce in italiano
     const softenThenTranslate = async (limit: number) => {

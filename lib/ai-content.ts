@@ -228,8 +228,16 @@ export async function publishArticle(postId: string, day: 'tue' | 'thu' | null):
   if (!t) throw new Error('articolo senza testo')
   await db.post.update({ where: { id: post.id }, data: { status: 'PUBLISHED', publishedAt: post.publishedAt ?? new Date() } })
   if (!day) return 'Articolo pubblicato'
+  return await articleSocial(postId, nextWeekdayRome(day === 'tue' ? 1 : 3, 10))
+}
+
+/** I tre post (X, Telegram, Facebook) che annunciano un articolo, programmati su Publer all'ora indicata. */
+export async function articleSocial(postId: string, when: Date): Promise<string> {
+  const post = await db.post.findUnique({ where: { id: postId }, include: { translations: true } })
+  if (!post) throw new Error('articolo non trovato')
+  const t = post.translations.find((x) => x.locale === 'EN') ?? post.translations[0]
+  if (!t) throw new Error('articolo senza testo')
   const link = `${siteUrl()}/post/${post.slug}`
-  const when = nextWeekdayRome(day === 'tue' ? 1 : 3, 10)
   const out = await ask({
     model: FAST(), maxTokens: 1200,
     system: `You write social posts for Cryptodroply, a directory of crypto tools. ${STYLE}`,
@@ -256,7 +264,7 @@ Answer ONLY with:
       await db.socialPost.update({ where: { id: row.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
     }
   }
-  return `Pubblicato. ${ok} post programmati su Publer per ${when.toISOString()}${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''}`
+  return `${ok} post programmati su Publer per ${when.toISOString()}${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''}`
 }
 
 

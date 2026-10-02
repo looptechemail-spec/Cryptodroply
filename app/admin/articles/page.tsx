@@ -2,7 +2,9 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
-import { publishArticle, runWeeklyArticle } from '@/lib/ai-content'
+import { runWeeklyArticle } from '@/lib/ai-content'
+import { saveCover, publishNow, scheduleArticle, unscheduleArticle } from '@/lib/articles'
+import { romeToDate, dateToRome } from '@/lib/time'
 import { renderMarkdown } from '@/lib/markdown'
 
 export const dynamic = 'force-dynamic'
@@ -34,14 +36,24 @@ async function act(fd: FormData) {
   }
   let note = ''
   try {
-    if (what === 'publish-tue') note = await publishArticle(id, 'tue')
-    else if (what === 'publish-thu') note = await publishArticle(id, 'thu')
-    else if (what === 'publish') note = await publishArticle(id, null)
-    else if (what === 'delete' && post.status === 'DRAFT') {
+    if (what !== 'delete') {
+      const file = fd.get('cover')
+      await saveCover(id, file instanceof File ? file : null, String(fd.get('coverUrl') ?? ''))
+    }
+    const social = fd.get('social') === 'on'
+    if (what === 'publish-now') note = await publishNow(id, social)
+    else if (what === 'schedule') {
+      const when = String(fd.get('when') ?? '')
+      if (!when) throw new Error('Scegli la data e l’ora di uscita')
+      note = await scheduleArticle(id, romeToDate(when), social)
+    } else if (what === 'unschedule') {
+      await unscheduleArticle(id)
+      note = 'Programmazione annullata (i post già mandati a Publer vanno tolti da Publer)'
+    } else if (what === 'delete' && post.status === 'DRAFT') {
       await db.postTranslation.deleteMany({ where: { postId: id } })
       await db.post.delete({ where: { id } })
       note = 'Draft deleted'
-    }
+    } else if (what === 'save') note = `Salvato: ${String(fd.get('title')).slice(0, 60)}`
   } catch (e) {
     note = `ERROR: ${(e as Error).message}`
   }
@@ -52,7 +64,7 @@ async function act(fd: FormData) {
 export default async function Articles() {
   await requireAdmin()
   const [drafts, runs] = await Promise.all([
-    db.post.findMany({ where: { status: 'DRAFT' }, orderBy: { createdAt: 'desc' }, take: 15, include: { translations: true } }),
+    db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 15, include: { translations: true } }),
     db.jobRun.findMany({ where: { key: { startsWith: 'manual-article' } }, orderBy: { ranAt: 'desc' }, take: 6 }),
   ])
   return (
@@ -61,7 +73,8 @@ export default async function Articles() {
       <AdminNav />
       <p>
         Every Monday morning (from 09:00, Rome time) a new article draft is written here. You can also write one now.
-        When you confirm a draft it goes live and its X, Telegram and Facebook posts are scheduled on Publer for the Tuesday or Thursday you pick, at 10:00.
+        Every article needs a cover image. Then publish it now or choose the day and time (Rome time) and it goes live by itself.
+        You can also ask for the X, Telegram and Facebook posts to be scheduled on Publer at the same moment.
       </p>
       <form action={create} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '16px 0' }}>
         <input name="topic" placeholder="optional topic" style={{ padding: 8, minWidth: 260 }} />
@@ -77,11 +90,30 @@ export default async function Articles() {
       {drafts.map((p) => {
         const t = p.translations.find((x) => x.locale === 'EN')
         return (
-          <form key={p.id} action={act} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
+          <form key={p.id} action={act} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
             <input type="hidden" name="id" value={p.id} />
             <small>/post/{p.slug} · created {p.createdAt.toISOString().slice(0, 10)}</small>
+            {p.scheduledAt && (
+              <p style={{ margin: '8px 0', fontWeight: 700, color: 'var(--blue)' }}>
+                Scheduled: goes live on {dateToRome(p.scheduledAt).replace('T', ' at ')} (Rome time)
+              </p>
+            )}
             <input name="title" defaultValue={t?.title ?? ''} style={{ width: '100%', padding: 10, margin: '8px 0', fontWeight: 700 }} />
             <input name="excerpt" defaultValue={t?.excerpt ?? ''} style={{ width: '100%', padding: 10, marginBottom: 8 }} />
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', margin: '8px 0 12px' }}>
+              {p.coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.coverUrl} alt="Cover" style={{ width: 200, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 12 }} />
+              ) : (
+                <span style={{ width: 200, aspectRatio: '16 / 9', borderRadius: 12, background: 'var(--tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>No cover yet<br />(required)</span>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 240 }}>
+                <label style={{ fontWeight: 700, fontSize: 14 }}>Cover image</label>
+                <input type="file" name="cover" accept="image/png,image/jpeg,image/webp,image/gif" />
+                <input name="coverUrl" placeholder="or paste an image address (https://...)" style={{ padding: 8 }} />
+                <small style={{ color: 'var(--muted)' }}>Best size 1600 x 900 px (16:9), up to 6 MB. Press Save to keep it.</small>
+              </div>
+            </div>
             <details>
               <summary>Read the article</summary>
               <div className="md" style={{ padding: '12px 0' }} dangerouslySetInnerHTML={{ __html: renderMarkdown(t?.contentMd ?? '') }} />
@@ -90,11 +122,20 @@ export default async function Articles() {
               <summary>Edit the text (markdown)</summary>
               <textarea name="contentMd" defaultValue={t?.contentMd ?? ''} rows={20} style={{ width: '100%', padding: 10, margin: '8px 0', fontFamily: 'monospace' }} />
             </details>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', marginTop: 12 }}>
+              <label style={{ fontSize: 14, fontWeight: 700 }}>
+                Publish on (Rome time){' '}
+                <input type="datetime-local" name="when" defaultValue={dateToRome(p.scheduledAt)} style={{ padding: 8 }} />
+              </label>
+              <label style={{ fontSize: 14 }}>
+                <input type="checkbox" name="social" defaultChecked /> Also schedule X, Telegram and Facebook posts on Publer
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
               <button name="act" value="save" className="btn btn-sm">Save</button>
-              <button name="act" value="publish-tue" className="btn btn-blue btn-sm">Publish + schedule on Tuesday</button>
-              <button name="act" value="publish-thu" className="btn btn-blue btn-sm">Publish + schedule on Thursday</button>
-              <button name="act" value="publish" className="btn btn-sm">Publish only</button>
+              <button name="act" value="publish-now" className="btn btn-blue btn-sm">Publish now</button>
+              <button name="act" value="schedule" className="btn btn-blue btn-sm">Schedule for the date above</button>
+              {p.scheduledAt && <button name="act" value="unschedule" className="btn btn-sm">Cancel schedule</button>}
               <button name="act" value="delete" className="btn btn-sm">Delete draft</button>
             </div>
           </form>
