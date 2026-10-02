@@ -5,7 +5,8 @@ import type { AppTool } from '@/lib/content'
 import type { Facet } from '@/lib/tags'
 
 /** Griglia di strumenti con ricerca e filtri (si scelgono più opzioni: tra opzioni dello stesso gruppo vale "o", tra gruppi vale "e"). */
-export default function ToolExplorer({ tools, facets, pro = false, base }: { tools: AppTool[]; facets: Facet[]; pro?: boolean; base?: string }) {
+export default function ToolExplorer({ tools, facets, pro = false, base, lang = 'en' }: { tools: AppTool[]; facets: Facet[]; pro?: boolean; base?: string; lang?: 'en' | 'it' }) {
+  const it = lang === 'it'
   const [sel, setSel] = useState<Record<string, string[]>>({})
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -44,10 +45,10 @@ export default function ToolExplorer({ tools, facets, pro = false, base }: { too
       {showBar && (
         <div className="filters">
           <div className="filters-top">
-            <input className="filters-search" type="search" placeholder="Search tools" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search tools" />
+            <input className="filters-search" type="search" placeholder={it ? 'Cerca strumenti' : 'Search tools'} value={q} onChange={(e) => setQ(e.target.value)} aria-label={it ? 'Cerca strumenti' : 'Search tools'} />
             {facets.length > 0 && (
               <button type="button" className="filters-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-                Filters{active ? ` (${active})` : ''}
+                {it ? 'Filtri' : 'Filters'}{active ? ` (${active})` : ''}
               </button>
             )}
           </div>
@@ -55,7 +56,7 @@ export default function ToolExplorer({ tools, facets, pro = false, base }: { too
             <div className={`filters-body ${open ? 'open' : ''}`}>
               {bools.length > 0 && (
                 <div className="filter-group">
-                  <div className="filter-label">Features</div>
+                  <div className="filter-label">{it ? 'Funzionalità' : 'Features'}</div>
                   <div className="filter-chips">{bools.map((f) => chip(f.id, 'yes', f.emoji, f.label, f.options[0].count))}</div>
                 </div>
               )}
@@ -71,11 +72,11 @@ export default function ToolExplorer({ tools, facets, pro = false, base }: { too
           )}
           <div className="filters-meta">
             <span>
-              {shown.length} of {tools.length} tools
+              {it ? `${shown.length} di ${tools.length} strumenti` : `${shown.length} of ${tools.length} tools`}
             </span>
             {(active > 0 || q) && (
               <button type="button" className="filters-clear" onClick={() => { setSel({}); setQ('') }}>
-                Clear all
+                {it ? 'Azzera tutto' : 'Clear all'}
               </button>
             )}
           </div>
@@ -84,11 +85,11 @@ export default function ToolExplorer({ tools, facets, pro = false, base }: { too
       {shown.length ? (
         <div className="app-grid">
           {shown.map((t) => (
-            <AppCard key={t.id} tool={t} pro={pro} base={base} />
+            <AppCard key={t.id} tool={t} pro={pro} base={base} lang={lang} />
           ))}
         </div>
       ) : (
-        <p className="filters-empty">No tool matches these filters. Try removing one.</p>
+        <p className="filters-empty">{it ? 'Nessuno strumento corrisponde a questi filtri. Prova a toglierne uno.' : 'No tool matches these filters. Try removing one.'}</p>
       )}
     </div>
   )

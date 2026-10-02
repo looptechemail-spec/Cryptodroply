@@ -2,6 +2,10 @@ import Link from 'next/link'
 import type { AppTool } from '@/lib/content'
 import { cleanText } from '@/lib/clean'
 
+type Lang = 'en' | 'it'
+// componenti usabili anche da client component: niente lib/i18n, il prefisso /it si costruisce qui
+const lh = (path: string, lang?: Lang) => (lang === 'it' ? '/it' + path : path)
+
 export function AppIcon({ tool, size = 72 }: { tool: Pick<AppTool, 'title' | 'logoUrl'>; size?: number }) {
   return (
     <div className="app-icon" style={{ width: size, height: size, borderRadius: Math.round(size * 0.24) }}>
@@ -11,9 +15,9 @@ export function AppIcon({ tool, size = 72 }: { tool: Pick<AppTool, 'title' | 'lo
 }
 
 /** Scheda verticale, per le file scorrevoli e le griglie. */
-export function AppCard({ tool, pro = false, base }: { tool: AppTool; pro?: boolean; base?: string }) {
+export function AppCard({ tool, pro = false, base, lang }: { tool: AppTool; pro?: boolean; base?: string; lang?: Lang }) {
   return (
-    <Link href={`${base ?? '/' + tool.categorySlug}/${tool.slug}`} className="app-card">
+    <Link href={lh(`${base ?? '/' + tool.categorySlug}/${tool.slug}`, lang)} className="app-card">
       <AppIcon tool={tool} />
       <div className="app-card-body">
         <div className="app-name">{tool.title}</div>
@@ -30,38 +34,38 @@ export function AppCard({ tool, pro = false, base }: { tool: AppTool; pro?: bool
       </div>
       <div className="app-card-foot">
         <span className="app-chip">{tool.categoryName}</span>
-        <span className={`app-get ${pro ? 'is-pro' : ''}`}>{pro ? 'PRO' : 'View'}</span>
+        <span className={`app-get ${pro ? 'is-pro' : ''}`}>{pro ? 'PRO' : lang === 'it' ? 'Vedi' : 'View'}</span>
       </div>
     </Link>
   )
 }
 
 /** Riga compatta, per le classifiche a colonne. */
-export function AppRow({ tool, rank, pro = false }: { tool: AppTool; rank?: number; pro?: boolean }) {
+export function AppRow({ tool, rank, pro = false, lang }: { tool: AppTool; rank?: number; pro?: boolean; lang?: Lang }) {
   return (
-    <Link href={`/${tool.categorySlug}/${tool.slug}`} className="app-row">
+    <Link href={lh(`/${tool.categorySlug}/${tool.slug}`, lang)} className="app-row">
       {rank !== undefined && <span className="app-rank">{rank}</span>}
       <AppIcon tool={tool} size={60} />
       <div className="app-row-body">
         <div className="app-name">{tool.title}</div>
         <div className="app-desc">{cleanText(tool.description)}</div>
       </div>
-      <span className={`app-get ${pro ? 'is-pro' : ''}`}>{pro ? 'PRO' : 'View'}</span>
+      <span className={`app-get ${pro ? 'is-pro' : ''}`}>{pro ? 'PRO' : lang === 'it' ? 'Vedi' : 'View'}</span>
     </Link>
   )
 }
 
 /** Grande scheda in evidenza, con la copertina del tool. */
-export function FeatureCard({ tool, tone }: { tool: AppTool; tone: 'blue' | 'yellow' | 'ink' }) {
+export function FeatureCard({ tool, tone, lang }: { tool: AppTool; tone: 'blue' | 'yellow' | 'ink'; lang?: Lang }) {
   return (
-    <Link href={`/${tool.categorySlug}/${tool.slug}`} className={`feature feature-${tone}`}>
+    <Link href={lh(`/${tool.categorySlug}/${tool.slug}`, lang)} className={`feature feature-${tone}`}>
       <div className="feature-copy">
         <span className="feature-kicker">{tool.categoryName}</span>
         <h3>{tool.title}</h3>
         <p>{cleanText(tool.description)}</p>
         <span className="feature-cta">
           <AppIcon tool={tool} size={44} />
-          <span className="app-get">View</span>
+          <span className="app-get">{lang === 'it' ? 'Vedi' : 'View'}</span>
         </span>
       </div>
       {tool.coverUrl && <img className="feature-cover" src={tool.coverUrl} alt="" loading="lazy" />}

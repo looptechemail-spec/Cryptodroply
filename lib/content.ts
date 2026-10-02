@@ -1,14 +1,17 @@
 import { db } from '@/lib/db'
 import { analyze, type Tag, type Facet } from '@/lib/tags'
+import { CATEGORY_NAMES_IT } from '@/lib/sections-it'
+
+type Loc = 'EN' | 'IT'
 
 export type CategoryInfo = { id: string; slug: string; wixId: string | null; name: string; count: number }
 
 /** Categorie con nome inglese e numero di tool pubblicati. */
-export async function getCategories(): Promise<CategoryInfo[]> {
+export async function getCategories(loc: Loc = 'EN'): Promise<CategoryInfo[]> {
   const rows = await db.category.findMany({
     orderBy: { sortOrder: 'asc' },
     include: {
-      translations: { where: { locale: 'EN' } },
+      translations: { where: { locale: { in: ['EN', 'IT'] } } },
       _count: { select: { tools: { where: { status: 'PUBLISHED' } } } },
     },
   })
@@ -16,7 +19,7 @@ export async function getCategories(): Promise<CategoryInfo[]> {
     id: c.id,
     slug: c.slug,
     wixId: c.wixId,
-    name: c.translations[0]?.name ?? c.slug,
+    name: (loc === 'IT' ? (c.wixId && CATEGORY_NAMES_IT[c.wixId]) || c.translations.find((t) => t.locale === 'IT')?.name : undefined) ?? c.translations.find((t) => t.locale === 'EN')?.name ?? c.slug,
     count: c._count.tools,
   }))
 }
@@ -45,7 +48,7 @@ export type AppTool = {
 }
 
 /** I tool pubblicati di una sezione, nel formato usato dalle schede "app store", con tag e filtri per categoria. */
-export async function getSectionData(collections: string[], take = 12): Promise<{ tools: AppTool[]; facets: Record<string, Facet[]> }> {
+export async function getSectionData(collections: string[], take = 12, loc: Loc = 'EN'): Promise<{ tools: AppTool[]; facets: Record<string, Facet[]> }> {
   const rows = await db.tool.findMany({
     where: { status: 'PUBLISHED', category: { wixId: { in: collections } } },
     orderBy: [{ category: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
@@ -56,7 +59,7 @@ export async function getSectionData(collections: string[], take = 12): Promise<
   const info: Record<string, { tags: Tag[]; vals: Record<string, string[]> }> = {}
   for (const slug of new Set(rows.map((r) => r.category.slug))) {
     const group = rows.filter((r) => r.category.slug === slug)
-    const a = analyze(group[0].category.attributes, group.map((r) => ({ id: r.id, attributes: r.attributes })))
+    const a = analyze(group[0].category.attributes, group.map((r) => ({ id: r.id, attributes: r.attributes })), loc === 'IT' ? 'it' : 'en')
     facets[slug] = a.facets
     Object.assign(info, a.tools)
   }
@@ -66,15 +69,15 @@ export async function getSectionData(collections: string[], take = 12): Promise<
     title: t.title,
     logoUrl: t.logoUrl,
     coverUrl: t.coverUrl,
-    description: pick(t.translations)?.description ?? null,
+    description: pick(t.translations, loc)?.description ?? null,
     categorySlug: t.category.slug,
-    categoryName: pick(t.category.translations)?.name ?? t.category.slug,
+    categoryName: (loc === 'IT' ? (t.category.wixId && CATEGORY_NAMES_IT[t.category.wixId]) || pick(t.category.translations, 'IT')?.name : undefined) ?? pick(t.category.translations)?.name ?? t.category.slug,
     tags: info[t.id]?.tags ?? [],
     vals: info[t.id]?.vals ?? {},
   }))
   return { tools, facets }
 }
 
-export async function getSectionTools(collections: string[], take = 12): Promise<AppTool[]> {
-  return (await getSectionData(collections, take)).tools
+export async function getSectionTools(collections: string[], take = 12, loc: Loc = 'EN'): Promise<AppTool[]> {
+  return (await getSectionData(collections, take, loc)).tools
 }

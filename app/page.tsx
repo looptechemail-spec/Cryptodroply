@@ -1,11 +1,13 @@
-import Link from 'next/link'
+import Link from '@/components/LocLink'
+import { i18n } from '@/lib/i18n'
+import { sec } from '@/lib/sections-it'
 import { cleanText } from '@/lib/clean'
-import { FREE_FEATURES, PRO_FEATURES } from '@/lib/plans'
+import { FREE_FEATURES, PRO_FEATURES, FREE_FEATURES_IT, PRO_FEATURES_IT } from '@/lib/plans'
 import { db } from '@/lib/db'
 import { getSectionTools, pick } from '@/lib/content'
 import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
 import { SECTIONS, sectionHref } from '@/lib/sections'
-import { PRO_PRICE_LABEL } from '@/lib/access'
+import { PRO_PRICE_LABEL, PRO_PRICE_LABEL_IT } from '@/lib/access'
 import { Hero3D } from '@/components/Hero3D'
 
 export const dynamic = 'force-dynamic'
@@ -20,6 +22,8 @@ const ICONS: Record<string, React.ReactNode> = {
 }
 
 export default async function Home() {
+  const { t, it, lang, loc } = await i18n()
+  const SECS = SECTIONS.map((s) => sec(s, it))
   const [posts, sectionTools] = await Promise.all([
     db.post.findMany({
       where: { status: 'PUBLISHED', access: 'FREE' },
@@ -27,7 +31,7 @@ export default async function Home() {
       take: 40,
       include: { translations: true, category: { include: { translations: true } } },
     }),
-    Promise.all(SECTIONS.map((s) => (s.pro ? Promise.resolve([]) : getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12)))),
+    Promise.all(SECTIONS.map((s) => (s.pro ? Promise.resolve([]) : getSectionTools(s.collections, s.key === 'wallet' ? 9 : 12, loc)))),
   ])
   const bySection = Object.fromEntries(SECTIONS.map((s, i) => [s.key, sectionTools[i]]))
   const telegram = process.env.NEXT_PUBLIC_TELEGRAM_URL ?? '#'
@@ -38,9 +42,9 @@ export default async function Home() {
       {p.coverUrl && <img src={p.coverUrl} alt="" className="post-thumb" loading="lazy" />}
       <span className="t">
         {locked && <span className="lock" aria-hidden="true">&#128274;</span>}
-        {cleanText(pick(p.translations)?.title)}
+        {cleanText(pick(p.translations, loc)?.title)}
       </span>
-      <span className="m">{p.publishedAt?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+      <span className="m">{p.publishedAt?.toLocaleDateString(it ? 'it-IT' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
     </Link>
   )
 
@@ -55,8 +59,8 @@ export default async function Home() {
 
   const siteBase = (process.env.SITE_URL ?? 'https://www.cryptodroply.com').replace(/\/$/, '')
   const siteLd = [
-    { '@context': 'https://schema.org', '@type': 'Organization', name: 'Cryptodroply', url: siteBase, logo: `${siteBase}/icon.png` },
-    { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Cryptodroply', url: siteBase },
+    { '@context': 'https://schema.org', '@type': 'Organization', name: 'Cryptodroply', url: it ? `${siteBase}/it` : siteBase, logo: `${siteBase}/icon.png` },
+    { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Cryptodroply', url: it ? `${siteBase}/it` : siteBase, inLanguage: it ? 'it' : 'en' },
   ]
   return (
     <>
@@ -65,21 +69,23 @@ export default async function Home() {
         <div className="hero-glow" aria-hidden="true" />
         <div className="container">
           <div>
-            <h1>Discover the best crypto tools, airdrops and privacy stack</h1>
+            <h1>{t('Discover the best crypto tools, airdrops and privacy stack', 'Scopri i migliori strumenti crypto, airdrop e tool per la privacy')}</h1>
             <p>
-              Wallets, exchanges, airdrops, DeFi, privacy, security and analysis. Every tool comes with a plain guide
-              to what it is, how it works and when to use it.
+              {t(
+                'Wallets, exchanges, airdrops, DeFi, privacy, security and analysis. Every tool comes with a plain guide to what it is, how it works and when to use it.',
+                'Wallet, exchange, airdrop, DeFi, privacy, sicurezza e analisi. Ogni strumento ha una guida semplice su cos’è, come funziona e quando usarlo.',
+              )}
             </p>
             <div className="hero-actions">
               <Link href="#plans" className="btn btn-yellow">
-                Get started free
+                {t('Get started free', 'Inizia gratis')}
               </Link>
               <Link href="#start" className="btn btn-outline">
-                Browse the store
+                {t('Browse the store', 'Sfoglia lo store')}
               </Link>
             </div>
             <div className="hero-chips">
-              {SECTIONS.filter((s) => !s.pro).map((s) => (
+              {SECS.filter((s) => !s.pro).map((s) => (
                 <Link key={s.key} href={sectionHref(s.key)}>
                   {s.title}
                 </Link>
@@ -99,10 +105,10 @@ export default async function Home() {
 
       <section className="block start" id="start">
         <div className="container">
-          <h2>Start here</h2>
-          <p className="lead">Choose what you want to do. Each section opens the tools for it, with a plain explanation of every one.</p>
+          <h2>{t('Start here', 'Parti da qui')}</h2>
+          <p className="lead">{t('Choose what you want to do. Each section opens the tools for it, with a plain explanation of every one.', 'Scegli cosa vuoi fare. Ogni sezione apre gli strumenti giusti, con una spiegazione semplice di ciascuno.')}</p>
           <div className="start-grid">
-            {SECTIONS.map((s) => (
+            {SECS.map((s) => (
               <Link key={s.key} href={sectionHref(s.key)} className={`start-card ${s.pro ? 'is-pro' : ''}`}>
                 <span className="start-icon">
                   <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -114,7 +120,7 @@ export default async function Home() {
                   {s.pro && <span className="badge-pro">PRO</span>}
                 </span>
                 <span className="start-text">{s.description}</span>
-                <span className="start-go">Go</span>
+                <span className="start-go">{t('Go', 'Vai')}</span>
               </Link>
             ))}
           </div>
@@ -125,20 +131,20 @@ export default async function Home() {
         <div className="container">
           <div className="row-head">
             <div>
-              <h2>Wallets</h2>
-              <p className="lead" style={{ marginBottom: 0 }}>{SECTIONS[1].description}</p>
+              <h2>{t('Wallets', 'Wallet')}</h2>
+              <p className="lead" style={{ marginBottom: 0 }}>{SECS[1].description}</p>
             </div>
-            <Link href={sectionHref('wallet')}>See all</Link>
+            <Link href={sectionHref('wallet')}>{t('See all', 'Vedi tutti')}</Link>
           </div>
           <div className="chart">
             {bySection['wallet'].map((t, i) => (
-              <AppRow key={t.id} tool={t} rank={i + 1} />
+              <AppRow key={t.id} tool={t} rank={i + 1} lang={lang} />
             ))}
           </div>
         </div>
       </section>
 
-      {SECTIONS.filter((s) => !s.pro && !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
+      {SECS.filter((s) => !s.pro && !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
         const list = bySection[s.key]
         if (!list.length) return null
         return (
@@ -152,12 +158,12 @@ export default async function Home() {
                   </h2>
                   <p className="lead" style={{ marginBottom: 0 }}>{s.description}</p>
                 </div>
-                <Link href={sectionHref(s.key)}>See all</Link>
+                <Link href={sectionHref(s.key)}>{t('See all', 'Vedi tutti')}</Link>
               </div>
             </div>
             <div className="rail rail-small" role="list">
               {list.map((t) => (
-                <AppCard key={t.id} tool={t} pro={s.pro} />
+                <AppCard key={t.id} tool={t} pro={s.pro} lang={lang} />
               ))}
             </div>
           </section>
@@ -168,11 +174,11 @@ export default async function Home() {
         <section className="block store-top">
           <div className="container">
             <div className="row-head">
-              <h2 style={{ fontSize: 30 }}>Editor&apos;s picks</h2>
+              <h2 style={{ fontSize: 30 }}>{t('Editor’s picks', 'Scelti dalla redazione')}</h2>
             </div>
             <div className="features">
               {picks.map((t, i) => (
-                <FeatureCard key={t.id} tool={t} tone={tones[i]} />
+                <FeatureCard key={t.id} tool={t} tone={tones[i]} lang={lang} />
               ))}
             </div>
           </div>
@@ -181,39 +187,39 @@ export default async function Home() {
 
       <section className="block" id="plans">
         <div className="container">
-          <h2>Free to start, PRO when you want more</h2>
-          <p className="lead">One paid plan, billed monthly. Cancel whenever you like.</p>
+          <h2>{t('Free to start, PRO when you want more', 'Gratis per iniziare, PRO quando vuoi di più')}</h2>
+          <p className="lead">{t('One paid plan, billed monthly. Cancel whenever you like.', 'Un solo piano a pagamento, addebitato ogni mese. Disdici quando vuoi.')}</p>
           <div className="plans">
             <div className="plan">
-              <div className="plan-name">Free</div>
+              <div className="plan-name">{t('Free', 'Gratis')}</div>
               <div className="plan-price">
                 <b>€0</b>
-                <span>no card needed</span>
+                <span>{t('no card needed', 'senza carta')}</span>
               </div>
               <ul className="plan-list">
-                {FREE_FEATURES.map((f) => (
+                {(it ? FREE_FEATURES_IT : FREE_FEATURES).map((f) => (
                   <li key={f}>{f}</li>
                 ))}
               </ul>
               <Link href="/signup" className="btn btn-blue">
-                Get started free
+                {t('Get started free', 'Inizia gratis')}
               </Link>
             </div>
             <div className="plan plan-pro">
               <div className="plan-name">
-                PRO <span className="badge-pro pro-on-dark">All access</span>
+                PRO <span className="badge-pro pro-on-dark">{t('All access', 'Accesso completo')}</span>
               </div>
               <div className="plan-price">
                 <b>€14</b>
-                <span>per month</span>
+                <span>{t('per month', 'al mese')}</span>
               </div>
               <ul className="plan-list">
-                {PRO_FEATURES.map((f) => (
+                {(it ? PRO_FEATURES_IT : PRO_FEATURES).map((f) => (
                   <li key={f}>{f}</li>
                 ))}
               </ul>
-              <Link href="/signup?plan=pro" className="btn btn-yellow" aria-label={`Get PRO, ${PRO_PRICE_LABEL}`}>
-                Get PRO
+              <Link href="/signup?plan=pro" className="btn btn-yellow" aria-label={it ? `Passa a PRO, ${PRO_PRICE_LABEL_IT}` : `Get PRO, ${PRO_PRICE_LABEL}`}>
+                {t('Get PRO', 'Passa a PRO')}
               </Link>
             </div>
           </div>
@@ -224,7 +230,7 @@ export default async function Home() {
         <div className="container">
           <div className="row-head">
             <h2 style={{ fontSize: 34 }}>Blog</h2>
-            <Link href="/blog">All articles</Link>
+            <Link href="/blog">{t('All articles', 'Tutti gli articoli')}</Link>
           </div>
           <div className="posts posts-home">
             {freePosts.map((p) => (
@@ -237,11 +243,11 @@ export default async function Home() {
       <section className="cta-band">
         <div className="container">
           <div>
-            <h2>Get new tools and airdrops first on Telegram</h2>
-            <p>Join the channel and see each new listing the day it goes live.</p>
+            <h2>{t('Get new tools and airdrops first on Telegram', 'Scopri per primo nuovi strumenti e airdrop su Telegram')}</h2>
+            <p>{t('Join the channel and see each new listing the day it goes live.', 'Entra nel canale e vedi ogni nuova scheda il giorno in cui esce.')}</p>
           </div>
           <a href={telegram} className="btn btn-black">
-            Join on Telegram
+            {t('Join on Telegram', 'Entra su Telegram')}
           </a>
         </div>
       </section>

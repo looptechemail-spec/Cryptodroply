@@ -3,6 +3,7 @@ import { getUser, isAdmin } from './auth'
 import { SECTIONS } from './sections'
 
 export const PRO_PRICE_LABEL = '€14 per month'
+export const PRO_PRICE_LABEL_IT = '14 € al mese'
 
 /**
  * Chi può vedere i contenuti PRO: gli abbonati con abbonamento attivo, gli utenti admin

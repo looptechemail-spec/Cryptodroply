@@ -1,17 +1,25 @@
-import Link from 'next/link'
+import Link from '@/components/LocLink'
+import { i18n } from '@/lib/i18n'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { pick } from '@/lib/content'
 import { cleanText } from '@/lib/clean'
-import { hasPro, PRO_PRICE_LABEL } from '@/lib/access'
+import { hasPro, PRO_PRICE_LABEL, PRO_PRICE_LABEL_IT } from '@/lib/access'
 import BlogTabs from '@/components/BlogTabs'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Analyses', description: 'In-depth crypto analysis for PRO members.', robots: { index: false, follow: false } }
-
-const fmt = (d: Date | null) => d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await i18n()
+  return {
+    title: t('Analyses', 'Analisi'),
+    description: t('In-depth crypto analysis for PRO members.', 'Analisi crypto approfondite per chi ha PRO.'),
+    robots: { index: false, follow: false },
+  }
+}
 
 export default async function Analyses() {
+  const { t: tr, it, loc } = await i18n()
+  const fmt = (d: Date | null) => d?.toLocaleDateString(it ? 'it-IT' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   const member = await hasPro()
   // Chi non è PRO non riceve nemmeno i titoli: si leggono solo se si è abbonati.
   const posts = member
@@ -26,32 +34,32 @@ export default async function Analyses() {
     <div className="container">
       <div className="page-head">
         <h1>
-          Analyses <span className="badge-pro" style={{ verticalAlign: 'middle' }}>PRO</span>
+          {tr('Analyses', 'Analisi')} <span className="badge-pro" style={{ verticalAlign: 'middle' }}>PRO</span>
         </h1>
         <p style={{ fontSize: 20, maxWidth: 680 }}>
-          Weekly and in-depth analysis built on price structure, on-chain data, fundamentals and risk.
+          {tr('Weekly and in-depth analysis built on price structure, on-chain data, fundamentals and risk.', 'Analisi settimanali e approfondite basate su struttura dei prezzi, dati on-chain, fondamentali e rischio.')}
         </p>
       </div>
       <BlogTabs active="analyses" />
       {!member ? (
         <div className="paywall" style={{ marginTop: 28 }}>
           <span className="paywall-lock" aria-hidden="true">&#128274;</span>
-          <h2>Analyses are for PRO members</h2>
+          <h2>{tr('Analyses are for PRO members', 'Le analisi sono riservate a chi ha PRO')}</h2>
           <p>
-            {total} in-depth analyses on price structure, on-chain data, fundamentals and risk. Get PRO for {PRO_PRICE_LABEL} to read them all.
+            {tr(`${total} in-depth analyses on price structure, on-chain data, fundamentals and risk. Get PRO for ${PRO_PRICE_LABEL} to read them all.`, `${total} analisi approfondite su struttura dei prezzi, dati on-chain, fondamentali e rischio. Passa a PRO a ${PRO_PRICE_LABEL_IT} per leggerle tutte.`)}
           </p>
           <Link href="/signup?plan=pro" className="btn btn-yellow">
-            Get PRO
+            {tr('Get PRO', 'Passa a PRO')}
           </Link>
           <Link href="/login" className="paywall-login">
-            Already a member? Log in
+            {tr('Already a member? Log in', 'Sei già iscritto? Accedi')}
           </Link>
         </div>
       ) : (
         <div className="posts" style={{ margin: '28px 0 72px' }}>
           {posts.map((p) => {
-            const t = pick(p.translations)
-            const cat = p.category ? pick(p.category.translations)?.name : null
+            const t = pick(p.translations, loc)
+            const cat = p.category ? pick(p.category.translations, loc)?.name : null
             return (
               <Link key={p.id} href={`/post/${p.slug}`} className="post-row">
                 <span className="t">{cleanText(t?.title)}</span>

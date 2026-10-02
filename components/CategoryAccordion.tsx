@@ -7,7 +7,7 @@ import type { AppTool } from '@/lib/content'
 
 export type Group = { slug: string; name: string; blurb: string; intro: string; count: number; tools: AppTool[]; facets: Facet[] }
 
-export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pro: boolean }) {
+export default function CategoryAccordion({ groups, pro, lang = 'en' }: { groups: Group[]; pro: boolean; lang?: 'en' | 'it' }) {
   const [open, setOpen] = useState<string | null>(groups[0]?.slug ?? null)
   return (
     <div className="acc">
@@ -37,10 +37,10 @@ export default function CategoryAccordion({ groups, pro }: { groups: Group[]; pr
         <div key={g.slug} id={`panel-${g.slug}`} role="tabpanel" hidden={open !== g.slug} className="acc-panel">
           <div className="row-head">
             <h2 style={{ fontSize: 26 }}>{g.name}</h2>
-            <Link href={`/${g.slug}`}>Open page</Link>
+            <Link href={lang === 'it' ? `/it/${g.slug}` : `/${g.slug}`}>{lang === 'it' ? 'Apri la pagina' : 'Open page'}</Link>
           </div>
           {g.intro && <p className="panel-intro">{g.intro}</p>}
-          <ToolExplorer tools={g.tools} facets={g.facets} pro={pro} />
+          <ToolExplorer tools={g.tools} facets={g.facets} pro={pro} lang={lang} />
         </div>
       ))}
     </div>

@@ -5,7 +5,8 @@
 export type Tag = { emoji: string; label: string }
 export type FacetOption = { value: string; label: string; emoji: string; count: number }
 export type Facet = { id: string; label: string; emoji: string; kind: 'bool' | 'multi'; options: FacetOption[] }
-type Def = { key: string; labelEn: string }
+type Def = { key: string; labelEn: string; labelIt?: string | null }
+export type TagLang = 'en' | 'it'
 type Analyzed = { tags: Tag[]; vals: Record<string, string[]> }
 
 // campi che non sono caratteristiche (testi lunghi, link, ordinamenti...)
@@ -20,6 +21,37 @@ const LABELS: Record<string, string> = {
 }
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s)
 export const labelOf = (raw: string) => cap(LABELS[raw.trim().toLowerCase()] ?? raw.trim())
+
+// etichette dei campi in italiano (chiave = etichetta inglese in minuscolo)
+const LABELS_IT: Record<string, string> = {
+  difficulty: 'Difficoltà', platform: 'Piattaforma', platforms: 'Piattaforme', custody: 'Custodia', kyc: 'KYC', cashback: 'Cashback',
+  fees: 'Commissioni', fee: 'Commissione', risk: 'Rischio', yield: 'Rendimento', assets: 'Asset', asset: 'Asset', reward: 'Ricompensa', rewards: 'Ricompense',
+  frequency: 'Frequenza', requirements: 'Requisiti', requirement: 'Requisito', claim: 'Riscossione', earnings: 'Guadagni', earning: 'Guadagno',
+  referral: 'Referral', 'open source': 'Open source', free: 'Gratis', 'free / paid': 'Gratis / A pagamento', access: 'Accesso', browser: 'Browser',
+  mobile: 'Mobile', pc: 'PC', desktop: 'Desktop', dapp: 'dApp', dapps: 'dApp', iban: 'IBAN', sepa: 'SEPA', deposit: 'Deposito',
+  'card network': 'Circuito', 'based in': 'Sede', 'supported coins': 'Monete supportate', 'monthly fees': 'Spese mensili',
+  'virtual card': 'Carta virtuale', 'physical card': 'Carta fisica', 'card deposit': 'Deposito con carta', 'crypto deposit': 'Deposito crypto',
+  'sepa deposit': 'Deposito SEPA', 'fx fee': 'Commissione di cambio', 'dex / cex': 'DEX / CEX', 'real time': 'Tempo reale', 'real-time': 'Tempo reale',
+  alerts: 'Avvisi', api: 'API', tracker: 'Tracker', 'pro version': 'Versione PRO', nft: 'NFT', nfts: 'NFT', governance: 'Governance', login: 'Accesso',
+  connection: 'Connessione', chain: 'Blockchain', chains: 'Blockchain', network: 'Rete', networks: 'Reti', coins: 'Monete', crypto: 'Crypto',
+  monthly: 'Mensile', type: 'Tipo', features: 'Funzionalità', language: 'Lingua', languages: 'Lingue', country: 'Paese', countries: 'Paesi',
+  price: 'Prezzo', pricing: 'Prezzi', support: 'Assistenza', security: 'Sicurezza', privacy: 'Privacy', token: 'Token', tokens: 'Token',
+  category: 'Categoria', 'free / paid version': 'Versione gratuita / a pagamento', website: 'Sito web', founded: 'Fondazione', 'launch date': 'Data di lancio',
+}
+// valori più comuni in italiano (chiave = valore inglese in minuscolo)
+const VALUES_IT: Record<string, string> = {
+  yes: 'Sì', no: 'No', free: 'Gratis', paid: 'A pagamento', 'free / paid': 'Gratis / A pagamento', freemium: 'Freemium', high: 'Alto', medium: 'Medio', low: 'Basso',
+  optional: 'Facoltativo', required: 'Obbligatorio', partial: 'Parziale', part: 'Parziale', limited: 'Limitato', mixed: 'Misto', easy: 'Facile', hard: 'Difficile',
+  beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzato', none: 'Nessuno', multi: 'Multi', daily: 'Giornaliero', weekly: 'Settimanale',
+  monthly: 'Mensile', yearly: 'Annuale', game: 'Gioco', games: 'Giochi', custodial: 'Custodial', 'non-custodial': 'Non-custodial', 'self-custody': 'Self-custody',
+  'no kyc': 'Senza KYC', 'light kyc': 'KYC leggero', unlimited: 'Illimitato', never: 'Mai', always: 'Sempre', global: 'Globale', worldwide: 'In tutto il mondo',
+  'open source': 'Open source', 'closed source': 'Codice chiuso', other: 'Altro', others: 'Altri', all: 'Tutti', various: 'Vari',
+}
+const trLabel = (label: string, it: boolean) => (it ? LABELS_IT[label.toLowerCase()] ?? label : label)
+const trValue = (v: string, it: boolean) => (it ? VALUES_IT[v.toLowerCase()] ?? v : v)
+/** Etichetta di un campo nella lingua richiesta (usa labelIt se c'è, poi il dizionario, poi l'inglese). */
+export const labelFor = (d: { labelEn: string; labelIt?: string | null }, lang: TagLang = 'en') =>
+  lang === 'it' ? (d.labelIt?.trim() ? cap(d.labelIt.trim()) : trLabel(labelOf(d.labelEn), true)) : labelOf(d.labelEn)
 
 const LABEL_EMOJI: [RegExp, string][] = [
   [/difficult/, '🎯'], [/platform/, '🖥️'], [/custod/, '🔐'], [/kyc/, '🪪'], [/cashback/, '💸'], [/fee/, '🧾'],
@@ -71,7 +103,8 @@ function tokens(raw: string): { label: string; emoji?: string }[] {
   return res
 }
 
-export function analyze(defs: Def[], tools: { id: string; attributes: unknown }[]): { facets: Facet[]; tools: Record<string, Analyzed> } {
+export function analyze(defs: Def[], tools: { id: string; attributes: unknown }[], lang: TagLang = 'en'): { facets: Facet[]; tools: Record<string, Analyzed> } {
+  const it = lang === 'it'
   const out: Record<string, Analyzed> = Object.fromEntries(tools.map((t) => [t.id, { tags: [], vals: {} }]))
   const facets: Facet[] = []
   const tipDef = defs.find((d) => d.key.toLowerCase() === 'tip' || d.labelEn.trim().toLowerCase() === 'tip')
@@ -87,8 +120,8 @@ export function analyze(defs: Def[], tools: { id: string; attributes: unknown }[
 
   for (const d of defs) {
     if (d === tipDef || SKIP.test(d.labelEn.trim()) || SKIP.test(d.key)) continue
-    const label = labelOf(d.labelEn)
-    const emoji = labelEmoji(label)
+    const label = labelFor(d, lang)
+    const emoji = labelEmoji(labelOf(d.labelEn))
     const raws = tools.map((t) => String(((t.attributes ?? {}) as Record<string, unknown>)[d.key] ?? '').trim())
     const filled = raws.filter(Boolean)
     if (!filled.length || filled.some((r) => /^https?:\/\//i.test(r))) continue
@@ -101,7 +134,7 @@ export function analyze(defs: Def[], tools: { id: string; attributes: unknown }[
         yes++
         out[t.id].vals[d.key] = ['yes']
         const extra = raws[i].replace(YES, '').replace(/^[,:\s]+/, '').trim()
-        out[t.id].tags.push({ emoji, label: extra && extra.length <= 14 ? `${label} ${extra}` : label })
+        out[t.id].tags.push({ emoji, label: extra && extra.length <= 14 ? `${label} ${trValue(extra, it)}` : label })
       })
       if (yes >= 1 && yes < tools.length) facets.push({ id: d.key, label, emoji, kind: 'bool', options: [{ value: 'yes', label, emoji, count: yes }] })
       continue
@@ -118,23 +151,24 @@ export function analyze(defs: Def[], tools: { id: string; attributes: unknown }[
         const e = x.emoji ?? valueEmoji(x.label) ?? emoji
         if (!seen.has(k)) {
           seen.add(k)
-          const o = opts.get(k) ?? { value: k, label: x.label, emoji: e, count: 0 }
+          const o = opts.get(k) ?? { value: k, label: trValue(x.label, it), emoji: e, count: 0 }
           o.count++
           opts.set(k, o)
         }
-        const shown = /^(optional|required|partial|part|limited|mixed)$/i.test(x.label) ? `${label}: ${x.label}` : x.label
+        const xl = trValue(x.label, it)
+        const shown = /^(optional|required|partial|part|limited|mixed)$/i.test(x.label) ? `${label}: ${xl}` : xl
         if (n < 2 && !out[t.id].tags.some((g) => g.label.toLowerCase() === shown.toLowerCase())) out[t.id].tags.push({ emoji: e, label: shown })
       })
       out[t.id].vals[d.key] = [...seen]
     })
     if (opts.size >= 2 && opts.size <= 14) {
-      facets.push({ id: d.key, label, emoji, kind: 'multi', options: [...opts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)) })
+      facets.push({ id: d.key, label, emoji, kind: 'multi', options: [...opts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, lang)) })
     }
   }
   return { facets, tools: out }
 }
 
 /** I tag di un solo strumento (per la sua pagina). */
-export function toolTags(defs: Def[], attributes: unknown): Tag[] {
-  return analyze(defs, [{ id: 'x', attributes }]).tools.x.tags
+export function toolTags(defs: Def[], attributes: unknown, lang: TagLang = 'en'): Tag[] {
+  return analyze(defs, [{ id: 'x', attributes }], lang).tools.x.tags
 }

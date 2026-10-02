@@ -1,4 +1,6 @@
-import Link from 'next/link'
+import Link from '@/components/LocLink'
+import { i18n } from '@/lib/i18n'
+import { sec, CATEGORY_NAMES_IT } from '@/lib/sections-it'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
@@ -9,7 +11,7 @@ import { hasPro, isProCollection, PRO_PRICE_LABEL } from '@/lib/access'
 import { Paywall } from '@/components/Paywall'
 import { getUser } from '@/lib/auth'
 import { FavButton } from '@/components/FavButton'
-import { toolTags } from '@/lib/tags'
+import { toolTags, labelFor } from '@/lib/tags'
 import { cleanText, cleanHtml } from '@/lib/clean'
 
 export const dynamic = 'force-dynamic'
@@ -55,12 +57,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tool } = await load(category, slug)
   if (!tool) return {}
   if (isProCollection(tool.category.wixId)) return { title: tool.title, robots: { index: false, follow: false } }
-  const t = pick(tool.translations)
+  const { it, loc } = await i18n()
+  const t = pick(tool.translations, loc)
   const description = t?.seoDescription ?? t?.description ?? undefined
+  const seoTitle = it && t?.locale !== 'IT' ? undefined : t?.seoTitle
   // l'anteprima quando il link viene condiviso è il logo dello strumento
   const image = tool.logoUrl ?? tool.coverUrl ?? undefined
   return {
-    title: t?.seoTitle ?? `${tool.title}: what it is and how to use it`,
+    title: seoTitle ?? (it ? `${tool.title}: cos’è e come si usa` : `${tool.title}: what it is and how to use it`),
     description,
     openGraph: { title: tool.title, description, images: image ? [image] : undefined },
     twitter: { card: 'summary', title: tool.title, description, images: image ? [image] : undefined },
@@ -71,6 +75,7 @@ export default async function ToolPage({ params }: Props) {
   const { category, slug } = await params
   const { tool, pro } = await load(category, slug)
   if (!tool) notFound()
+  const { t: tr, it, lang, loc } = await i18n()
 
   const isMember = await hasPro()
   if (isProCollection(tool.category.wixId) && !isMember) {
@@ -79,32 +84,35 @@ export default async function ToolPage({ params }: Props) {
         <div className="crumbs" style={{ marginTop: 28 }}>
           <Link href="/">Home</Link>
         </div>
-        <Paywall title="This tool is for PRO members" text="The Grow and Privacy sections are included with PRO." />
+        <Paywall title={tr('This tool is for PRO members', 'Questo strumento è riservato a chi ha PRO')} text={tr('The Grow and Privacy sections are included with PRO.', 'Le sezioni Grow e Privacy sono incluse in PRO.')} />
       </div>
     )
   }
   const viewer = await getUser()
   const saved = viewer ? !!(await db.favorite.findUnique({ where: { userId_toolId: { userId: viewer.id, toolId: tool.id } } })) : false
-  const t = pick(tool.translations)
-  const catName = pick(tool.category.translations)?.name ?? tool.category.slug
+  const t = pick(tool.translations, loc)
+  const catName = (it && tool.category.wixId && CATEGORY_NAMES_IT[tool.category.wixId]) || pick(tool.category.translations, loc)?.name || tool.category.slug
   const base = pro ? `/pro-${tool.category.slug}` : `/${tool.category.slug}`
-  const values = (tool.attributes ?? {}) as Record<string, string>
+  // in italiano: i valori tradotti (se ci sono) prendono il posto di quelli originali
+  const itAttrs = it && t?.locale === 'IT' ? ((t.attributes ?? {}) as Record<string, string>) : {}
+  const values = { ...((tool.attributes ?? {}) as Record<string, string>), ...Object.fromEntries(Object.entries(itAttrs).filter(([, v]) => v)) }
   const facts = tool.category.attributes
-    .map((a) => ({ label: a.labelEn, value: values[a.key] }))
+    .map((a) => ({ label: labelFor(a, lang), value: values[a.key] }))
     .filter((f) => f.value)
-  const tags = toolTags(tool.category.attributes, tool.attributes)
+  const tags = toolTags(tool.category.attributes, tool.attributes, lang)
   // sotto la scheda: gli altri strumenti della stessa sezione (es. wallet = cold + hot), prima quelli della stessa categoria
-  const section = SECTIONS.find((x) => tool.category.wixId && x.collections.includes(tool.category.wixId))
+  const sectionBase = SECTIONS.find((x) => tool.category.wixId && x.collections.includes(tool.category.wixId))
+  const section = sectionBase && sec(sectionBase, it)
   const related = section
-    ? (await getSectionTools(section.collections, 60))
+    ? (await getSectionTools(section.collections, 60, loc))
         .filter((x) => x.id !== tool.id)
         .sort((a, b) => Number(b.categorySlug === tool.category.slug) - Number(a.categorySlug === tool.category.slug))
         .slice(0, 14)
     : []
   const sections = [
-    { title: 'What it is', html: t?.whatIs },
-    { title: 'How it works', html: t?.howItWorks },
-    { title: 'When to use it', html: t?.whenToUse },
+    { title: tr('What it is', 'Cos’è'), html: t?.whatIs },
+    { title: tr('How it works', 'Come funziona'), html: t?.howItWorks },
+    { title: tr('When to use it', 'Quando usarlo'), html: t?.whenToUse },
   ].filter((s) => s.html)
 
   // i tutorial sono per chi ha un account (gratuito o PRO); chi non è registrato non li vede
@@ -118,7 +126,7 @@ export default async function ToolPage({ params }: Props) {
             <Link href="/">Home</Link> / <Link href={`/${tool.category.slug}`}>{catName}</Link> / {tool.title}
           </div>
           <div className="tool-head">
-            <div className="tool-logo">{tool.logoUrl && <img src={tool.logoUrl} alt={`${tool.title} logo`} />}</div>
+            <div className="tool-logo">{tool.logoUrl && <img src={tool.logoUrl} alt={tr(`${tool.title} logo`, `Logo di ${tool.title}`)} />}</div>
             <div style={{ flexGrow: 1 }}>
               <h1>{tool.title}</h1>
               {tags.length > 0 && (
@@ -135,12 +143,12 @@ export default async function ToolPage({ params }: Props) {
             <div className="tool-actions">
               {(tool.refLink || tool.websiteUrl) && (
                 <a href={`/go/${tool.id}`} className="btn btn-yellow" rel="sponsored nofollow noopener" target="_blank">
-                  Visit {tool.title}
+                  {tr(`Visit ${tool.title}`, `Vai a ${tool.title}`)}
                 </a>
               )}
               <FavButton toolId={tool.id} initial={saved} loggedIn={!!viewer} />
               <Link href={`/${tool.category.slug}`} className="btn btn-outline">
-                All {catName.toLowerCase()}
+                {tr(`All ${catName.toLowerCase()}`, `Tutti: ${catName}`)}
               </Link>
             </div>
           </div>
@@ -164,12 +172,12 @@ export default async function ToolPage({ params }: Props) {
 
           {tool.videos.length > 0 && (
             <>
-              <h2 style={{ marginBottom: 20 }}>Video tutorials</h2>
+              <h2 style={{ marginBottom: 20 }}>{tr('Video tutorials', 'Video tutorial')}</h2>
               {canWatch ? (
                 <div className="videos">
                   {tool.videos.map((v) => {
                     const embed = youtubeEmbed(v.youtubeUrl)
-                    const title = v.titleEn ?? 'Video tutorial'
+                    const title = (it ? v.titleIt ?? v.titleEn : v.titleEn) ?? tr('Video tutorial', 'Video tutorial')
                     return (
                       <div key={v.id}>
                         {embed && (
@@ -189,12 +197,12 @@ export default async function ToolPage({ params }: Props) {
                     <rect x="4" y="11" width="16" height="10" rx="2" />
                     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                   </svg>
-                  <b>Video tutorials are free for registered members</b>
+                  <b>{tr('Video tutorials are free for registered members', 'I video tutorial sono gratuiti per chi ha un account')}</b>
                   <Link href="/signup" className="btn btn-yellow btn-sm">
-                    Create a free account
+                    {tr('Create a free account', 'Crea un account gratuito')}
                   </Link>
                   <Link href="/login" className="paywall-login">
-                    Already registered? Log in
+                    {tr('Already registered? Log in', 'Hai già un account? Accedi')}
                   </Link>
                 </div>
               )}
@@ -205,7 +213,7 @@ export default async function ToolPage({ params }: Props) {
         <aside className="side">
           {facts.length > 0 && (
             <div className="facts">
-              <h2>Key facts</h2>
+              <h2>{tr('Key facts', 'Dati chiave')}</h2>
               <div className="list">
                 {facts.map((f) => (
                   <div key={f.label} className="fact">
@@ -225,17 +233,17 @@ export default async function ToolPage({ params }: Props) {
             <div className="row-head">
               <div>
                 <h2>
-                  More in {section.title}
+                  {tr('More in', 'Altro in')} {section.title}
                   {section.pro && <span className="badge-pro">PRO</span>}
                 </h2>
                 <p className="lead" style={{ marginBottom: 0 }}>{section.description}</p>
               </div>
-              <Link href={sectionHref(section.key)}>See all</Link>
+              <Link href={sectionHref(section.key)}>{tr('See all', 'Vedi tutti')}</Link>
             </div>
           </div>
           <div className="rail rail-small" role="list">
             {related.map((x) => (
-              <AppCard key={x.id} tool={x} pro={section.pro} />
+              <AppCard key={x.id} tool={x} pro={section.pro} lang={lang} />
             ))}
           </div>
         </section>
@@ -245,11 +253,11 @@ export default async function ToolPage({ params }: Props) {
         <section className="cta-band" style={{ marginTop: 0 }}>
           <div className="container">
             <div>
-              <h2>Watch the video tutorials, free</h2>
-              <p>Create a free account to unlock every tutorial.</p>
+              <h2>{tr('Watch the video tutorials, free', 'Guarda i video tutorial, gratis')}</h2>
+              <p>{tr('Create a free account to unlock every tutorial.', 'Crea un account gratuito per sbloccare tutti i tutorial.')}</p>
             </div>
             <Link href="/signup" className="btn btn-black">
-              Create a free account
+              {tr('Create a free account', 'Crea un account gratuito')}
             </Link>
           </div>
         </section>

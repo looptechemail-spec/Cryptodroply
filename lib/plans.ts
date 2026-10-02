@@ -20,3 +20,26 @@ export const FAQ: { q: string; a: string }[] = [
   { q: 'Do I need an account to use the site?', a: 'The free sections and the blog are open to everyone. A free account unlocks the video tutorials and lets you save tools. PRO adds Grow, Privacy and the analyses.' },
   { q: 'Who is behind Cryptodroply?', a: 'Cryptodroply is created by Coinspark. Write to us from the contact page for anything else.' },
 ]
+
+export const FREE_FEATURES_IT = [
+  'Sezioni Free earn, Wallet, Exchange e Tools gratuite',
+  'I dati chiave di ogni strumento, a confronto',
+  'Una guida semplice su cos\'è ogni strumento, come funziona e quando usarlo',
+  'Video tutorial per ogni strumento, con un account gratuito',
+  'Salva i tuoi strumenti preferiti nel tuo account',
+  'Il blog e la newsletter',
+]
+export const PRO_FEATURES_IT = [
+  'Tutto quello che c\'è in Free',
+  'Le sezioni Grow e Privacy',
+  'Le analisi settimanali, complete',
+  'Disdici quando vuoi',
+]
+export const FAQ_IT: { q: string; a: string }[] = [
+  { q: 'Quanto costa PRO?', a: 'PRO costa 14 € al mese. Non ci sono altri piani né costi nascosti.' },
+  { q: 'Posso disdire?', a: 'Sì, in qualsiasi momento dalla pagina del tuo account. Mantieni PRO fino alla fine del periodo che hai già pagato.' },
+  { q: 'Come pago?', a: 'Con carta, tramite Stripe. Non vediamo e non conserviamo mai i dati della tua carta.' },
+  { q: 'Cosa ottengo con PRO?', a: 'Le sezioni Grow e Privacy e le analisi settimanali complete. I video tutorial sono gratuiti con qualsiasi account.' },
+  { q: 'Mi serve un account per usare il sito?', a: 'Le sezioni gratuite e il blog sono aperti a tutti. Un account gratuito sblocca i video tutorial e ti permette di salvare gli strumenti. PRO aggiunge Grow, Privacy e le analisi.' },
+  { q: 'Chi c\'è dietro Cryptodroply?', a: 'Cryptodroply è creato da Coinspark. Per qualsiasi altra cosa scrivici dalla pagina contatti.' },
+]

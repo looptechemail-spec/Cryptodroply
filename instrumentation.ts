@@ -16,6 +16,13 @@ export async function register() {
     setInterval(() => {
       import('./lib/ai-content').then((m) => m.tickAutomation((x) => console.log('[auto] ' + x))).catch((e) => console.error('auto:', e))
     }, 60 * 60 * 1000)
+    // traduzione italiana di strumenti e articoli: dopo l'avvio traduce tutto ciò che manca, poi ogni ora i contenuti nuovi
+    setTimeout(() => {
+      import('./lib/translate').then((m) => m.translateMissing((x) => console.log('[translate] ' + x))).catch((e) => console.error('translate:', e))
+    }, 90 * 1000)
+    setInterval(() => {
+      import('./lib/translate').then((m) => m.translateMissing((x) => console.log('[translate] ' + x), 20)).catch((e) => console.error('translate:', e))
+    }, 60 * 60 * 1000)
     // lancio: si tolgono le bozze SEO automatiche (una volta sola) e si copiano sul sito le immagini rimaste su Wix
     void (async () => {
       try {

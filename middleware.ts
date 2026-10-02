@@ -8,7 +8,21 @@ export function middleware(req: NextRequest) {
   const ref = req.nextUrl.searchParams.get('ref')
   const headers = new Headers(req.headers)
   headers.set('x-pathname', req.nextUrl.pathname + req.nextUrl.search)
-  const res = NextResponse.next({ request: { headers } })
+  // versione italiana: /it/... viene servita dalle stesse pagine, con la lingua indicata nell'intestazione x-lang
+  const path = req.nextUrl.pathname
+  const isIt = path === '/it' || path.startsWith('/it/')
+  headers.set('x-lang', isIt ? 'it' : 'en')
+  let res: NextResponse
+  if (isIt) {
+    const url = req.nextUrl.clone()
+    url.pathname = path.slice(3) || '/'
+    res = NextResponse.rewrite(url, { request: { headers } })
+  } else {
+    res = NextResponse.next({ request: { headers } })
+  }
+  // ricorda la lingua scelta, così dopo un modulo (accesso, contatti...) si torna nella stessa lingua
+  const lang = isIt ? 'it' : 'en'
+  if (req.cookies.get('cd_lang')?.value !== lang) res.cookies.set('cd_lang', lang, { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' })
   if (ref && req.cookies.get('cd_consent')?.value === 'yes' && /^[a-z0-9]{6,20}$/i.test(ref)) {
     res.cookies.set('cd_ref', ref.toLowerCase(), { maxAge: 60 * 60 * 24 * 30, path: '/', sameSite: 'lax', httpOnly: true, secure: true })
   }

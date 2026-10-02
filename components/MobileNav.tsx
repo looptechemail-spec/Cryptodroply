@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 
 /** Menu mobile: pulsante hamburger, voci con sottomenu che si aprono al tocco, e nascondimento dell'intestazione scorrendo in basso. */
-export default function MobileNav() {
+export default function MobileNav({ openLabel = 'Open menu', closeLabel = 'Close menu' }: { openLabel?: string; closeLabel?: string }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function MobileNav() {
   }, [])
 
   return (
-    <button type="button" className="burger" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+    <button type="button" className="burger" aria-label={open ? closeLabel : openLabel} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
       <span /><span /><span />
     </button>
   )
