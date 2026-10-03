@@ -14,29 +14,52 @@ const back = (page: string, msg: string): never => redirect(`${page}?msg=${encod
 const pageOf = (source: string) => (source === 'tool' ? '/admin/tool-posts' : '/admin/news')
 const log = (key: string, note: string) => db.jobRun.create({ data: { key: `manual-${key}-${Date.now()}`, note: note.slice(0, 400) } })
 
-/** Salva un post e, se serve, lo manda a Publer come bozza o programmato. */
-export async function savePost(act: string, fd: FormData) {
+/** Un contenuto = un blocco con i testi per X, Telegram e Facebook. Un solo pulsante lo salva, lo scarta, lo pubblica subito o lo programma su tutti. */
+export async function saveGroup(act: string, fd: FormData) {
   await requireAdmin()
-  const id = String(fd.get('id'))
+  const ids = String(fd.get('ids') ?? '').split(',').filter(Boolean)
   const when = String(fd.get('scheduledAt') ?? '')
-  const p = await db.socialPost.update({
-    where: { id },
-    data: { text: String(fd.get('text')), scheduledAt: when ? romeToDate(when) : null, ...(act === 'reject' ? { status: 'REJECTED' } : {}) },
-  })
-  let msg = act === 'reject' ? 'Post discarded' : 'Saved'
-  if (act === 'publer-draft' || act === 'publer-schedule' || act === 'publer-now') {
-    const state = act === 'publer-draft' ? 'draft' : act === 'publer-now' ? 'now' : 'scheduled'
-    try {
-      const job = await sendToPubler(p, state)
-      await db.socialPost.update({ where: { id }, data: { status: 'PUBLER', publerRef: `${state}:${job}`, sentAt: new Date() } })
-      msg = state === 'draft' ? 'Sent to Publer as a draft' : state === 'now' ? 'Published now via Publer (it appears on the networks in a few moments)' : 'Scheduled on Publer'
-    } catch (e) {
-      await db.socialPost.update({ where: { id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
-      msg = `Publer error: ${(e as Error).message}`
+  const rows = await db.socialPost.findMany({ where: { id: { in: ids } } })
+  if (!rows.length) back('/admin/news', 'Post non trovato: ricarica la pagina')
+  const source = rows[0].source
+  const page = pageOf(source)
+  let msg = ''
+  try {
+    if (act === 'discard') {
+      await db.socialPost.updateMany({ where: { id: { in: ids } }, data: { status: 'REJECTED' } })
+      msg = `Scartato (${rows.length} post)`
+    } else {
+      let scheduledAt: Date | null = null
+      if (when) scheduledAt = romeToDate(when)
+      for (const r of rows) {
+        const text = String(fd.get(`text_${r.id}`) ?? r.text)
+        await db.socialPost.update({ where: { id: r.id }, data: { text, scheduledAt } })
+      }
+      if (act === 'save') msg = 'Salvato'
+      else {
+        const state = act === 'publish-now' ? 'now' : act === 'schedule' ? 'scheduled' : 'draft'
+        if (state === 'scheduled' && !scheduledAt) throw new Error('Scegli data e ora per programmare')
+        const fresh = await db.socialPost.findMany({ where: { id: { in: ids } } })
+        const ok: string[] = [], bad: string[] = []
+        for (const p of fresh) {
+          try {
+            const job = await sendToPubler(p, state)
+            await db.socialPost.update({ where: { id: p.id }, data: { status: 'PUBLER', publerRef: `${state}:${job}`, sentAt: new Date() } })
+            ok.push(p.channel)
+          } catch (e) {
+            await db.socialPost.update({ where: { id: p.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
+            bad.push(`${p.channel}: ${(e as Error).message.slice(0, 120)}`)
+          }
+        }
+        const what = state === 'now' ? 'Pubblicato ora' : state === 'scheduled' ? 'Programmato' : 'Bozza inviata'
+        msg = `${ok.length ? `${what} su ${ok.join(', ')}` : 'Nessun post inviato'}${bad.length ? `. ERROR ${bad.join(' | ')}` : ''}`
+      }
     }
+  } catch (e) {
+    msg = `ERROR: ${(e as Error).message}`
   }
   refresh()
-  back(pageOf(p.source), msg)
+  back(page, msg)
 }
 
 /** Manda a Publer tutti i post da rivedere di una sezione che hanno una data. */

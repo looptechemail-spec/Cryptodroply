@@ -96,10 +96,11 @@ Answer ONLY with these blocks:
 <post channel="facebook">text</post>`,
   })
   let n = 0
+  const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   for (const m of out.matchAll(/<post channel="(telegram|x|facebook)">([\s\S]*?)<\/post>/gi)) {
     const text = m[2].trim().replace(/\s*https?:\/\/\S+\s*$/, '')
     if (text.length < 10) continue
-    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'tool' } })
+    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'tool', batch } })
     n++
   }
   if (!n) throw new Error('nessun post nella risposta')
@@ -197,10 +198,11 @@ ${brief}`,
     if (!cand) continue
     const dayDate = new Date(`${monday}T00:00:00Z`); dayDate.setUTCDate(dayDate.getUTCDate() + i)
     const when = romeToDate(`${dayDate.toISOString().slice(0, 10)}T10:00`)
+    const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
     for (const [ch, tagName] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
       const text = tag(m[3], tagName)
       if (text.length < 20) continue
-      const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: cand.link, scheduledAt: when, source: 'tool' } })
+      const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: cand.link, scheduledAt: when, source: 'tool', batch } })
       n++
       try {
         const job = await sendToPubler(row, 'draft')
@@ -251,10 +253,11 @@ Answer ONLY with:
   })
   const errors: string[] = []
   let ok = 0
+  const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
     const text = tag(out, tg)
     if (text.length < 20) continue
-    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'article' } })
+    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'article', batch } })
     try {
       const job = await sendToPubler(row, 'scheduled')
       await db.socialPost.update({ where: { id: row.id }, data: { status: 'PUBLER', publerRef: `scheduled:${job}`, sentAt: new Date() } })
@@ -295,10 +298,11 @@ ${source}`,
   })
   const when = whenLocal ? romeToDate(whenLocal) : tomorrowRome(12)
   let n = 0
+  const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
     const text = tag(out, tg)
     if (text.length < 15) continue
-    await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news' } })
+    await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news', batch } })
     n++
   }
   if (!n) throw new Error('nessun post nella risposta')
@@ -323,11 +327,12 @@ Answer ONLY with:
   })
   const when = whenLocal ? romeToDate(whenLocal) : tomorrowRome(12)
   let n = 0
+  const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   const errors: string[] = []
   for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
     const text = tag(out, tg)
     if (text.length < 15) continue
-    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news' } })
+    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news', batch } })
     try {
       const job = await sendToPubler(row, 'draft')
       await db.socialPost.update({ where: { id: row.id }, data: { status: 'PUBLER', publerRef: `draft:${job}`, sentAt: new Date() } })

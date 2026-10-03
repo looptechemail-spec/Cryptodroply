@@ -445,6 +445,7 @@ model SocialPost {
   sentAt      DateTime?
   source      String    @default("news") // tool (post giornalieri sugli strumenti), news (notizie), article (nuovo articolo)
   publerRef   String? // stato e id del lavoro su Publer (es. "draft:6810dec6...")
+  batch       String? // i post X, Telegram e Facebook dello stesso contenuto hanno lo stesso codice
   createdAt   DateTime  @default(now())
 
   @@index([status, scheduledAt])
