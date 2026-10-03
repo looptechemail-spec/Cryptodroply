@@ -5,7 +5,7 @@ import { cleanText } from '@/lib/clean'
 import { FREE_FEATURES, PRO_FEATURES, FREE_FEATURES_IT, PRO_FEATURES_IT } from '@/lib/plans'
 import { db } from '@/lib/db'
 import { getSectionTools, pick } from '@/lib/content'
-import { AppCard, AppRow, FeatureCard } from '@/components/AppCard'
+import { AppCard, FeatureCard } from '@/components/AppCard'
 import { SECTIONS, sectionHref } from '@/lib/sections'
 import { PRO_PRICE_LABEL, PRO_PRICE_LABEL_IT } from '@/lib/access'
 import { Hero3D } from '@/components/Hero3D'
@@ -127,28 +127,11 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="block" id="wallets">
-        <div className="container">
-          <div className="row-head">
-            <div>
-              <h2>{t('Wallets', 'Wallet')}</h2>
-              <p className="lead" style={{ marginBottom: 0 }}>{SECS[1].description}</p>
-            </div>
-            <Link href={sectionHref('wallet')}>{t('See all', 'Vedi tutti')}</Link>
-          </div>
-          <div className="chart">
-            {bySection['wallet'].map((t, i) => (
-              <AppRow key={t.id} tool={t} rank={i + 1} lang={lang} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {SECS.filter((s) => !s.pro && !['wallet', 'exchange', 'tools'].includes(s.key)).map((s) => {
+      {[...SECS.filter((s) => s.key === 'wallet'), ...SECS.filter((s) => s.key !== 'wallet')].filter((s) => !s.pro && !['exchange', 'tools'].includes(s.key)).map((s) => {
         const list = bySection[s.key]
         if (!list.length) return null
         return (
-          <section key={s.key} className="block rail-block">
+          <section key={s.key} id={s.key === 'wallet' ? 'wallets' : undefined} className="block rail-block">
             <div className="container">
               <div className="row-head">
                 <div>
