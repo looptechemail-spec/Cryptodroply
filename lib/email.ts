@@ -1,5 +1,5 @@
 /** Invio email con Resend. Senza RESEND_API_KEY non invia nulla e lo scrive nei log. */
-export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<boolean> {
+export async function sendEmail(opts: { to: string; subject: string; html: string; replyTo?: string }): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM
   if (!key || !from) {
@@ -9,7 +9,7 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: opts.to, subject: opts.subject, html: opts.html }),
+    body: JSON.stringify({ from, to: opts.to, subject: opts.subject, html: opts.html, ...(opts.replyTo ? { reply_to: opts.replyTo } : {}) }),
   })
   if (!res.ok) console.error('[email] Resend ha risposto', res.status, await res.text().catch(() => ''))
   return res.ok

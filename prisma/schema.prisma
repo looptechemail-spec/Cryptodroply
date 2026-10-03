@@ -523,3 +523,16 @@ model ChatUsage {
 
   @@unique([key, day])
 }
+
+// YouTuber i cui video sono sulle schede: da invitare a collaborare con il link referral
+model Creator {
+  id          String    @id @default(cuid())
+  channelUrl  String    @unique
+  name        String
+  email       String?
+  notes       String?
+  status      String    @default("TO_CONTACT") // TO_CONTACT, CONTACTED, REPLIED, PARTNER, DECLINED
+  pages       Json      @default("[]") // schede dove compaiono i suoi video: [{ toolTitle, url }]
+  contactedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
