@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
-import { runWeeklyArticle } from '@/lib/ai-content'
+import { runWeeklyArticle, runWeeklyAnalysis } from '@/lib/ai-content'
 import { saveCover, publishNow, scheduleArticle, unscheduleArticle } from '@/lib/articles'
 import { romeToDate, dateToRome } from '@/lib/time'
 import { translatePost } from '@/lib/translate'
@@ -23,6 +23,21 @@ async function create(fd: FormData) {
     await db.jobRun.create({ data: { key: `manual-article-new-${Date.now()}`, note: `ERROR: ${(e as Error).message}` } })
   }
   revalidatePath('/admin/articles')
+}
+
+async function createAnalysis(fd: FormData) {
+  'use server'
+  await requireAdmin()
+  const project = String(fd.get('project') ?? '').trim()
+  const notes = String(fd.get('notes') ?? '').trim()
+  let msg = ''
+  try {
+    const url = await runWeeklyAnalysis(project, notes)
+    msg = `Analysis draft created: ${url}`
+  } catch (e) { msg = `ERROR: ${(e as Error).message}` }
+  await db.jobRun.create({ data: { key: `manual-article-analysis-${Date.now()}`, note: msg.slice(0, 400) } })
+  revalidatePath('/admin/articles')
+  redirect(`/admin/articles?r=${encodeURIComponent(msg.slice(0, 300))}`)
 }
 
 async function deleteAllDrafts() {
@@ -107,6 +122,15 @@ export default async function Articles({ searchParams }: { searchParams: Promise
       <form action={create} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '16px 0' }}>
         <input name="topic" placeholder="optional topic" style={{ padding: 8, minWidth: 260 }} />
         <button className="btn btn-yellow btn-sm">Write a draft now (takes 1 to 2 minutes)</button>
+      </form>
+      <form action={createAnalysis} style={{ background: '#fff', borderRadius: 20, padding: 16, margin: '0 0 16px', boxShadow: 'var(--shadow-1)' }}>
+        <b>Weekly analysis (PRO)</b>
+        <p style={{ margin: '6px 0 10px' }}>Write the weekly analysis of a project, with the same structure as the ones already published (basic data, team, technology, purpose, tokenomics, staking, market, my take, tips, red flags). It stays a draft, PRO only, in the Weekly Crypto analysis category. Add the cover, check the numbers, then publish.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input name="project" placeholder="Project name or ticker (e.g. ZIGChain)" required style={{ padding: 8, minWidth: 260 }} />
+          <input name="notes" placeholder="optional notes: link, angle, things to check" style={{ padding: 8, minWidth: 320, flex: 1 }} />
+          <button className="btn btn-yellow btn-sm">Write the analysis (takes 3 to 5 minutes)</button>
+        </div>
       </form>
       {runs.length > 0 && (
         <ul>

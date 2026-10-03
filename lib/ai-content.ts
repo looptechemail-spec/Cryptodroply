@@ -385,6 +385,76 @@ Answer ONLY in this format:
   return `"${title}" -> ${siteUrl()}/admin/articles`
 }
 
+/**
+ * Analisi settimanale di un progetto crypto (categoria "Weekly Crypto analysis", riservata a PRO), in bozza.
+ * Stessa struttura delle analisi già pubblicate: dati base, team, tecnologia, utilità, tokenomics, staking, mercato, il mio parere, consigli, segnali di rischio, avvertenza.
+ */
+export async function runWeeklyAnalysis(project: string, notes = ''): Promise<string> {
+  const name = project.trim()
+  if (name.length < 2) throw new Error('Scrivi il nome del progetto da analizzare')
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Europe/Rome' })
+  const out = await ask({
+    model: WRITER(), maxTokens: 12000, searches: 20,
+    system: `You are the analyst of Cryptodroply, a directory of crypto tools. You write the PRO "Weekly Crypto analysis": a fundamental analysis of one crypto project for subscribers. It is educational and neutral: never give buy or sell advice, never predict prices, never promise returns, never say a token will go up. Facts only, with the figure and the date it refers to; when a number cannot be verified say so plainly instead of guessing, and give ranges when trackers disagree. Plain, direct English, short paragraphs, no hype. Never use long dashes as punctuation in your own sentences, use commas or full stops. Use the official site, documentation, whitepaper, GitHub, block explorer, audit reports, CoinGecko or CoinMarketCap, DefiLlama and reliable news. Today is ${today}.`,
+    prompt: `Write the weekly analysis of this project: ${name}
+${notes.trim() ? `Instructions from the editor (follow them): ${notes.trim()}\n` : ''}Search the web first: official site, docs, whitepaper, team, funding, audits, tokenomics, unlocks, market data, competitors, recent news.
+
+Follow EXACTLY this structure and these section titles, in markdown. Inside each section use bold labels as shown ("**Label:** text"), and put each label on its own line, with a blank line between lines so that markdown renders them as separate paragraphs.
+
+**Date:** ${today}
+**Category:** (what kind of project, one line)
+**Timeframe:** (the horizon this analysis refers to, for example "Medium to long term")
+
+## 📋 BASIC DATA
+Name, Ticker, Category, Launch date (founding, testnet, token sale, mainnet), Website, Documentation, Whitepaper (or say none was found), GitHub, Block Explorer (with contract addresses or explorers where verifiable).
+
+## 👥 TEAM & PROJECT
+A few paragraphs on who founded it, history, key events (acquisitions, pivots, incidents). Then the labels: Team (public or anonymous, names), Open source (yes or no, what), Backed by, Total raised, Audits (who, when, what was found, and whether newer parts are unaudited).
+
+## ⚙️ TECHNOLOGY
+Labels: Blockchain, Consensus, Smart contracts, Layer, Custodial, EVM compatible, TPS / Finality, Audits. Then one or two paragraphs on how it works, with one simple analogy for a beginner.
+
+## 🎯 PURPOSE & UTILITY
+Labels: What it does, The problem it solves, Who it is useful for, Real use cases (Live and operational / Announced or in progress), Direct competitors (with how it differs).
+
+## 🪙 TOKENOMICS
+Labels: Max supply, Circulating supply, Market cap, FDV, Token launched, ICO / TGE price, Current price, Inflationary / deflationary, Burn mechanism, Token needed to use the protocol, then the allocation breakdown and vesting.
+
+## 💰 STAKING & YIELD
+Labels: Staking available, Mechanism, APY (only if verifiable, with date, and say that it is not guaranteed), Lock-up, Where to stake. Never present yield as an opportunity.
+
+## 📊 MARKET DATA (reference only, not financial advice)
+Labels: Market cap, FDV, Rank, ATH, ATL, Current price, Distance from ATH, Main exchanges, Liquidity, Next major unlock.
+
+## 🧠 MY TAKE
+Sub-labels: Why I selected it, Strengths, Weaknesses and open questions, Who might find it interesting (and who it is not a fit for). Neutral and balanced.
+
+## 💡 PRO TIPS
+3 to 5 practical checks the reader can do by themselves (where to verify, what to monitor, what to read), written as education, not as instructions to trade.
+
+## 🚩 RED FLAGS
+The concrete risks found: concentration, unlocks, centralization, audits missing, regulatory issues, drawdown, anything unverified. Be specific.
+
+## ⚖️ DISCLAIMER
+This content is exclusively for informational and educational purposes and does not constitute financial advice. The crypto world changes fast: team, technology, tokenomics, and the purpose of a project can evolve, change radically, or cease to exist without notice. Everything you read here is a snapshot of the moment this analysis was written. The future is unpredictable for anyone. Do your own research. DYOR.
+
+Then add a final "## Sources" section with a markdown link for every source used.
+
+Answer ONLY in this format:
+<title>${name} (TICKER), Fundamental Analysis</title>
+<excerpt>one sentence summary, under 160 characters, neutral</excerpt>
+<body>the full analysis in markdown</body>`,
+  })
+  const title = tag(out, 'title'), excerpt = tag(out, 'excerpt'), body = tag(out, 'body')
+  if (!title || body.length < 4000 || !/BASIC DATA/.test(body)) throw new Error('analisi incompleta, riprova')
+  let slug = slugify(title)
+  if (await db.post.findUnique({ where: { slug } })) slug += '-' + Date.now().toString(36).slice(-4)
+  const cat = await db.postCategory.findUnique({ where: { slug: 'weekly-crypto-analysis' } })
+  const post = await db.post.create({ data: { slug, legacyPath: `/post/${slug}`, access: 'PRO', status: 'DRAFT', categoryId: cat?.id ?? null } })
+  await db.postTranslation.create({ data: { postId: post.id, locale: 'EN', title, excerpt, contentMd: body, seoTitle: title.slice(0, 60), seoDescription: excerpt.slice(0, 155) } })
+  return `"${title}" -> ${siteUrl()}/admin/articles`
+}
+
 /** Bozza della newsletter settimanale con gli articoli gratuiti della settimana. */
 export async function runWeeklyDigest(): Promise<string> {
   const d = await buildDigest()
