@@ -82,9 +82,30 @@ export default function AssistantChat({ lang }: { lang: 'en' | 'it' }) {
     <>
       {!open && (
         <button onClick={() => setOpen(true)} aria-label={t.open}
-          style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 60, background: brand, color: '#fff', border: 0, borderRadius: 999, padding: '14px 20px', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 8px 24px rgba(60,83,244,.35)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span aria-hidden="true" style={{ background: '#FFD300', color: '#000', borderRadius: 999, width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>?</span>
-          {t.open}
+          style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 60, background: 'transparent', border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <svg width="68" height="68" viewBox="0 0 64 64" role="img" aria-hidden="true" style={{ borderRadius: '50%', boxShadow: '0 8px 24px rgba(60,83,244,.4)' }}>
+            <circle cx="32" cy="32" r="32" fill="#3C53F4" />
+            <line x1="32" y1="10" x2="32" y2="17" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+            <circle cx="32" cy="8.5" r="3" fill="#FFD300" />
+            <rect x="13" y="29" width="4" height="9" rx="2" fill="#dfe4ff" />
+            <rect x="47" y="29" width="4" height="9" rx="2" fill="#dfe4ff" />
+            <rect x="16" y="17" width="32" height="26" rx="9" fill="#fff" />
+            <circle cx="26" cy="29" r="6" fill="#fff" stroke="#1a1a1a" strokeWidth="2.2" />
+            <circle cx="38" cy="29" r="6" fill="#fff" stroke="#1a1a1a" strokeWidth="2.2" />
+            <line x1="32" y1="29" x2="32" y2="29" stroke="#1a1a1a" strokeWidth="2.2" />
+            <line x1="20" y1="28" x2="16.5" y2="26.5" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" />
+            <line x1="44" y1="28" x2="47.5" y2="26.5" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" />
+            <circle cx="26" cy="29" r="2.2" fill="#3C53F4" />
+            <circle cx="38" cy="29" r="2.2" fill="#3C53F4" />
+            <path d="M26 37.5 Q32 41 38 37.5" stroke="#1a1a1a" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <rect x="21" y="45" width="22" height="13" rx="5" fill="#FFD300" />
+            <text x="32" y="55.6" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a1a1a" fontFamily="Arial, sans-serif">B</text>
+            <rect x="29.6" y="46.2" width="1.3" height="2.2" fill="#1a1a1a" />
+            <rect x="33.1" y="46.2" width="1.3" height="2.2" fill="#1a1a1a" />
+            <rect x="29.6" y="55.6" width="1.3" height="2" fill="#1a1a1a" />
+            <rect x="33.1" y="55.6" width="1.3" height="2" fill="#1a1a1a" />
+          </svg>
+          <span style={{ background: '#fff', color: '#1a1a1a', fontWeight: 800, fontSize: 12.5, borderRadius: 999, padding: '5px 11px', boxShadow: '0 4px 14px rgba(0,0,0,.18)', whiteSpace: 'nowrap' }}>{t.open}</span>
         </button>
       )}
       {open && (
