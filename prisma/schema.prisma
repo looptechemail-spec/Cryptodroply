@@ -504,3 +504,12 @@ model SeoPage {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// Accesso PRO regalato a un indirizzo email (clienti del vecchio sito che pagano ancora su Wix). Vale appena si registrano con quell'email.
+model ProGrant {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  note       String?
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+}

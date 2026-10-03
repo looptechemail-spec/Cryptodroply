@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { getUser, isAdmin } from './auth'
 import { SECTIONS } from './sections'
+import { db } from './db'
 
 export const PRO_PRICE_LABEL = '€14 per month'
 export const PRO_PRICE_LABEL_IT = '14 € al mese'
@@ -17,7 +18,10 @@ export async function hasPro(): Promise<boolean> {
     if (!user) return false
     if (user.role === 'ADMIN') return true
     const sub = user.subscription
-    if (!sub) return false
+    if (!sub || !(sub.status === 'ACTIVE' || sub.status === 'TRIALING' || (sub.status === 'CANCELED' && !!sub.currentPeriodEnd && sub.currentPeriodEnd > new Date()))) {
+      // clienti del vecchio sito: PRO regalato all'indirizzo email (pagano ancora su Wix)
+      return !!(await db.proGrant.findUnique({ where: { email: user.email.toLowerCase() }, select: { id: true } }))
+    }
     if (sub.status === 'ACTIVE' || sub.status === 'TRIALING') return true
     // periodo già pagato che scade a fine mese anche se l'abbonamento è stato annullato
     return sub.status === 'CANCELED' && !!sub.currentPeriodEnd && sub.currentPeriodEnd > new Date()
