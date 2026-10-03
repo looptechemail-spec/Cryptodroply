@@ -90,7 +90,7 @@ export async function categoriesBySection() {
   }))
 }
 
-export async function analyzeProject(rawUrl: string): Promise<string> {
+export async function analyzeProject(rawUrl: string, notes = ''): Promise<string> {
   const u = assertPublicUrl(rawUrl)
   const page = await readPage(u)
   const groups = await categoriesBySection()
@@ -103,7 +103,7 @@ export async function analyzeProject(rawUrl: string): Promise<string> {
 Page title: ${page.title}
 Page description: ${page.description}
 Page text (may be partial): ${page.text}
-
+${notes.trim() ? `\nEditor's notes for this listing (follow them for content, angle, emphasis, category and details; the tone and safety rules above always stay in force; facts that are not on the page or in the notes must not be invented):\n${notes.trim().slice(0, 3000)}\n` : ''}
 Choose the single best category from this list (answer with the id in brackets only):
 ${catList}
 

@@ -14,7 +14,7 @@ async function analyze(fd: FormData) {
   'use server'
   await requireAdmin()
   try {
-    await analyzeProject(String(fd.get('url') ?? ''))
+    await analyzeProject(String(fd.get('url') ?? ''), String(fd.get('notes') ?? ''))
   } catch (e) {
     back(`ERROR: ${(e as Error).message}`)
   }
@@ -58,9 +58,10 @@ export default async function ImportProject({ searchParams }: { searchParams: Pr
       <AdminNav />
       <p>Paste the website of a project. Claude reads it and prepares a listing. You check the preview, pick the exact category and accept: only then it is added to the site.</p>
       {msg && <p className="notice" style={{ fontWeight: 700 }}>{msg}</p>}
-      <form action={analyze} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '16px 0 28px' }}>
-        <input name="url" type="url" required placeholder="https://project-website.com" style={{ padding: 10, minWidth: 320, flex: 1 }} />
-        <button className="btn btn-yellow btn-sm">Prepare preview (takes about a minute)</button>
+      <form action={analyze} style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '16px 0 28px' }}>
+        <input name="url" type="url" required placeholder="https://project-website.com" style={{ padding: 10 }} />
+        <textarea name="notes" rows={4} placeholder="Optional: your instructions for the listing. For example: put it in Hot Wallets, stress that it is open source, mention that the app is free, add that it supports Italian, keep the tone very simple, add my referral link..." style={{ padding: 10 }} />
+        <div><button className="btn btn-yellow btn-sm">Prepare preview (takes about a minute)</button></div>
       </form>
       {previews.length === 0 && <p>No previews waiting.</p>}
       {previews.map(({ id, p }) => {
