@@ -44,3 +44,19 @@ export async function mirrorLocalFile(relPath: string, contentType: string): Pro
     return null
   }
 }
+
+/** Copia sul sito i loghi e le copertine degli strumenti che puntano ancora a siti esterni (con il blocco anti-copia dei siti i loghi sparivano). */
+export async function mirrorExternalToolImages(log: (m: string) => void = () => {}): Promise<number> {
+  const tools = await db.tool.findMany({
+    where: { OR: [{ logoUrl: { startsWith: 'http' } }, { coverUrl: { startsWith: 'http' } }] },
+    select: { id: true, slug: true, logoUrl: true, coverUrl: true },
+  })
+  let n = 0
+  for (const t of tools) {
+    const data: { logoUrl?: string; coverUrl?: string } = {}
+    if (t.logoUrl?.startsWith('http')) { const m = await mirrorImage(t.logoUrl); if (m.startsWith('/media/')) data.logoUrl = m }
+    if (t.coverUrl?.startsWith('http')) { const m = await mirrorImage(t.coverUrl); if (m.startsWith('/media/')) data.coverUrl = m }
+    if (Object.keys(data).length) { await db.tool.update({ where: { id: t.id }, data }); n++; log(`immagini copiate: ${t.slug}`) }
+  }
+  return n
+}
