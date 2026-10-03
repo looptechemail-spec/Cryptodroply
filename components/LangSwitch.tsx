@@ -1,5 +1,6 @@
-import { headers } from 'next/headers'
-import { getLang, lp, stripLang } from '@/lib/i18n'
+'use client'
+import { usePathname } from 'next/navigation'
+import type { Lang } from '@/lib/i18n'
 
 const IT = (
   <svg viewBox="0 0 30 20" width="26" height="17" aria-hidden="true" focusable="false">
@@ -18,19 +19,39 @@ const GB = (
   </svg>
 )
 
-/** Bandierine italiana e inglese: portano alla stessa pagina nell'altra lingua. */
-export default async function LangSwitch() {
-  const lang = await getLang()
-  const raw = (await headers()).get('x-pathname') ?? '/'
-  const base = stripLang(raw)
+const NO_PREFIX = /^\/(api|admin|media|go|r)([/?#]|$)/
+
+function stripLang(path: string): string {
+  if (path === '/it') return '/'
+  return path.startsWith('/it/') ? path.slice(3) : path
+}
+
+/** Bandierine italiana e inglese: portano alla stessa pagina nell'altra lingua. È un componente client perché l'intestazione resta
+ *  montata quando si naviga tra le pagine: l'indirizzo va letto dalla pagina attuale, non da quella in cui si è entrati. */
+export default function LangSwitch({ lang }: { lang: Lang }) {
+  const base = stripLang(usePathname() || '/')
+  const itHref = NO_PREFIX.test(base) ? base : base === '/' ? '/it' : '/it' + base
   const items = [
-    { code: 'it' as const, label: 'Italiano', flag: IT, href: lp(base, 'it') },
+    { code: 'it' as const, label: 'Italiano', flag: IT, href: itHref },
     { code: 'en' as const, label: 'English', flag: GB, href: base },
   ]
   return (
     <div className="lang-switch" role="group" aria-label="Language / Lingua">
       {items.map((x) => (
-        <a key={x.code} href={x.href} hrefLang={x.code} lang={x.code} title={x.label} aria-label={x.label} aria-current={lang === x.code ? 'true' : undefined} className={lang === x.code ? 'on' : ''}>
+        <a
+          key={x.code}
+          href={x.href}
+          hrefLang={x.code}
+          lang={x.code}
+          title={x.label}
+          aria-label={x.label}
+          aria-current={lang === x.code ? 'true' : undefined}
+          className={lang === x.code ? 'on' : ''}
+          onClick={(e) => {
+            e.preventDefault()
+            window.location.assign(x.href + window.location.search + window.location.hash)
+          }}
+        >
           {x.flag}
         </a>
       ))}

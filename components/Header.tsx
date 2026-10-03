@@ -9,7 +9,7 @@ import { getUser } from '@/lib/auth'
 import { SECTIONS, sectionHref, CATEGORY_BLURBS } from '@/lib/sections'
 
 export default async function Header() {
-  const { t, it, loc } = await i18n()
+  const { t, it, loc, lang } = await i18n()
   const categories = await getCategories(loc).catch(() => [])
   const user = await getUser().catch(() => null)
   return (
@@ -80,7 +80,7 @@ export default async function Header() {
             </Link>
           )}
         </nav>
-        <LangSwitch />
+        <LangSwitch lang={lang} />
         {user ? (
           <Link href="/account" className="btn btn-blue btn-sm">
             {t('Account', 'Account')}
