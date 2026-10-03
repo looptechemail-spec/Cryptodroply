@@ -14,7 +14,7 @@ export async function launchChecks(): Promise<Check[]> {
   const add = (label: string, status: Check['status'], detail: string) => out.push({ label, status, detail })
 
   const site = process.env.SITE_URL ?? ''
-  add('Site address (SITE_URL)', site === 'https://www.cryptodroply.com' ? 'ok' : 'bad', site || 'not set. It must be https://www.cryptodroply.com')
+  add('Site address (SITE_URL)', site.replace(/\/+$/, '') === 'https://www.cryptodroply.com' ? 'ok' : 'bad', site || 'not set. It must be https://www.cryptodroply.com')
 
   // Stripe
   const sk = process.env.STRIPE_SECRET_KEY ?? ''
@@ -54,8 +54,17 @@ export async function launchChecks(): Promise<Check[]> {
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) add('Email sending', 'bad', 'RESEND_API_KEY or EMAIL_FROM is missing')
   else {
     const d = await get('https://api.resend.com/domains', { Authorization: `Bearer ${process.env.RESEND_API_KEY}` }).catch(() => null)
-    const dom = (d?.json?.data ?? []).find((x: any) => x.name === 'cryptodroply.com')
-    add('Email sending', dom?.status === 'verified' ? 'ok' : 'bad', dom ? `cryptodroply.com is ${dom.status} on Resend. Sender: ${process.env.EMAIL_FROM}` : 'cryptodroply.com not found for this Resend key')
+    const from = process.env.EMAIL_FROM ?? ''
+    const fromDomain = (from.match(/@([^>\s]+)/)?.[1] ?? '').toLowerCase()
+    if (!d?.ok) {
+      // le chiavi "solo invio" non possono leggere l'elenco dei domini: non vuol dire che sia sbagliato
+      add('Email sending', 'warn', `The Resend key cannot list domains (${d?.status ?? 'no answer'}: it may be a send-only key). Sender: ${from}. Check in Resend that ${fromDomain || 'the sender domain'} is Verified, then send a test from Admin > Old contacts.`)
+    } else {
+      const list: any[] = d.json?.data ?? []
+      const dom = list.find((x) => x.name === fromDomain || fromDomain.endsWith('.' + x.name))
+      if (dom) add('Email sending', dom.status === 'verified' ? 'ok' : 'bad', `${dom.name} is ${dom.status} on Resend. Sender: ${from}`)
+      else add('Email sending', 'bad', `The sender ${from || '(EMAIL_FROM missing)'} uses ${fromDomain || '?'} but this Resend key only sees: ${list.map((x) => `${x.name} (${x.status})`).join(', ') || 'no domains'}. Use a sender on one of these domains, or the key of the right Resend account.`)
+    }
   }
 
   // Publer, automazioni
