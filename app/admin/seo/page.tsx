@@ -23,10 +23,9 @@ async function clearDrafts() {
   revalidatePath('/admin/seo')
   redirect(`/admin/seo?msg=${encodeURIComponent(`${r.count} drafts deleted`)}`)
 }
-async function save(fd: FormData) {
+async function save(act: string, fd: FormData) {
   'use server'
   await requireAdmin()
-  const act = String(fd.get('act'))
   const id = String(fd.get('id'))
   if (act === 'delete') await db.seoPage.delete({ where: { id } }).catch(() => undefined)
   else await db.seoPage.update({
@@ -64,21 +63,21 @@ export default async function AdminSeo({ searchParams }: { searchParams: Promise
       </div>
       <p>{pages.filter((p) => p.status === 'PUBLISHED').length} published, {pages.filter((p) => p.status !== 'PUBLISHED').length} drafts.</p>
       {pages.map((p) => (
-        <form key={p.id} action={save} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 14, boxShadow: 'var(--shadow-1)' }}>
+        <form key={p.id} action={save.bind(null, 'save')} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 14, boxShadow: 'var(--shadow-1)' }}>
           <input type="hidden" name="id" value={p.id} />
           <b>{p.status}</b> · <a href={`/best/${p.slug}`} target="_blank" rel="noreferrer">/best/{p.slug}</a>
           <input name="title" defaultValue={p.title} style={{ width: '100%', padding: 8, margin: '8px 0' }} />
           <input name="metaDescription" defaultValue={p.metaDescription} style={{ width: '100%', padding: 8, marginBottom: 8 }} />
           <textarea name="intro" defaultValue={p.intro} rows={5} style={{ width: '100%', padding: 8 }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <button name="act" value="save" className="btn btn-sm">Save</button>
+            <button formAction={save.bind(null, 'save')} className="btn btn-sm">Save</button>
             {p.status === 'PUBLISHED'
-              ? <button name="act" value="unpublish" className="btn btn-sm">Unpublish</button>
-              : <button name="act" value="publish" className="btn btn-yellow btn-sm">Publish</button>}
+              ? <button formAction={save.bind(null, 'unpublish')} className="btn btn-sm">Unpublish</button>
+              : <button formAction={save.bind(null, 'publish')} className="btn btn-yellow btn-sm">Publish</button>}
             {p.status === 'PUBLISHED'
-              ? <button name="act" value="social" className="btn btn-sm">Social drafts on Publer</button>
-              : <button name="act" value="publish-social" className="btn btn-yellow btn-sm">Publish + drafts on Publer</button>}
-            <button name="act" value="delete" className="btn btn-sm">Delete</button>
+              ? <button formAction={save.bind(null, 'social')} className="btn btn-sm">Social drafts on Publer</button>
+              : <button formAction={save.bind(null, 'publish-social')} className="btn btn-yellow btn-sm">Publish + drafts on Publer</button>}
+            <button formAction={save.bind(null, 'delete')} className="btn btn-sm">Delete</button>
           </div>
         </form>
       ))}

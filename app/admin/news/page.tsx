@@ -32,9 +32,9 @@ export default async function News({ searchParams }: { searchParams: Promise<{ v
             <button className="btn btn-blue btn-sm">Write the posts</button>
           </div>
         </form>
-        <form action={sendAll} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+        <form action={sendAll.bind(null, 'draft')} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
           <input type="hidden" name="source" value="news" />
-          <button name="state" value="draft" className="btn btn-sm">Send everything below to Publer as drafts</button>
+          <button formAction={sendAll.bind(null, 'draft')} className="btn btn-sm">Send everything below to Publer as drafts</button>
         </form>
       </div>
       {runs.length > 0 && <ul>{runs.map((r) => <li key={r.key}>{r.ranAt.toISOString().slice(0, 16).replace('T', ' ')}: {r.note ?? ''}</li>)}</ul>}

@@ -22,12 +22,11 @@ async function analyze(fd: FormData) {
   back('Preview ready below. Check it, choose the category and accept.')
 }
 
-async function decide(fd: FormData) {
+async function decide(mode: string, fd: FormData) {
   'use server'
   await requireAdmin()
   const id = String(fd.get('id'))
-  const act = String(fd.get('act'))
-  if (act === 'discard') { await discardPreview(id); back('Preview discarded') }
+  if (mode === 'discard') { await discardPreview(id); back('Preview discarded') }
   let msg = ''
   try {
     let attributes: Record<string, string> = {}
@@ -36,9 +35,9 @@ async function decide(fd: FormData) {
     const path = await acceptPreview(id, {
       title: g('title'), categoryId: g('categoryId'), description: g('description'), fullDescription: g('fullDescription'),
       whatIs: g('whatIs'), howItWorks: g('howItWorks'), whenToUse: g('whenToUse'), tip: g('tip'), website: g('website'),
-      logoUrl: g('logoUrl'), coverUrl: g('coverUrl'), attributes, publish: g('publish') === '1',
+      logoUrl: g('logoUrl'), coverUrl: g('coverUrl'), attributes, publish: mode === 'publish',
     })
-    msg = `Added: ${path}${g('publish') === '1' ? '' : ' (saved as draft)'}`
+    msg = `Added: ${path}${mode === 'publish' ? '' : ' (saved as draft)'}`
   } catch (e) {
     msg = `ERROR: ${(e as Error).message}`
   }
@@ -67,7 +66,7 @@ export default async function ImportProject({ searchParams }: { searchParams: Pr
       {previews.map(({ id, p }) => {
         const cat = catInfo[p.categoryId]
         return (
-          <form key={id} action={decide} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 24, boxShadow: 'var(--shadow-1)' }}>
+          <form key={id} action={decide.bind(null, 'draft')} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 24, boxShadow: 'var(--shadow-1)' }}>
             <input type="hidden" name="id" value={id} />
             <small>Source: <a href={p.url} target="_blank" rel="noreferrer">{p.url}</a></small>
             <h2 style={{ margin: '8px 0 12px' }}>Preview</h2>
@@ -123,9 +122,9 @@ export default async function ImportProject({ searchParams }: { searchParams: Pr
               <textarea name="attributes" defaultValue={JSON.stringify(p.attributes, null, 2)} rows={5} style={{ ...box, fontFamily: 'monospace' }} />
             </details>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-              <button name="publish" value="1" className="btn btn-blue btn-sm" formAction={decide}>Accept and publish</button>
-              <button name="publish" value="0" className="btn btn-sm">Accept as draft</button>
-              <button name="act" value="discard" className="btn btn-sm">Discard</button>
+              <button formAction={decide.bind(null, 'publish')} className="btn btn-blue btn-sm">Accept and publish</button>
+              <button formAction={decide.bind(null, 'draft')} className="btn btn-sm">Accept as draft</button>
+              <button formAction={decide.bind(null, 'discard')} className="btn btn-sm">Discard</button>
             </div>
           </form>
         )

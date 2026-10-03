@@ -7,10 +7,9 @@ import { runDailySocial, runToolSocial, runWeekPlan, nextMondayRome, runWeeklyAr
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-async function run(fd: FormData) {
+async function run(job: string, fd: FormData) {
   'use server'
   await requireAdmin()
-  const job = String(fd.get('job'))
   let note = ''
   try {
     if (job === 'social') note = `${await runDailySocial()} social drafts created`
@@ -38,20 +37,20 @@ export default async function Automation() {
         Scheduled runs: <b>{on && hasKey ? 'ON' : 'OFF'}</b> {!hasKey && '(ANTHROPIC_API_KEY missing)'} {hasKey && !on && '(set AUTOMATION_ENABLED=true in Railway to turn on)'}
         <br />Schedule (Rome time): social drafts every day from 08:00, blog article draft on Monday from 09:00 (review it in Articles), newsletter draft on Friday from 10:00. Every Friday from 09:00 the next week's social plan (X, Telegram, Facebook, 10:00 each day) is created as drafts on Publer. Everything is created as a draft for you to approve.
       </p>
-      <form action={run} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '16px 0' }}>
-        <button name="job" value="social" className="btn btn-sm">Run now: social drafts</button>
-        <button name="job" value="digest" className="btn btn-sm">Run now: newsletter draft</button>
+      <form action={run.bind(null, 'social')} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '16px 0' }}>
+        <button formAction={run.bind(null, 'social')} className="btn btn-sm">Run now: social drafts</button>
+        <button formAction={run.bind(null, 'digest')} className="btn btn-sm">Run now: newsletter draft</button>
         <span style={{ display: 'flex', gap: 6 }}>
           <input name="monday" placeholder="Monday YYYY-MM-DD (optional)" style={{ padding: 8 }} />
-          <button name="job" value="week" className="btn btn-sm">Run now: week plan to Publer (drafts)</button>
+          <button formAction={run.bind(null, 'week')} className="btn btn-sm">Run now: week plan to Publer (drafts)</button>
         </span>
         <span style={{ display: 'flex', gap: 6 }}>
           <input name="tool" placeholder="tool name (optional)" style={{ padding: 8 }} />
-          <button name="job" value="tool" className="btn btn-sm">Tool posts for tomorrow 12:00</button>
+          <button formAction={run.bind(null, 'tool')} className="btn btn-sm">Tool posts for tomorrow 12:00</button>
         </span>
         <span style={{ display: 'flex', gap: 6 }}>
           <input name="topic" placeholder="optional topic" style={{ padding: 8 }} />
-          <button name="job" value="article" className="btn btn-sm">Run now: article draft</button>
+          <button formAction={run.bind(null, 'article')} className="btn btn-sm">Run now: article draft</button>
         </span>
       </form>
       <p style={{ color: 'var(--muted)' }}>Each run takes up to a minute or two. Wait for the page to reload.</p>

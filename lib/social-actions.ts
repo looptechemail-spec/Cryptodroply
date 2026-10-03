@@ -15,11 +15,10 @@ const pageOf = (source: string) => (source === 'tool' ? '/admin/tool-posts' : '/
 const log = (key: string, note: string) => db.jobRun.create({ data: { key: `manual-${key}-${Date.now()}`, note: note.slice(0, 400) } })
 
 /** Salva un post e, se serve, lo manda a Publer come bozza o programmato. */
-export async function savePost(fd: FormData) {
+export async function savePost(act: string, fd: FormData) {
   await requireAdmin()
   const id = String(fd.get('id'))
   const when = String(fd.get('scheduledAt') ?? '')
-  const act = String(fd.get('act'))
   const p = await db.socialPost.update({
     where: { id },
     data: { text: String(fd.get('text')), scheduledAt: when ? romeToDate(when) : null, ...(act === 'reject' ? { status: 'REJECTED' } : {}) },
@@ -41,10 +40,10 @@ export async function savePost(fd: FormData) {
 }
 
 /** Manda a Publer tutti i post da rivedere di una sezione che hanno una data. */
-export async function sendAll(fd: FormData) {
+export async function sendAll(stateArg: string, fd: FormData) {
   await requireAdmin()
   const source = String(fd.get('source'))
-  const state = String(fd.get('state')) === 'scheduled' ? 'scheduled' : 'draft'
+  const state = stateArg === 'scheduled' ? 'scheduled' : 'draft'
   let ok = 0, bad = 0
   const list = await db.socialPost.findMany({
     where: { source, status: 'DRAFT', channel: { in: ['x', 'telegram', 'facebook'] }, ...(state === 'scheduled' ? { scheduledAt: { not: null } } : {}) },

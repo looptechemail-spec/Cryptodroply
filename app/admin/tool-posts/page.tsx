@@ -30,10 +30,10 @@ export default async function ToolPosts({ searchParams }: { searchParams: Promis
           <input type="file" name="file" accept=".csv" required />
           <button className="btn btn-sm">Import a Publer CSV</button>
         </form>
-        <form action={sendAll} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <form action={sendAll.bind(null, 'draft')} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input type="hidden" name="source" value="tool" />
-          <button name="state" value="draft" className="btn btn-blue btn-sm">Send everything below to Publer as drafts</button>
-          <button name="state" value="scheduled" className="btn btn-sm">Schedule everything below on Publer</button>
+          <button formAction={sendAll.bind(null, 'draft')} className="btn btn-blue btn-sm">Send everything below to Publer as drafts</button>
+          <button formAction={sendAll.bind(null, 'scheduled')} className="btn btn-sm">Schedule everything below on Publer</button>
         </form>
       </div>
       {runs.length > 0 && <ul>{runs.map((r) => <li key={r.key}>{r.ranAt.toISOString().slice(0, 16).replace('T', ' ')}: {r.note}</li>)}</ul>}
