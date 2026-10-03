@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
-import { grantAndNotify, parseEmails, DEFAULT_SUBJECT, DEFAULT_BODY, INITIAL_GRANTS } from '@/lib/pro-grants'
+import { wixPayments, grantAndNotify, parseEmails, DEFAULT_SUBJECT, DEFAULT_BODY, INITIAL_GRANTS } from '@/lib/pro-grants'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -39,6 +39,8 @@ export default async function ProGrants({ searchParams }: { searchParams: Promis
   const grants = await db.proGrant.findMany({ orderBy: { createdAt: 'asc' } })
   const users = await db.user.findMany({ where: { email: { in: grants.map((g) => g.email) } }, select: { email: true } })
   const registered = new Set(users.map((u) => u.email.toLowerCase()))
+  const pay = await wixPayments(grants.map((g) => g.email))
+  const wixSite = process.env.WIX_SITE_ID
   const pending = grants.filter((g) => !g.notifiedAt).map((g) => g.email)
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
@@ -51,19 +53,25 @@ export default async function ProGrants({ searchParams }: { searchParams: Promis
         <textarea name="emails" rows={7} defaultValue={(pending.length ? pending : INITIAL_GRANTS.filter((e) => !grants.some((g) => g.email === e && g.notifiedAt))).join('\n')} style={{ width: '100%', padding: 10, margin: '6px 0 12px' }} />
         <label><b>Subject</b></label>
         <input name="subject" defaultValue={DEFAULT_SUBJECT} style={{ width: '100%', padding: 10, margin: '6px 0 12px' }} />
-        <label><b>Text</b> (English and Italian; the button to sign up is added)</label>
+        <label><b>Text</b> (English; the sign-up button is added)</label>
         <textarea name="body" rows={14} defaultValue={DEFAULT_BODY} style={{ width: '100%', padding: 10, margin: '6px 0 12px' }} />
         <button className="btn btn-yellow btn-sm">Grant PRO and send the email</button>
       </form>
       <h2>Granted ({grants.length})</h2>
+      <p>
+        {wixSite && <a href={`https://manage.wix.com/dashboard/${wixSite}`} target="_blank" rel="noreferrer">Open the Wix dashboard</a>}
+        {wixSite && ' · '}<a href="https://dashboard.stripe.com/subscriptions" target="_blank" rel="noreferrer">Open Stripe subscriptions</a>
+        {pay.error && <span style={{ color: '#b00020' }}> · Wix status not available: {pay.error}</span>}
+      </p>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead><tr><th align="left">Email</th><th align="left">Registered on the new site</th><th align="left">Email sent</th><th /></tr></thead>
+        <thead><tr><th align="left">Email</th><th align="left">Registered on the new site</th><th align="left">Email sent</th><th align="left">Payment on Wix</th><th /></tr></thead>
         <tbody>
           {grants.map((g) => (
             <tr key={g.id}>
               <td>{g.email}</td>
               <td>{registered.has(g.email) ? 'Yes' : 'Not yet'}</td>
               <td>{g.notifiedAt ? g.notifiedAt.toISOString().slice(0, 16).replace('T', ' ') : 'No'}</td>
+              <td>{pay.map.get(g.email)?.join(' | ') ?? (pay.error ? '?' : 'No plan found')} · <a href={`https://dashboard.stripe.com/search?query=${encodeURIComponent(g.email)}`} target="_blank" rel="noreferrer">Stripe</a></td>
               <td><form action={remove}><input type="hidden" name="email" value={g.email} /><button className="btn btn-sm">Remove</button></form></td>
             </tr>
           ))}

@@ -18,18 +18,13 @@ export async function seedProGrants(log: (m: string) => void = () => {}) {
 export const parseEmails = (raw: string) =>
   [...new Set(raw.split(/[\s,;]+/).map((x) => x.trim().toLowerCase()).filter((x) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)))]
 
-export const DEFAULT_SUBJECT = 'Your PRO access on the new Cryptodroply / Il tuo accesso PRO sul nuovo Cryptodroply'
+export const DEFAULT_SUBJECT = 'Create your account on the new Cryptodroply to get your PRO plan'
 export const DEFAULT_BODY = `Hi,
-thank you for being a PRO member of Cryptodroply. We have launched the new website and your PRO access is already active on it, you do not need to pay again. Your payments stay on Wix as before, so nothing changes for you.
+thank you for being a PRO member of Cryptodroply. We have launched our new website.
 
-To use it: open the new site, create your account with THIS email address (or log in if you already did) and you will see all the PRO content: the weekly analyses, the Grow and Privacy sections and the rest.
+To get your PRO plan on it, just create your account with this email address. As soon as you sign up, PRO is active automatically: the weekly analyses, the Grow and Privacy sections and everything else.
 
----
-
-Ciao,
-grazie per essere un membro PRO di Cryptodroply. Abbiamo lanciato il nuovo sito e il tuo accesso PRO è già attivo, non devi pagare di nuovo. I pagamenti restano su Wix come prima, quindi per te non cambia nulla.
-
-Per usarlo: apri il nuovo sito, crea l'account con QUESTA email (oppure accedi se l'hai già fatto) e vedrai tutti i contenuti PRO: le analisi settimanali, le sezioni Grow e Privacy e il resto.`
+Your payments stay on Wix as before, so you do not need to pay again or change anything.`
 
 const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
@@ -42,9 +37,9 @@ export async function grantAndNotify(emails: string[], subject: string, body: st
     granted++
     if (g.notifiedAt) continue
     const html = emailShell(
-      body.split('\n').map((l) => (l.trim() === '---' ? '<hr style="border:0;border-top:1px solid #ddd;margin:20px 0">' : l.trim() ? `<p>${esc(l)}</p>` : '')).join('') +
-      button(`${siteUrl()}/signup`, 'Create your account / Crea il tuo account') +
-      `<p style="font-size:13px;color:#666">Already registered? <a href="${siteUrl()}/login">Log in / Accedi</a></p>`,
+      body.split('\n').map((l) => (l.trim() ? `<p>${esc(l)}</p>` : '')).join('') +
+      button(`${siteUrl()}/signup`, 'Create your account') +
+      `<p style="font-size:13px;color:#666">Already registered? <a href="${siteUrl()}/login">Log in</a></p>`,
     )
     if (await sendEmail({ to: email, subject, html })) {
       await db.proGrant.update({ where: { email }, data: { notifiedAt: new Date() } })
@@ -52,4 +47,40 @@ export async function grantAndNotify(emails: string[], subject: string, body: st
     } else failed.push(email)
   }
   return { granted, sent, failed }
+}
+
+/** Stato dei pagamenti su Wix (che incassa con Stripe) per queste email. Se Wix non risponde restituisce il motivo. */
+export async function wixPayments(emails: string[]): Promise<{ map: Map<string, string[]>; error?: string }> {
+  const key = process.env.WIX_API_KEY, site = process.env.WIX_SITE_ID
+  const map = new Map<string, string[]>()
+  if (!key || !site) return { map, error: 'WIX_API_KEY o WIX_SITE_ID mancanti' }
+  const call = async (path: string) => {
+    const res = await fetch('https://www.wixapis.com' + path, { headers: { Authorization: key, 'wix-site-id': site, 'Content-Type': 'application/json' } })
+    if (!res.ok) throw new Error(`Wix ${res.status}: ${(await res.text().catch(() => '')).slice(0, 120)}`)
+    return res.json() as Promise<any>
+  }
+  try {
+    const orders: any[] = []
+    for (let offset = 0; offset < 5000; offset += 50) {
+      const r = await call(`/pricing-plans/v2/orders?limit=50&offset=${offset}`)
+      const list: any[] = r.orders ?? []
+      orders.push(...list)
+      if (list.length < 50) break
+    }
+    const ids = [...new Set(orders.map((o) => o.buyer?.memberId).filter(Boolean))].slice(0, 400) as string[]
+    const emailOf = new Map<string, string>()
+    for (let i = 0; i < ids.length; i += 10) {
+      await Promise.all(ids.slice(i, i + 10).map(async (id) => {
+        try { const m = await call(`/members/v1/members/${id}`); emailOf.set(id, String(m.member?.loginEmail ?? '').toLowerCase()) } catch { /* membro non leggibile */ }
+      }))
+    }
+    const want = new Set(emails)
+    for (const o of orders) {
+      const e = emailOf.get(o.buyer?.memberId)
+      if (!e || !want.has(e)) continue
+      const end = o.currentCycle?.endedDate ?? o.endDate ?? o.lastPaymentDate
+      map.set(e, [...(map.get(e) ?? []), `${o.planName ?? 'plan'}: ${o.status ?? '?'}${o.lastPaymentStatus ? ', last payment ' + o.lastPaymentStatus : ''}${end ? ', until ' + String(end).slice(0, 10) : ''}`])
+    }
+    return { map }
+  } catch (e) { return { map, error: (e as Error).message } }
 }
