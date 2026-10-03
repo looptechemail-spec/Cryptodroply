@@ -24,12 +24,12 @@ export async function savePost(act: string, fd: FormData) {
     data: { text: String(fd.get('text')), scheduledAt: when ? romeToDate(when) : null, ...(act === 'reject' ? { status: 'REJECTED' } : {}) },
   })
   let msg = act === 'reject' ? 'Post discarded' : 'Saved'
-  if (act === 'publer-draft' || act === 'publer-schedule') {
-    const state = act === 'publer-draft' ? 'draft' : 'scheduled'
+  if (act === 'publer-draft' || act === 'publer-schedule' || act === 'publer-now') {
+    const state = act === 'publer-draft' ? 'draft' : act === 'publer-now' ? 'now' : 'scheduled'
     try {
       const job = await sendToPubler(p, state)
       await db.socialPost.update({ where: { id }, data: { status: 'PUBLER', publerRef: `${state}:${job}`, sentAt: new Date() } })
-      msg = state === 'draft' ? 'Sent to Publer as a draft' : 'Scheduled on Publer'
+      msg = state === 'draft' ? 'Sent to Publer as a draft' : state === 'now' ? 'Published now via Publer (it appears on the networks in a few moments)' : 'Scheduled on Publer'
     } catch (e) {
       await db.socialPost.update({ where: { id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
       msg = `Publer error: ${(e as Error).message}`

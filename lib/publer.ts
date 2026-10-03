@@ -56,7 +56,7 @@ async function accountFor(channel: string, accounts: PublerAccount[]): Promise<P
 }
 
 /** Invia un post a Publer come bozza datata ("draft") o programmato ("scheduled"). Ritorna l'id del lavoro. */
-export async function sendToPubler(p: { channel: string; text: string; linkUrl?: string | null; scheduledAt?: Date | null }, state: 'draft' | 'scheduled'): Promise<string> {
+export async function sendToPubler(p: { channel: string; text: string; linkUrl?: string | null; scheduledAt?: Date | null }, state: 'draft' | 'scheduled' | 'now'): Promise<string> {
   const ws = await workspaceId()
   const accounts = await listAccounts()
   const acc = await accountFor(p.channel, accounts)
@@ -68,14 +68,14 @@ export async function sendToPubler(p: { channel: string; text: string; linkUrl?:
   }
   const body = {
     bulk: {
-      state,
+      state: state === 'now' ? 'scheduled' : state,
       posts: [{
         networks: { [provider]: { type: 'status', text } },
-        accounts: [{ id: acc.id, ...(p.scheduledAt ? { scheduled_at: p.scheduledAt.toISOString() } : {}) }],
+        accounts: [{ id: acc.id, ...(p.scheduledAt && state !== 'now' ? { scheduled_at: p.scheduledAt.toISOString() } : {}) }],
       }],
     },
   }
-  const r = await call('/posts/schedule', { method: 'POST', workspace: ws, body: JSON.stringify(body) })
+  const r = await call(state === 'now' ? '/posts/schedule/publish' : '/posts/schedule', { method: 'POST', workspace: ws, body: JSON.stringify(body) })
   const job = r?.job_id ?? r?.id
   if (!job) throw new Error('Publer non ha restituito un id: ' + JSON.stringify(r).slice(0, 200))
   return String(job)

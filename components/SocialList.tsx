@@ -26,6 +26,7 @@ export async function SocialList({ source, view }: { source: string; view: strin
             {r.status === 'DRAFT' && (
               <>
                 <button formAction={savePost.bind(null, 'publer-draft')} className="btn btn-blue btn-sm">Send to Publer as draft</button>
+                <button formAction={savePost.bind(null, 'publer-now')} className="btn btn-blue btn-sm">Publish now</button>
                 <button formAction={savePost.bind(null, 'publer-schedule')} className="btn btn-yellow btn-sm">Schedule on Publer</button>
                 <button formAction={savePost.bind(null, 'reject')} className="btn btn-sm">Discard</button>
               </>
