@@ -38,7 +38,7 @@ async function act(fd: FormData) {
   try {
     if (what !== 'delete') {
       const file = fd.get('cover')
-      await saveCover(id, file instanceof File ? file : null, String(fd.get('coverUrl') ?? ''))
+      await saveCover(id, file && typeof file === 'object' && 'arrayBuffer' in file ? (file as File) : null, String(fd.get('coverUrl') ?? ''))
     }
     const social = fd.get('social') === 'on'
     if (what === 'publish-now') note = await publishNow(id, social)

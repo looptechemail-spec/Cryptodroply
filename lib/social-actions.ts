@@ -68,7 +68,7 @@ export async function sendAll(fd: FormData) {
 export async function importCsv(fd: FormData) {
   await requireAdmin()
   const f = fd.get('file')
-  if (!(f instanceof File) || !f.size) back('/admin/tool-posts', 'Choose a CSV file first')
+  if (!(f && typeof f === 'object' && 'arrayBuffer' in f) || !(f as File).size) back('/admin/tool-posts', 'Choose a CSV file first')
   const rows = parseCsv(await (f as File).text())
   const head = rows.shift() ?? []
   const iDate = head.indexOf('Date'), iText = head.indexOf('Text'), iLink = head.indexOf('Link(s)')
