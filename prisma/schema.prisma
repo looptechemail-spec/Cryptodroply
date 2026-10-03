@@ -513,3 +513,13 @@ model ProGrant {
   notifiedAt DateTime?
   createdAt  DateTime  @default(now())
 }
+
+// Messaggi usati al giorno dall'assistente (per utente o per indirizzo, senza salvare i testi)
+model ChatUsage {
+  id    String @id @default(cuid())
+  key   String
+  day   String // AAAA-MM-GG
+  count Int    @default(0)
+
+  @@unique([key, day])
+}

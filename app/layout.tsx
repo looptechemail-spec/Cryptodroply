@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import AdminBar from '@/components/AdminBar'
 import CookieBanner from '@/components/CookieBanner'
 import { PageViews } from '@/components/PageViews'
+import AssistantChat from '@/components/AssistantChat'
 import { headers } from 'next/headers'
 import { getLang, stripLang } from '@/lib/i18n'
 
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Footer />
         <PageViews />
         <CookieBanner lang={lang} />
+        <AssistantChat lang={lang === 'it' ? 'it' : 'en'} />
       </body>
     </html>
   )
