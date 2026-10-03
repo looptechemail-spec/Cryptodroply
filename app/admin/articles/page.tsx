@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
@@ -31,11 +32,12 @@ async function act(fd: FormData) {
   const post = await db.post.findUnique({ where: { id }, include: { translations: true } })
   if (!post) return
   const t = post.translations.find((x) => x.locale === 'EN')
-  if (t && what !== 'delete') {
-    await db.postTranslation.update({ where: { id: t.id }, data: { title: String(fd.get('title')), excerpt: String(fd.get('excerpt')), contentMd: String(fd.get('contentMd')) } })
-  }
   let note = ''
   try {
+    if (t && what !== 'delete') {
+      const contentMd = fd.get('contentMd')
+      await db.postTranslation.update({ where: { id: t.id }, data: { title: String(fd.get('title') ?? t.title), excerpt: String(fd.get('excerpt') ?? t.excerpt ?? ''), ...(typeof contentMd === 'string' && contentMd ? { contentMd } : {}) } })
+    }
     if (what !== 'delete') {
       const file = fd.get('cover')
       await saveCover(id, file && typeof file === 'object' && 'arrayBuffer' in file ? (file as File) : null, String(fd.get('coverUrl') ?? ''))
@@ -57,11 +59,16 @@ async function act(fd: FormData) {
   } catch (e) {
     note = `ERROR: ${(e as Error).message}`
   }
-  if (note) await db.jobRun.create({ data: { key: `manual-article-${what}-${Date.now()}`, note: note.slice(0, 300) } })
+  if (!note) note = `Azione "${what}" eseguita`
+  await db.jobRun.create({ data: { key: `manual-article-${what}-${Date.now()}`, note: note.slice(0, 300) } })
   revalidatePath('/admin/articles')
+  revalidatePath('/blog')
+  revalidatePath('/')
+  redirect(`/admin/articles?r=${encodeURIComponent(note.slice(0, 300))}`)
 }
 
-export default async function Articles() {
+export default async function Articles({ searchParams }: { searchParams: Promise<{ r?: string }> }) {
+  const { r } = await searchParams
   await requireAdmin()
   const [drafts, runs] = await Promise.all([
     db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 15, include: { translations: true } }),
@@ -71,6 +78,9 @@ export default async function Articles() {
     <div className="container" style={{ paddingBottom: 80 }}>
       <h1>Articles</h1>
       <AdminNav />
+      {r && (
+        <p role="status" style={{ padding: '12px 16px', borderRadius: 12, fontWeight: 700, background: r.startsWith('ERROR') ? '#fde8e8' : '#e6f6ea', color: r.startsWith('ERROR') ? '#a11' : '#145a2a' }}>{r}</p>
+      )}
       <p>
         Every Monday morning (from 09:00, Rome time) a new article draft is written here. You can also write one now.
         Every article needs a cover image. Then publish it now or choose the day and time (Rome time) and it goes live by itself.
