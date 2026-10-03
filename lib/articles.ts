@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { db } from './db'
 import { mirrorImage } from './media'
 import { articleSocial } from './ai-content'
+import { translatePost } from './translate'
 
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }
 
@@ -24,6 +25,13 @@ export async function saveCover(postId: string, file: File | null, url: string):
   return cover
 }
 
+/** Prima dell'uscita: se manca la versione italiana la prepara (se non riesce, parte la traduzione automatica oraria). */
+async function ensureItalian(postId: string): Promise<string> {
+  const it = await db.postTranslation.findUnique({ where: { postId_locale: { postId, locale: 'IT' } } })
+  if (it?.title && it.contentMd) return ''
+  try { await translatePost(postId); return ' Versione italiana creata.' } catch (e) { return ` Versione italiana non creata (${(e as Error).message}): la farà la traduzione automatica.` }
+}
+
 async function ready(postId: string) {
   const post = await db.post.findUnique({ where: { id: postId }, include: { translations: true } })
   if (!post) throw new Error('Articolo non trovato')
@@ -35,18 +43,20 @@ async function ready(postId: string) {
 /** Pubblica subito. Con `social` crea anche i 3 post su Publer (tra 15 minuti). */
 export async function publishNow(postId: string, social: boolean): Promise<string> {
   await ready(postId)
+  const itNote = await ensureItalian(postId)
   await db.post.update({ where: { id: postId }, data: { status: 'PUBLISHED', publishedAt: new Date(), scheduledAt: null } })
-  if (!social) return 'Articolo pubblicato'
-  return 'Articolo pubblicato. ' + (await articleSocial(postId, new Date(Date.now() + 15 * 60000)))
+  if (!social) return 'Articolo pubblicato in inglese e italiano.' + itNote
+  return 'Articolo pubblicato in inglese e italiano.' + itNote + ' ' + (await articleSocial(postId, new Date(Date.now() + 15 * 60000)))
 }
 
 /** Programma l'uscita a un'ora precisa (l'articolo resta bozza e viene pubblicato da solo). Con `social` i post Publer escono alla stessa ora. */
 export async function scheduleArticle(postId: string, when: Date, social: boolean): Promise<string> {
   await ready(postId)
   if (when.getTime() < Date.now() + 2 * 60000) throw new Error('Scegli una data e un’ora nel futuro')
+  const itNote = await ensureItalian(postId)
   await db.post.update({ where: { id: postId }, data: { scheduledAt: when } })
-  if (!social) return `Articolo programmato per ${when.toISOString()}`
-  return `Articolo programmato per ${when.toISOString()}. ` + (await articleSocial(postId, when))
+  if (!social) return `Articolo programmato per ${when.toISOString()} (inglese e italiano).` + itNote
+  return `Articolo programmato per ${when.toISOString()} (inglese e italiano).${itNote} ` + (await articleSocial(postId, when))
 }
 
 export async function unscheduleArticle(postId: string) {

@@ -6,6 +6,7 @@ import { AdminNav } from '@/components/AdminNav'
 import { runWeeklyArticle } from '@/lib/ai-content'
 import { saveCover, publishNow, scheduleArticle, unscheduleArticle } from '@/lib/articles'
 import { romeToDate, dateToRome } from '@/lib/time'
+import { translatePost } from '@/lib/translate'
 import { renderMarkdown } from '@/lib/markdown'
 
 export const dynamic = 'force-dynamic'
@@ -24,11 +25,10 @@ async function create(fd: FormData) {
   revalidatePath('/admin/articles')
 }
 
-async function act(fd: FormData) {
+async function act(what: string, fd: FormData) {
   'use server'
   await requireAdmin()
   const id = String(fd.get('id'))
-  const what = String(fd.get('act'))
   const post = await db.post.findUnique({ where: { id }, include: { translations: true } })
   if (!post) return
   const t = post.translations.find((x) => x.locale === 'EN')
@@ -39,12 +39,19 @@ async function act(fd: FormData) {
       await db.postTranslation.update({ where: { id: t.id }, data: { title: String(fd.get('title') ?? t.title), excerpt: String(fd.get('excerpt') ?? t.excerpt ?? ''), ...(typeof contentMd === 'string' && contentMd ? { contentMd } : {}) } })
     }
     if (what !== 'delete') {
+      const itId = post.translations.find((x) => x.locale === 'IT')?.id
+      if (itId && typeof fd.get('itContentMd') === 'string') {
+        await db.postTranslation.update({ where: { id: itId }, data: { title: String(fd.get('itTitle') ?? ''), excerpt: String(fd.get('itExcerpt') ?? ''), contentMd: String(fd.get('itContentMd')) } })
+      }
       const file = fd.get('cover')
       await saveCover(id, file && typeof file === 'object' && 'arrayBuffer' in file ? (file as File) : null, String(fd.get('coverUrl') ?? ''))
     }
     const social = fd.get('social') === 'on'
     if (what === 'publish-now') note = await publishNow(id, social)
-    else if (what === 'schedule') {
+    else if (what === 'translate') {
+      await translatePost(id)
+      note = 'Versione italiana pronta: leggila qui sotto, correggila se serve e poi pubblica'
+    } else if (what === 'schedule') {
       const when = String(fd.get('when') ?? '')
       if (!when) throw new Error('Scegli la data e l’ora di uscita')
       note = await scheduleArticle(id, romeToDate(when), social)
@@ -99,8 +106,9 @@ export default async function Articles({ searchParams }: { searchParams: Promise
       {drafts.length === 0 && <p>No drafts.</p>}
       {drafts.map((p) => {
         const t = p.translations.find((x) => x.locale === 'EN')
+        const it = p.translations.find((x) => x.locale === 'IT')
         return (
-          <form key={p.id} action={act} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
+          <form key={p.id} action={act.bind(null, 'save')} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
             <input type="hidden" name="id" value={p.id} />
             <small>/post/{p.slug} · created {p.createdAt.toISOString().slice(0, 10)}</small>
             {p.scheduledAt && (
@@ -128,6 +136,22 @@ export default async function Articles({ searchParams }: { searchParams: Promise
               <summary>Read the article</summary>
               <div className="md" style={{ padding: '12px 0' }} dangerouslySetInnerHTML={{ __html: renderMarkdown(t?.contentMd ?? '') }} />
             </details>
+            {it ? (
+              <>
+                <details open>
+                  <summary><b>Italian version (preview)</b></summary>
+                  <input name="itTitle" defaultValue={it.title} style={{ width: '100%', padding: 10, margin: '8px 0', fontWeight: 700 }} />
+                  <input name="itExcerpt" defaultValue={it.excerpt ?? ''} style={{ width: '100%', padding: 10, marginBottom: 8 }} />
+                  <div className="md" style={{ padding: '12px 0' }} dangerouslySetInnerHTML={{ __html: renderMarkdown(it.contentMd) }} />
+                </details>
+                <details>
+                  <summary>Edit the Italian text (markdown)</summary>
+                  <textarea name="itContentMd" defaultValue={it.contentMd} rows={20} style={{ width: '100%', padding: 10, margin: '8px 0', fontFamily: 'monospace' }} />
+                </details>
+              </>
+            ) : (
+              <p style={{ margin: '8px 0', color: 'var(--muted)', fontSize: 14 }}>No Italian version yet. Press “Translate to Italian” to see it, or it is created automatically when you publish.</p>
+            )}
             <details>
               <summary>Edit the text (markdown)</summary>
               <textarea name="contentMd" defaultValue={t?.contentMd ?? ''} rows={20} style={{ width: '100%', padding: 10, margin: '8px 0', fontFamily: 'monospace' }} />
@@ -142,11 +166,12 @@ export default async function Articles({ searchParams }: { searchParams: Promise
               </label>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-              <button name="act" value="save" className="btn btn-sm">Save</button>
-              <button name="act" value="publish-now" className="btn btn-blue btn-sm">Publish now</button>
-              <button name="act" value="schedule" className="btn btn-blue btn-sm">Schedule for the date above</button>
-              {p.scheduledAt && <button name="act" value="unschedule" className="btn btn-sm">Cancel schedule</button>}
-              <button name="act" value="delete" className="btn btn-sm">Delete draft</button>
+              <button formAction={act.bind(null, 'save')} className="btn btn-sm">Save</button>
+              <button formAction={act.bind(null, 'translate')} className="btn btn-yellow btn-sm">{it ? 'Translate again' : 'Translate to Italian'} (about 1 minute)</button>
+              <button formAction={act.bind(null, 'publish-now')} className="btn btn-blue btn-sm">Publish now</button>
+              <button formAction={act.bind(null, 'schedule')} className="btn btn-blue btn-sm">Schedule for the date above</button>
+              {p.scheduledAt && <button formAction={act.bind(null, 'unschedule')} className="btn btn-sm">Cancel schedule</button>}
+              <button formAction={act.bind(null, 'delete')} className="btn btn-sm">Delete draft</button>
             </div>
           </form>
         )

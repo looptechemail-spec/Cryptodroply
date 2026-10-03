@@ -45,6 +45,18 @@ async function translateFields(model: string, fields: Record<string, string | nu
   return res
 }
 
+/** Traduce in italiano un solo articolo (anche bozza) e salva la traduzione. Rifà la traduzione se già presente. */
+export async function translatePost(postId: string): Promise<void> {
+  const en = await db.postTranslation.findUnique({ where: { postId_locale: { postId, locale: 'EN' } } })
+  if (!en) throw new Error('Articolo senza testo inglese')
+  const tr = await translateFields(WRITER(), { title: en.title, excerpt: en.excerpt, contentMd: en.contentMd, seoTitle: en.seoTitle, seoDescription: en.seoDescription }, 16000)
+  if (!tr.title || !tr.contentMd) throw new Error('traduzione italiana vuota')
+  await db.postTranslation.upsert({
+    where: { postId_locale: { postId, locale: 'IT' } },
+    update: { ...tr }, create: { postId, locale: 'IT', title: tr.title, contentMd: tr.contentMd, excerpt: tr.excerpt, seoTitle: tr.seoTitle, seoDescription: tr.seoDescription },
+  })
+}
+
 let running = false
 export const translating = () => running
 
