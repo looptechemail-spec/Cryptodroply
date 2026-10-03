@@ -60,3 +60,19 @@ export async function mirrorExternalToolImages(log: (m: string) => void = () => 
   }
   return n
 }
+
+/** Loghi scelti a mano (file in data/logos): si applicano una volta sola allo strumento con quel nome. */
+const LOGO_OVERRIDES = [{ key: 'logo-coindropster-1', name: 'coindropster', file: 'data/logos/coindropster.jpg', type: 'image/jpeg' }]
+
+export async function applyLogoOverrides(log: (m: string) => void = () => {}): Promise<void> {
+  for (const o of LOGO_OVERRIDES) {
+    if (await db.jobRun.findUnique({ where: { key: o.key } })) continue
+    const tools = await db.tool.findMany({ where: { title: { contains: o.name, mode: 'insensitive' } }, select: { id: true, slug: true } })
+    if (!tools.length) { log(`logo ${o.name}: strumento non trovato`); continue }
+    const url = await mirrorLocalFile(o.file, o.type)
+    if (!url) { log(`logo ${o.name}: file non letto`); continue }
+    await db.tool.updateMany({ where: { id: { in: tools.map((t) => t.id) } }, data: { logoUrl: url } })
+    await db.jobRun.create({ data: { key: o.key, note: tools.map((t) => t.slug).join(',') } })
+    log(`logo aggiornato: ${tools.map((t) => t.slug).join(', ')}`)
+  }
+}

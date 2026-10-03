@@ -26,6 +26,7 @@ export async function register() {
       await import('./lib/soften').then((m) => m.softenPrivacyTools((x) => console.log('[soften] ' + x))).catch((e) => console.error('soften:', e))
       await import('./lib/translate').then((m) => m.translateMissing((x) => console.log('[translate] ' + x), limit)).catch((e) => console.error('translate:', e))
     }
+    setTimeout(() => void import('./lib/media').then((m) => m.applyLogoOverrides((x) => console.log('[media] ' + x))).catch((e) => console.error('media:', e)), 20 * 1000)
     setTimeout(() => void import('./lib/media').then((m) => m.mirrorExternalToolImages((x) => console.log('[media] ' + x))).catch((e) => console.error('media:', e)), 30 * 1000)
     setTimeout(() => void softenThenTranslate(0), 90 * 1000)
     setInterval(() => void softenThenTranslate(20), 60 * 60 * 1000)
