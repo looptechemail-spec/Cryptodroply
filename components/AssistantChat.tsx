@@ -10,14 +10,14 @@ const T = {
     ph: 'Write your question…', send: 'Send', close: 'Close', wait: 'Thinking…', note: 'Educational information, not financial advice.',
     err: 'Something went wrong. Please try again in a moment.', off: 'The assistant is not available right now.', limit: 'You have used all your messages for today.',
     limitAnon: 'You have used your free messages for today. Create a free account for more.', limitFree: 'You have used your free messages for today. PRO members get many more.',
-    signup: 'Create a free account', pro: 'Get PRO', sug: ['What is a cold wallet?', 'How do I spot a crypto scam?', 'How do airdrops work?'],
+    signup: 'Create a free account', pro: 'Get PRO', sug: ['I am new, where do I start?', 'What is a cold wallet?', 'How do I spot a crypto scam?'],
   },
   it: {
     open: 'Chiedi all’assistente crypto', title: 'Assistente crypto', hello: 'Ciao! Chiedimi qualsiasi cosa su crypto, wallet, exchange, airdrop o sulle guide di Cryptodroply.',
     ph: 'Scrivi la tua domanda…', send: 'Invia', close: 'Chiudi', wait: 'Sto pensando…', note: 'Informazioni educative, non consulenza finanziaria.',
     err: 'Qualcosa non ha funzionato. Riprova tra un attimo.', off: 'L’assistente non è disponibile al momento.', limit: 'Hai finito i messaggi di oggi.',
     limitAnon: 'Hai finito i messaggi gratuiti di oggi. Crea un account gratuito per averne di più.', limitFree: 'Hai finito i messaggi gratuiti di oggi. Chi ha PRO ne ha molti di più.',
-    signup: 'Crea un account gratuito', pro: 'Passa a PRO', sug: ['Cos’è un cold wallet?', 'Come riconosco una truffa crypto?', 'Come funzionano gli airdrop?'],
+    signup: 'Crea un account gratuito', pro: 'Passa a PRO', sug: ['Sono nuovo, da dove parto?', 'Cos’è un cold wallet?', 'Come riconosco una truffa crypto?'],
   },
 } as const
 
