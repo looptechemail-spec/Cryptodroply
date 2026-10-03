@@ -328,6 +328,22 @@ model NewsletterMembership {
   @@id([subscriberId, listId])
 }
 
+// Contatti del vecchio sito Wix: ricevono un invito a registrarsi (o a riattivare il pagamento). Non sono iscritti alla newsletter.
+model LegacyContact {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  firstName    String?
+  lastName     String?
+  group        String    @default("CONTACT") // CONTACT (contatto) o PAID (aveva pagato un piano)
+  planInfo     String? // piani e stato, solo per i paganti
+  wixSubscribed String? // stato iscrizione email su Wix (es. SUBSCRIBED, UNSUBSCRIBED)
+  optOutAt     DateTime? // ha chiesto di non ricevere altro
+  invitedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([group, invitedAt])
+}
+
 model Campaign {
   id        String         @id @default(cuid())
   listId    String
