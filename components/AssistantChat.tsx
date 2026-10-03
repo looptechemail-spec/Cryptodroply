@@ -50,6 +50,19 @@ export default function AssistantChat({ lang }: { lang: 'en' | 'it' }) {
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<{ kind: 'err' | 'limit'; tier?: string; text: string } | null>(null)
   const box = useRef<HTMLDivElement>(null)
+  const [lift, setLift] = useState(0) // spazio per non finire sotto il banner dei cookie
+
+  useEffect(() => {
+    const measure = () => {
+      const b = document.querySelector('.cookie-banner') as HTMLElement | null
+      setLift(b ? b.offsetHeight + 16 : 0)
+    }
+    measure()
+    const mo = new MutationObserver(measure)
+    mo.observe(document.body, { childList: true, subtree: true })
+    window.addEventListener('resize', measure)
+    return () => { mo.disconnect(); window.removeEventListener('resize', measure) }
+  }, [])
 
   useEffect(() => {
     try { const s = sessionStorage.getItem('cd_chat'); if (s) setMsgs(JSON.parse(s)) } catch { /* nessun salvataggio */ }
@@ -82,7 +95,7 @@ export default function AssistantChat({ lang }: { lang: 'en' | 'it' }) {
     <>
       {!open && (
         <button onClick={() => setOpen(true)} aria-label={t.open}
-          style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 60, background: 'transparent', border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          style={{ position: 'fixed', right: 16, bottom: 16 + lift, zIndex: 90, background: 'transparent', border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <svg width="68" height="68" viewBox="0 0 64 64" role="img" aria-hidden="true" style={{ borderRadius: '50%', boxShadow: '0 8px 24px rgba(60,83,244,.4)' }}>
             <circle cx="32" cy="32" r="32" fill="#3C53F4" />
             <line x1="32" y1="10" x2="32" y2="17" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
@@ -110,7 +123,7 @@ export default function AssistantChat({ lang }: { lang: 'en' | 'it' }) {
       )}
       {open && (
         <div role="dialog" aria-label={t.title}
-          style={{ position: 'fixed', right: 12, bottom: 12, zIndex: 60, width: 'min(390px, calc(100vw - 24px))', height: 'min(580px, calc(100vh - 24px))', background: '#fff', borderRadius: 20, boxShadow: '0 16px 48px rgba(0,0,0,.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden', color: '#1a1a1a' }}>
+          style={{ position: 'fixed', right: 12, bottom: 12, zIndex: 120, width: 'min(390px, calc(100vw - 24px))', height: 'min(580px, calc(100vh - 24px))', background: '#fff', borderRadius: 20, boxShadow: '0 16px 48px rgba(0,0,0,.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden', color: '#1a1a1a' }}>
           <div style={{ background: brand, color: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <strong>{t.title}</strong>
             <button onClick={() => setOpen(false)} aria-label={t.close} style={{ background: 'transparent', color: '#fff', border: 0, fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>×</button>
