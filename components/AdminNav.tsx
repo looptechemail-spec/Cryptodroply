@@ -1,4 +1,6 @@
+'use client'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const LINKS = [
   ['/admin', 'Dashboard'], ['/admin/tools', 'Tools'], ['/admin/videos', 'Videos'], ['/admin/users', 'Users'],
@@ -6,10 +8,13 @@ const LINKS = [
 ] as const
 
 export function AdminNav() {
+  const path = (usePathname() ?? '').replace(/\/$/, '')
+  const active = (href: string) => (href === '/admin' ? path === '/admin' : path === href || path.startsWith(href + '/'))
   return (
     <nav className="admin-nav">
       {LINKS.map(([href, label]) => (
-        <Link key={href} href={href}>{label}</Link>
+        <Link key={href} href={href} aria-current={active(href) ? 'page' : undefined}
+          style={active(href) ? { background: '#3C53F4', color: '#fff', fontWeight: 800 } : undefined}>{label}</Link>
       ))}
       <form method="post" action="/api/admin/logout" style={{ display: 'inline' }}>
         <button className="btn btn-outline-dark btn-sm" type="submit">Log out</button>
