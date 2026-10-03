@@ -47,13 +47,24 @@ Answer ONLY with blocks in this exact format, nothing else:
 <post channel="telegram" link="SOURCE_URL">text</post>
 <post channel="x" link="SOURCE_URL">text</post>`,
   })
-  const re = /<post channel="(telegram|x)" link="([^"]*)">([\s\S]*?)<\/post>/gi
+  const re = /<post\s+channel=["'“”]?(telegram|x)["'“”]?\s+link=["'“”]?([^"'“”>]*)["'“”]?\s*>([\s\S]*?)<\/post>/gi
+  const when = tomorrowRome(12)
+  const batches = new Map<string, string>()
   let n = 0
   for (const m of out.matchAll(re)) {
     const text = m[3].trim()
     if (text.length < 10) continue
-    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3900), linkUrl: /^https?:\/\//.test(m[2]) ? m[2] : null } })
+    const link = /^https?:\/\//.test(m[2]) ? m[2] : null
+    const k = link ?? text.slice(0, 20)
+    if (!batches.has(k)) batches.set(k, Math.random().toString(36).slice(2, 10) + Date.now().toString(36))
+    const batch = batches.get(k)!
+    await db.socialPost.create({ data: { channel: m[1].toLowerCase(), text: text.slice(0, 3900), linkUrl: link, scheduledAt: when, source: 'news', batch } })
     n++
+    if (m[1].toLowerCase() === 'telegram') {
+      const fb = text.replace(/#\w+/g, '').trim()
+      await db.socialPost.create({ data: { channel: 'facebook', text: fb.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news', batch } })
+      n++
+    }
   }
   if (!n) throw new Error('nessun post nella risposta')
   return n
@@ -284,8 +295,8 @@ export async function runNewsFromText(input: string, whenLocal?: string): Promis
   } else {
     link = raw.match(/https?:\/\/\S+/)?.[0] ?? null
   }
-  const out = await ask({
-    model: FAST(), maxTokens: 1200,
+  const mk = (model: string) => ask({
+    model, maxTokens: 1500,
     system: `You write social posts for Cryptodroply, a directory of crypto tools. ${STYLE}`,
     prompt: `Write three posts about the content below for ordinary crypto users. Use only what the content says, invent nothing, no price talk.
 Telegram: 3 to 5 short lines, one emoji allowed. X: under 250 characters before the link, at most 2 hashtags. Facebook: 3 to 4 short lines, no hashtags.
@@ -296,6 +307,8 @@ Answer ONLY with:
 CONTENT:
 ${source}`,
   })
+  let out = await mk(FAST()).catch(() => '')
+  if (!tag(out, 'x') && !tag(out, 'tg')) out = await mk(WRITER())
   const when = whenLocal ? romeToDate(whenLocal) : tomorrowRome(12)
   let n = 0
   const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
