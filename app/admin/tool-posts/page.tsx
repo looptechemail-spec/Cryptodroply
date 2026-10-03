@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
 import { SocialList } from '@/components/SocialList'
-import { importCsv, prepareWeek, sendAll } from '@/lib/social-actions'
+import { importCsv, prepareWeek, sendAll, deleteAllDrafts } from '@/lib/social-actions'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -36,6 +36,7 @@ export default async function ToolPosts({ searchParams }: { searchParams: Promis
           <button formAction={sendAll.bind(null, 'scheduled')} className="btn btn-sm">Schedule everything below on Publer</button>
         </form>
       </div>
+      <form action={deleteAllDrafts.bind(null, 'tool')} style={{ marginBottom: 12 }}><button className="btn btn-sm">Delete all drafts below</button></form>
       {runs.length > 0 && <ul>{runs.map((r) => <li key={r.key}>{r.ranAt.toISOString().slice(0, 16).replace('T', ' ')}: {r.note}</li>)}</ul>}
       <p>
         <a href="?v=review" style={{ marginRight: 16, fontWeight: view === 'review' ? 800 : 400 }}>To review</a>

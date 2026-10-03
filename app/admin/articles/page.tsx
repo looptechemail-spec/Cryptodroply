@@ -25,6 +25,17 @@ async function create(fd: FormData) {
   revalidatePath('/admin/articles')
 }
 
+async function deleteAllDrafts() {
+  'use server'
+  await requireAdmin()
+  const ids = (await db.post.findMany({ where: { status: 'DRAFT' }, select: { id: true } })).map((x) => x.id)
+  await db.postTranslation.deleteMany({ where: { postId: { in: ids } } })
+  await db.post.deleteMany({ where: { id: { in: ids } } })
+  await db.jobRun.create({ data: { key: `manual-article-delete-all-${Date.now()}`, note: `Eliminate ${ids.length} bozze di articoli` } })
+  revalidatePath('/admin/articles')
+  redirect(`/admin/articles?r=${encodeURIComponent(`Eliminate ${ids.length} bozze di articoli`)}`)
+}
+
 async function act(what: string, fd: FormData) {
   'use server'
   await requireAdmin()
@@ -102,6 +113,7 @@ export default async function Articles({ searchParams }: { searchParams: Promise
           {runs.map((r) => <li key={r.key}>{r.ranAt.toISOString().slice(0, 16).replace('T', ' ')}: {r.note}</li>)}
         </ul>
       )}
+      {drafts.length > 0 && <form action={deleteAllDrafts} style={{ marginBottom: 12 }}><button className="btn btn-sm">Delete all article drafts</button></form>}
       <p><a href="/admin/seo">Best-of pages (SEO)</a> are managed here too.</p>
       {drafts.length === 0 && <p>No drafts.</p>}
       {drafts.map((p) => {

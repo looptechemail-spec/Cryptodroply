@@ -138,3 +138,11 @@ export async function newsFromText(fd: FormData) {
   refresh()
   back('/admin/news', msg)
 }
+
+/** Cancella tutte le bozze (e gli scartati) di una sezione. I post già mandati a Publer non si toccano. */
+export async function deleteAllDrafts(source: string) {
+  await requireAdmin()
+  const r = await db.socialPost.deleteMany({ where: { source, status: { in: ['DRAFT', 'REJECTED'] } } })
+  refresh()
+  back(pageOf(source), `Eliminate ${r.count} bozze`)
+}
