@@ -1,3 +1,5 @@
+import { JsonLd } from '@/components/JsonLd'
+import { itemList, breadcrumbs } from '@/lib/jsonld'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
@@ -56,8 +58,15 @@ export default async function CategoryPage({ params }: Props) {
   const itDesc = it ? c.translations.find((x) => x.locale === 'IT')?.description ?? (c.wixId ? introOf(c.wixId, {}, true) : '') : ''
   const analyzed = analyze(c.attributes, c.tools.map((x) => ({ id: x.id, attributes: x.attributes })), lang)
 
+  const desc = itDesc || pick(c.translations, loc)?.description || (c.wixId ? CATEGORY_INTROS[c.wixId] : undefined) || undefined
+  const ld = locked ? [] : [
+    itemList(name, desc ?? undefined, c.tools.map((x) => ({ name: x.title, path: `${base}/${x.slug}` })), lang, base),
+    breadcrumbs([{ name: 'Home', path: '/' }, { name, path: base }], lang),
+  ]
+
   return (
     <div className="container">
+      <JsonLd data={ld} />
       <div className="page-head">
         <h1>{name}</h1>
         <p className="section-intro">{itDesc || pick(c.translations, loc)?.description || (c.wixId ? CATEGORY_INTROS[c.wixId] : null)}</p>

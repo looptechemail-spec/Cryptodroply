@@ -1,3 +1,5 @@
+import { JsonLd } from '@/components/JsonLd'
+import { itemList, breadcrumbs } from '@/lib/jsonld'
 import { i18n } from '@/lib/i18n'
 import { sec, blurbOf, introOf } from '@/lib/sections-it'
 import { notFound } from 'next/navigation'
@@ -43,8 +45,13 @@ export default async function SectionPage({ params }: Props) {
     }))
     .filter((g) => g.tools.length)
 
+  const ld = locked ? [] : [
+    itemList(section.title, section.description, tools.map((x) => ({ name: x.title, path: `/${x.categorySlug}/${x.slug}` })), lang, `/s/${key}`),
+    breadcrumbs([{ name: 'Home', path: '/' }, { name: section.title, path: `/s/${key}` }], lang),
+  ]
   return (
     <div className="container">
+      <JsonLd data={ld} />
       <div className="page-head">
         <h1>
           {section.title}

@@ -1,3 +1,5 @@
+import { JsonLd } from '@/components/JsonLd'
+import { breadcrumbs } from '@/lib/jsonld'
 import Link from '@/components/LocLink'
 import { i18n } from '@/lib/i18n'
 import { notFound } from 'next/navigation'
@@ -76,6 +78,7 @@ export default async function PostPage({ params }: Props) {
           <div className="md" style={{ margin: '32px 0 72px' }} dangerouslySetInnerHTML={{ __html: html }} />
         </>
       )}
+      {!locked && <JsonLd data={breadcrumbs([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog' }, { name: cleanText(t?.title) ?? 'Article', path: `/post/${post.slug}` }], it ? 'it' : 'en')} />}
       {!locked && (
         <script
           type="application/ld+json"

@@ -1,3 +1,4 @@
+import { JsonLd } from '@/components/JsonLd'
 import Link from '@/components/LocLink'
 import type { Metadata } from 'next'
 import { getUser } from '@/lib/auth'
@@ -24,6 +25,7 @@ export default async function Pricing() {
   const faq = it ? FAQ_IT : FAQ
   return (
     <>
+      <JsonLd data={{ '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: it ? 'it' : 'en', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }} />
       <section className="block">
         <div className="container">
           <h1 style={{ fontSize: 'clamp(34px,5vw,56px)', fontWeight: 800, letterSpacing: '-0.02em' }}>{t('Simple pricing', 'Prezzi semplici')}</h1>

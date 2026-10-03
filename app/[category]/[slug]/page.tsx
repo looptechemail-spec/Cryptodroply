@@ -13,6 +13,8 @@ import { getUser } from '@/lib/auth'
 import { FavButton } from '@/components/FavButton'
 import { toolTags, labelFor } from '@/lib/tags'
 import { cleanText, cleanHtml } from '@/lib/clean'
+import { JsonLd } from '@/components/JsonLd'
+import { toolLd, breadcrumbs, plain } from '@/lib/jsonld'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,8 +120,22 @@ export default async function ToolPage({ params }: Props) {
   // i tutorial sono per chi ha un account (gratuito o PRO); chi non è registrato non li vede
   const canWatch = !!viewer || isMember
 
+  const path = `${base}/${tool.slug}`
+  const ld = [
+    ...toolLd({
+      name: tool.title, description: cleanText(t?.description), path, lang, category: catName, image: tool.logoUrl ?? tool.coverUrl, website: tool.websiteUrl,
+      faq: [
+        { q: tr(`What is ${tool.title}?`, `Che cos’è ${tool.title}?`), a: plain(t?.whatIs || t?.fullDescription || t?.description) },
+        { q: tr(`How does ${tool.title} work?`, `Come funziona ${tool.title}?`), a: plain(t?.howItWorks) },
+        { q: tr(`When should you use ${tool.title}?`, `Quando conviene usare ${tool.title}?`), a: plain(t?.whenToUse) },
+      ],
+    }),
+    breadcrumbs([{ name: 'Home', path: '/' }, { name: catName, path: `/${tool.category.slug}` }, { name: tool.title, path }], lang),
+  ]
+
   return (
     <>
+      <JsonLd data={ld} />
       <section className="tool-hero">
         <div className="container">
           <div className="crumbs">
