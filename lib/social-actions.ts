@@ -6,7 +6,7 @@ import { requireAdmin } from './admin'
 import { romeToDate } from './time'
 import { sendToPubler } from './publer'
 import { parseCsv } from './csv'
-import { nextMondayRome, runNewsFromText, runWeekPlan, runDailySocial } from './ai-content'
+import { nextMondayRome, runNewsDrafts, runWeekPlan, runDailySocial } from './ai-content'
 
 const PAGES = ['/admin/tool-posts', '/admin/news']
 const refresh = () => PAGES.forEach((p) => revalidatePath(p))
@@ -130,11 +130,33 @@ export async function findNews() {
   back('/admin/news', msg)
 }
 
-/** Testo o indirizzo incollato -> bozze. */
-export async function newsFromText(fd: FormData) {
+/** Testo o indirizzo incollato -> bozze; con mode 'now' le pubblica subito su X, Telegram e Facebook, con 'schedule' le programma alla data scelta. */
+export async function newsFromText(mode: string, fd: FormData) {
   await requireAdmin()
   let msg = ''
-  try { msg = await runNewsFromText(String(fd.get('content') ?? ''), String(fd.get('when') ?? '') || undefined); await log('news', msg) } catch (e) { msg = `ERROR: ${(e as Error).message}`; await log('news', msg) }
+  try {
+    const when = String(fd.get('when') ?? '')
+    if (mode === 'schedule' && !when) throw new Error('Scegli data e ora per programmare')
+    const ids = await runNewsDrafts(String(fd.get('content') ?? ''), when || undefined)
+    if (mode === 'draft') msg = `${ids.length} bozze create`
+    else {
+      const state = mode === 'now' ? 'now' : 'scheduled'
+      const rows = await db.socialPost.findMany({ where: { id: { in: ids } } })
+      const ok: string[] = [], bad: string[] = []
+      for (const p of rows) {
+        try {
+          const job = await sendToPubler(p, state)
+          await db.socialPost.update({ where: { id: p.id }, data: { status: 'PUBLER', publerRef: `${state}:${job}`, sentAt: new Date() } })
+          ok.push(p.channel)
+        } catch (e) {
+          await db.socialPost.update({ where: { id: p.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
+          bad.push(`${p.channel}: ${(e as Error).message.slice(0, 120)}`)
+        }
+      }
+      msg = `${ok.length ? `${state === 'now' ? 'Pubblicato ora' : 'Programmato'} su ${ok.join(', ')}` : 'Nessun post inviato'}${bad.length ? `. ERROR ${bad.join(' | ')} (i testi restano nelle bozze)` : ''}`
+    }
+    await log('news', msg)
+  } catch (e) { msg = `ERROR: ${(e as Error).message}`; await log('news', msg) }
   refresh()
   back('/admin/news', msg)
 }

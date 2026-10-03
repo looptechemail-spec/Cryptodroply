@@ -284,6 +284,11 @@ Answer ONLY with:
 
 /** Notizia o contenuto incollato (testo o indirizzo web) -> tre bozze (X, Telegram, Facebook) per Publer. */
 export async function runNewsFromText(input: string, whenLocal?: string): Promise<string> {
+  return `${(await runNewsDrafts(input, whenLocal)).length} bozze create`
+}
+
+/** Come sopra, ma restituisce gli id dei post creati. */
+export async function runNewsDrafts(input: string, whenLocal?: string): Promise<string[]> {
   const raw = input.trim()
   if (raw.length < 15) throw new Error('Incolla un testo o un indirizzo web')
   let source = raw, link: string | null = null
@@ -310,16 +315,16 @@ ${source}`,
   let out = await mk(FAST()).catch(() => '')
   if (!tag(out, 'x') && !tag(out, 'tg')) out = await mk(WRITER())
   const when = whenLocal ? romeToDate(whenLocal) : tomorrowRome(12)
-  let n = 0
+  const ids: string[] = []
   const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   for (const [ch, tg] of [['x', 'x'], ['telegram', 'tg'], ['facebook', 'fb']] as const) {
     const text = tag(out, tg)
     if (text.length < 15) continue
-    await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news', batch } })
-    n++
+    const row = await db.socialPost.create({ data: { channel: ch, text: text.slice(0, 3000), linkUrl: link, scheduledAt: when, source: 'news', batch } })
+    ids.push(row.id)
   }
-  if (!n) throw new Error('nessun post nella risposta')
-  return `${n} bozze create`
+  if (!ids.length) throw new Error('nessun post nella risposta')
+  return ids
 }
 
 /** Pagina SEO pubblicata -> tre bozze (X, Telegram, Facebook) su Publer, con il link alla pagina. */

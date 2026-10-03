@@ -25,11 +25,13 @@ export default async function News({ searchParams }: { searchParams: Promise<{ v
         <form action={findNews} style={{ marginBottom: 14 }}>
           <button className="btn btn-yellow btn-sm">Find today&apos;s news and write posts (takes 1 to 2 minutes)</button>
         </form>
-        <form action={newsFromText}>
+        <form action={newsFromText.bind(null, 'draft')}>
           <textarea name="content" rows={4} placeholder="Paste a text or a link here" style={{ width: '100%', padding: 10 }} required />
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 8 }}>
-            <label>Date and time (Rome, empty = tomorrow 12:00) <input type="datetime-local" name="when" /></label>
-            <button className="btn btn-blue btn-sm">Write the posts</button>
+            <label>Date and time (Rome, needed to schedule) <input type="datetime-local" name="when" /></label>
+            <button formAction={newsFromText.bind(null, 'now')} className="btn btn-blue btn-sm">Publish now on X, Telegram and Facebook</button>
+            <button formAction={newsFromText.bind(null, 'schedule')} className="btn btn-yellow btn-sm">Schedule on all three (pick the date)</button>
+            <button formAction={newsFromText.bind(null, 'draft')} className="btn btn-sm">Only write the drafts</button>
           </div>
         </form>
         <form action={sendAll.bind(null, 'draft')} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
