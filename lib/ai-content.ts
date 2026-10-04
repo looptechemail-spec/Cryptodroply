@@ -19,18 +19,59 @@ const STYLE = `Write in clear, plain English for crypto beginners and intermedia
 async function ask(opts: { model: string; system: string; prompt: string; maxTokens: number; searches?: number }): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) throw new Error('ANTHROPIC_API_KEY mancante')
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({
-      model: opts.model, max_tokens: opts.maxTokens, system: opts.system,
-      messages: [{ role: 'user', content: opts.prompt }],
-      ...(opts.searches ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: opts.searches }] } : {}),
-    }),
-  })
-  if (!res.ok) throw new Error(`Anthropic ${res.status}: ${(await res.text().catch(() => '')).slice(0, 300)}`)
-  const j = await res.json()
-  return (j.content ?? []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('')
+  // in streaming: le richieste lunghe (ricerca web + testo lungo) non scadono; se la ricerca si interrompe (pause_turn) si riprende
+  const messages: any[] = [{ role: 'user', content: opts.prompt }]
+  let text = ''
+  for (let round = 0; round < 4; round++) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: opts.model, max_tokens: opts.maxTokens, system: opts.system, stream: true, messages,
+        ...(opts.searches ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: opts.searches }] } : {}),
+      }),
+    })
+    if (!res.ok || !res.body) throw new Error(`Anthropic ${res.status}: ${(await res.text().catch(() => '')).slice(0, 300)}`)
+    const blocks: any[] = []
+    let stop = ''
+    const reader = res.body.getReader()
+    const dec = new TextDecoder()
+    let buf = ''
+    const handle = (line: string) => {
+      if (!line.startsWith('data:')) return
+      const raw = line.slice(5).trim()
+      if (!raw || raw === '[DONE]') return
+      let ev: any
+      try { ev = JSON.parse(raw) } catch { return }
+      if (ev.type === 'error') throw new Error(`Anthropic: ${ev.error?.message ?? 'errore'}`)
+      if (ev.type === 'content_block_start') blocks[ev.index] = { ...ev.content_block, ...(ev.content_block.type === 'text' ? { text: ev.content_block.text ?? '' } : {}), _json: '' }
+      else if (ev.type === 'content_block_delta') {
+        const b = blocks[ev.index]
+        if (!b) return
+        if (ev.delta.type === 'text_delta') b.text = (b.text ?? '') + ev.delta.text
+        else if (ev.delta.type === 'input_json_delta') b._json += ev.delta.partial_json
+      } else if (ev.type === 'content_block_stop') {
+        const b = blocks[ev.index]
+        if (b && b._json) { try { b.input = JSON.parse(b._json) } catch { /* ignora */ } }
+        if (b) delete b._json
+      } else if (ev.type === 'message_delta') stop = ev.delta?.stop_reason ?? stop
+    }
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      const lines = buf.split('\n')
+      buf = lines.pop() ?? ''
+      for (const l of lines) handle(l)
+    }
+    if (buf) handle(buf)
+    const done = blocks.filter(Boolean)
+    text += done.filter((b) => b.type === 'text').map((b) => b.text).join('')
+    console.log(`[ai] ${opts.model} round ${round + 1} stop=${stop} chars=${text.length}`)
+    if (stop !== 'pause_turn') break
+    messages.push({ role: 'assistant', content: done })
+  }
+  return text
 }
 
 const tag = (s: string, name: string) => s.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`, 'i'))?.[1]?.trim() ?? ''

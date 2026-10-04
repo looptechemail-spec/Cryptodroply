@@ -41,13 +41,16 @@ async function createAnalysis(fd: FormData) {
   if (project.length < 2) redirect(`/admin/articles?r=${encodeURIComponent('ERROR: write the project name')}`)
   const key = `manual-article-analysis-${Date.now()}`
   await db.jobRun.create({ data: { key, note: `Writing the analysis of ${project}... (3 to 5 minutes, reload this page to see it)` } })
+  console.log(`[analysis] start: ${project}`)
   void (async () => {
     try {
       const r = await runWeeklyAnalysis(project, notes)
+      console.log(`[analysis] done: ${r.title}`)
       let extra = ''
       try { if (cover || coverUrl) { await saveCover(r.id, cover, coverUrl); extra = ' Cover added.' } } catch (e) { extra = ` Cover not added (${(e as Error).message}).` }
       await db.jobRun.update({ where: { key }, data: { note: `Analysis draft ready: "${r.title}". Find it in the drafts below (PRO).${extra}`.slice(0, 400) } })
     } catch (e) {
+      console.error(`[analysis] failed: ${(e as Error).message}`)
       await db.jobRun.update({ where: { key }, data: { note: `ERROR writing the analysis of ${project}: ${(e as Error).message}`.slice(0, 400) } }).catch(() => undefined)
     }
   })()
