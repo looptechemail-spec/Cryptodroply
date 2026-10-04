@@ -435,7 +435,7 @@ export async function runWeeklyAnalysis(project: string, notes = ''): Promise<{ 
   if (name.length < 2) throw new Error('Scrivi il nome del progetto da analizzare')
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Europe/Rome' })
   const out = await ask({
-    model: WRITER(), maxTokens: 12000, searches: 12,
+    model: WRITER(), maxTokens: 32000, searches: 10,
     system: `You are the analyst of Cryptodroply, a directory of crypto tools. You write the PRO "Weekly Crypto analysis": a fundamental analysis of one crypto project for subscribers. It is educational and neutral: never give buy or sell advice, never predict prices, never promise returns, never say a token will go up. Facts only, with the figure and the date it refers to; when a number cannot be verified say so plainly instead of guessing, and give ranges when trackers disagree. Plain, direct English, short paragraphs, no hype. Never use long dashes as punctuation in your own sentences, use commas or full stops. Use the official site, documentation, whitepaper, GitHub, block explorer, audit reports, CoinGecko or CoinMarketCap, DefiLlama and reliable news. Today is ${today}.`,
     prompt: `Write the weekly analysis of this project: ${name}
 ${notes.trim() ? `Instructions from the editor (follow them): ${notes.trim()}\n` : ''}Search the web first: official site, docs, whitepaper, team, funding, audits, tokenomics, unlocks, market data, competitors, recent news.
@@ -481,12 +481,15 @@ This content is exclusively for informational and educational purposes and does 
 
 Then add a final "## Sources" section with a markdown link for every source used.
 
+Do not write any commentary or notes while you search; write nothing except the final answer. Be thorough but compact: about 1800 to 2500 words in total.
+
 Answer ONLY in this format:
 <title>${name} (TICKER), Fundamental Analysis</title>
 <excerpt>one sentence summary, under 160 characters, neutral</excerpt>
 <body>the full analysis in markdown</body>`,
   })
-  const title = tag(out, 'title'), excerpt = tag(out, 'excerpt'), body = tag(out, 'body')
+  const title = tag(out, 'title'), excerpt = tag(out, 'excerpt')
+  const body = tag(out, 'body') || (out.match(/<body>([\s\S]*)$/i)?.[1] ?? '').trim()
   if (!title || body.length < 4000 || !/BASIC DATA/.test(body)) throw new Error('analisi incompleta, riprova')
   let slug = slugify(title)
   if (await db.post.findUnique({ where: { slug } })) slug += '-' + Date.now().toString(36).slice(-4)
