@@ -389,12 +389,12 @@ Answer ONLY in this format:
  * Analisi settimanale di un progetto crypto (categoria "Weekly Crypto analysis", riservata a PRO), in bozza.
  * Stessa struttura delle analisi già pubblicate: dati base, team, tecnologia, utilità, tokenomics, staking, mercato, il mio parere, consigli, segnali di rischio, avvertenza.
  */
-export async function runWeeklyAnalysis(project: string, notes = ''): Promise<string> {
+export async function runWeeklyAnalysis(project: string, notes = ''): Promise<{ id: string; title: string }> {
   const name = project.trim()
   if (name.length < 2) throw new Error('Scrivi il nome del progetto da analizzare')
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Europe/Rome' })
   const out = await ask({
-    model: WRITER(), maxTokens: 12000, searches: 20,
+    model: WRITER(), maxTokens: 12000, searches: 12,
     system: `You are the analyst of Cryptodroply, a directory of crypto tools. You write the PRO "Weekly Crypto analysis": a fundamental analysis of one crypto project for subscribers. It is educational and neutral: never give buy or sell advice, never predict prices, never promise returns, never say a token will go up. Facts only, with the figure and the date it refers to; when a number cannot be verified say so plainly instead of guessing, and give ranges when trackers disagree. Plain, direct English, short paragraphs, no hype. Never use long dashes as punctuation in your own sentences, use commas or full stops. Use the official site, documentation, whitepaper, GitHub, block explorer, audit reports, CoinGecko or CoinMarketCap, DefiLlama and reliable news. Today is ${today}.`,
     prompt: `Write the weekly analysis of this project: ${name}
 ${notes.trim() ? `Instructions from the editor (follow them): ${notes.trim()}\n` : ''}Search the web first: official site, docs, whitepaper, team, funding, audits, tokenomics, unlocks, market data, competitors, recent news.
@@ -452,7 +452,7 @@ Answer ONLY in this format:
   const cat = await db.postCategory.findUnique({ where: { slug: 'weekly-crypto-analysis' } })
   const post = await db.post.create({ data: { slug, legacyPath: `/post/${slug}`, access: 'PRO', status: 'DRAFT', categoryId: cat?.id ?? null } })
   await db.postTranslation.create({ data: { postId: post.id, locale: 'EN', title, excerpt, contentMd: body, seoTitle: title.slice(0, 60), seoDescription: excerpt.slice(0, 155) } })
-  return `"${title}" -> ${siteUrl()}/admin/articles`
+  return { id: post.id, title }
 }
 
 /** Bozza della newsletter settimanale con gli articoli gratuiti della settimana. */

@@ -30,14 +30,29 @@ async function createAnalysis(fd: FormData) {
   await requireAdmin()
   const project = String(fd.get('project') ?? '').trim()
   const notes = String(fd.get('notes') ?? '').trim()
-  let msg = ''
-  try {
-    const url = await runWeeklyAnalysis(project, notes)
-    msg = `Analysis draft created: ${url}`
-  } catch (e) { msg = `ERROR: ${(e as Error).message}` }
-  await db.jobRun.create({ data: { key: `manual-article-analysis-${Date.now()}`, note: msg.slice(0, 400) } })
+  const coverUrl = String(fd.get('coverUrl') ?? '').trim()
+  // la copertina si legge subito: il lavoro lungo continua in secondo piano
+  let cover: File | null = null
+  const f = fd.get('cover')
+  if (f && typeof f === 'object' && 'arrayBuffer' in f && (f as File).size > 0) {
+    const buf = await (f as File).arrayBuffer()
+    cover = new File([buf], (f as File).name || 'cover', { type: (f as File).type })
+  }
+  if (project.length < 2) redirect(`/admin/articles?r=${encodeURIComponent('ERROR: write the project name')}`)
+  const key = `manual-article-analysis-${Date.now()}`
+  await db.jobRun.create({ data: { key, note: `Writing the analysis of ${project}... (3 to 5 minutes, reload this page to see it)` } })
+  void (async () => {
+    try {
+      const r = await runWeeklyAnalysis(project, notes)
+      let extra = ''
+      try { if (cover || coverUrl) { await saveCover(r.id, cover, coverUrl); extra = ' Cover added.' } } catch (e) { extra = ` Cover not added (${(e as Error).message}).` }
+      await db.jobRun.update({ where: { key }, data: { note: `Analysis draft ready: "${r.title}". Find it in the drafts below (PRO).${extra}`.slice(0, 400) } })
+    } catch (e) {
+      await db.jobRun.update({ where: { key }, data: { note: `ERROR writing the analysis of ${project}: ${(e as Error).message}`.slice(0, 400) } }).catch(() => undefined)
+    }
+  })()
   revalidatePath('/admin/articles')
-  redirect(`/admin/articles?r=${encodeURIComponent(msg.slice(0, 300))}`)
+  redirect(`/admin/articles?r=${encodeURIComponent(`Started: the analysis of ${project} is being written. It takes 3 to 5 minutes. Reload this page: the result appears in the list below.`)}`)
 }
 
 async function deleteAllDrafts() {
@@ -104,8 +119,8 @@ export default async function Articles({ searchParams }: { searchParams: Promise
   const { r } = await searchParams
   await requireAdmin()
   const [drafts, runs] = await Promise.all([
-    db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 15, include: { translations: true } }),
-    db.jobRun.findMany({ where: { key: { startsWith: 'manual-article' } }, orderBy: { ranAt: 'desc' }, take: 6 }),
+    db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 40, include: { translations: true } }),
+    db.jobRun.findMany({ where: { key: { startsWith: 'manual-article' } }, orderBy: { ranAt: 'desc' }, take: 8 }),
   ])
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
@@ -123,14 +138,18 @@ export default async function Articles({ searchParams }: { searchParams: Promise
         <input name="topic" placeholder="optional topic" style={{ padding: 8, minWidth: 260 }} />
         <button className="btn btn-yellow btn-sm">Write a draft now (takes 1 to 2 minutes)</button>
       </form>
-      <form action={createAnalysis} style={{ background: '#fff', borderRadius: 20, padding: 16, margin: '0 0 16px', boxShadow: 'var(--shadow-1)' }}>
+      <form action={createAnalysis} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 16, margin: '0 0 16px', boxShadow: 'var(--shadow-1)' }}>
         <b>Weekly analysis (PRO)</b>
         <p style={{ margin: '6px 0 10px' }}>Write the weekly analysis of a project, with the same structure as the ones already published (basic data, team, technology, purpose, tokenomics, staking, market, my take, tips, red flags). It stays a draft, PRO only, in the Weekly Crypto analysis category. Add the cover, check the numbers, then publish.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input name="project" placeholder="Project name or ticker (e.g. ZIGChain)" required style={{ padding: 8, minWidth: 260 }} />
           <input name="notes" placeholder="optional notes: link, angle, things to check" style={{ padding: 8, minWidth: 320, flex: 1 }} />
-          <button className="btn btn-yellow btn-sm">Write the analysis (takes 3 to 5 minutes)</button>
         </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '10px 0' }}>
+          <label>Cover (optional, you can also add it later) <input type="file" name="cover" accept="image/png,image/jpeg,image/webp,image/gif" /></label>
+          <input name="coverUrl" placeholder="or paste an image address" style={{ padding: 8, minWidth: 240, flex: 1 }} />
+        </div>
+        <button className="btn btn-yellow btn-sm">Write the analysis (takes 3 to 5 minutes)</button>
       </form>
       {runs.length > 0 && (
         <ul>
@@ -146,7 +165,7 @@ export default async function Articles({ searchParams }: { searchParams: Promise
         return (
           <form key={p.id} action={act.bind(null, 'save')} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
             <input type="hidden" name="id" value={p.id} />
-            <small>/post/{p.slug} · created {p.createdAt.toISOString().slice(0, 10)}</small>
+            <small>/post/{p.slug} · created {p.createdAt.toISOString().slice(0, 10)}</small>{p.access === 'PRO' && <span style={{ background: '#FFD300', borderRadius: 999, padding: '2px 10px', fontWeight: 800, fontSize: 12, marginLeft: 8 }}>PRO analysis</span>}
             {p.scheduledAt && (
               <p style={{ margin: '8px 0', fontWeight: 700, color: 'var(--blue)' }}>
                 Scheduled: goes live on {dateToRome(p.scheduledAt).replace('T', ' at ')} (Rome time)
