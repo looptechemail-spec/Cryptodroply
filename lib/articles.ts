@@ -8,7 +8,7 @@ import { translatePost } from './translate'
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }
 
 /** Salva la copertina (file caricato o indirizzo web) e la collega all'articolo. Senza nuovi dati lascia quella che c'è. */
-export async function saveCover(postId: string, file: File | null, url: string): Promise<string | null> {
+export async function saveCover(postId: string, file: { size: number; type: string; arrayBuffer: () => Promise<ArrayBuffer> } | null, url: string): Promise<string | null> {
   let cover: string | null = null
   if (file && file.size > 0) {
     if (!TYPES[file.type]) throw new Error('La copertina deve essere PNG, JPG, WEBP o GIF')

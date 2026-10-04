@@ -32,11 +32,11 @@ async function createAnalysis(fd: FormData) {
   const notes = String(fd.get('notes') ?? '').trim()
   const coverUrl = String(fd.get('coverUrl') ?? '').trim()
   // la copertina si legge subito: il lavoro lungo continua in secondo piano
-  let cover: File | null = null
+  let cover: { size: number; type: string; arrayBuffer: () => Promise<ArrayBuffer> } | null = null
   const f = fd.get('cover')
   if (f && typeof f === 'object' && 'arrayBuffer' in f && (f as File).size > 0) {
     const buf = await (f as File).arrayBuffer()
-    cover = new File([buf], (f as File).name || 'cover', { type: (f as File).type })
+    cover = { size: buf.byteLength, type: (f as File).type, arrayBuffer: async () => buf }
   }
   if (project.length < 2) redirect(`/admin/articles?r=${encodeURIComponent('ERROR: write the project name')}`)
   const key = `manual-article-analysis-${Date.now()}`
