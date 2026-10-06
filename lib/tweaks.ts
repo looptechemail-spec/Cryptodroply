@@ -73,6 +73,8 @@ async function applyEditorRequests(log: (m: string) => void) {
   for (const t of wm) {
     log(`WEMIX: "${t.title}" (${t.slug}) sito=${t.websiteUrl ?? '-'} affiliazione=${t.refLink ?? '-'}`)
     if (has(t.title, 'play') || has(t.slug, 'play')) {
+      // il campo affiliazione conteneva un video YouTube: il pulsante del sito portava al video, quindi si svuota
+      if (t.refLink && /youtube\.com|youtu\.be/i.test(t.refLink)) { await db.tool.update({ where: { id: t.id }, data: { refLink: null } }); log(`WEMIX Play: tolto il link sbagliato nel campo affiliazione (${t.refLink})`) }
       if (t.websiteUrl !== 'https://wemixplay.com/') { await db.tool.update({ where: { id: t.id }, data: { websiteUrl: 'https://wemixplay.com/' } }); log(`WEMIX Play: sito aggiornato a https://wemixplay.com/ (era ${t.websiteUrl ?? 'vuoto'})`) }
     }
   }

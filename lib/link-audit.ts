@@ -20,6 +20,7 @@ export async function auditToolLinks(log: (m: string) => void = () => {}) {
   const out: string[] = []
   let checked = 0
   const queue = tools.filter((t) => t.websiteUrl)
+  for (const t of tools) if (t.refLink && /youtube\.com|youtu\.be/i.test(t.refLink)) out.push(`AFFILIAZIONE = VIDEO YOUTUBE (il pulsante porta al video): ${t.title} -> ${t.refLink}`)
   const noSite = tools.filter((t) => !t.websiteUrl).map((t) => t.title)
   if (noSite.length) out.push(`SENZA SITO: ${noSite.join(', ')}`)
   const worker = async () => {
