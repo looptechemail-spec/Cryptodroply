@@ -19,10 +19,12 @@ export async function auditToolLinks(log: (m: string) => void = () => {}) {
   const tools = await db.tool.findMany({ where: { status: 'PUBLISHED' }, select: { id: true, title: true, slug: true, websiteUrl: true, refLink: true } })
   const out: string[] = []
   let checked = 0
-  const queue = tools.filter((t) => t.websiteUrl)
+  // il pulsante dello strumento porta a refLink e, se manca, a websiteUrl: si controlla quello
+  const target = (t: { refLink: string | null; websiteUrl: string | null }) => t.refLink || t.websiteUrl
+  const queue = tools.filter((t) => target(t))
   for (const t of tools) if (t.refLink && /youtube\.com|youtu\.be/i.test(t.refLink)) out.push(`AFFILIAZIONE = VIDEO YOUTUBE (il pulsante porta al video): ${t.title} -> ${t.refLink}`)
-  const noSite = tools.filter((t) => !t.websiteUrl).map((t) => t.title)
-  if (noSite.length) out.push(`SENZA SITO: ${noSite.join(', ')}`)
+  const noSite = tools.filter((t) => !target(t)).map((t) => t.title)
+  if (noSite.length) out.push(`SENZA NESSUN LINK: ${noSite.join(', ')}`)
   const worker = async () => {
     for (;;) {
       const t = queue.pop()
