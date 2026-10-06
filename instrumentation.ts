@@ -27,6 +27,7 @@ export async function register() {
       await import('./lib/translate').then((m) => m.translateMissing((x) => console.log('[translate] ' + x), limit)).catch((e) => console.error('translate:', e))
     }
     setTimeout(() => void import('./lib/pro-grants').then((m) => m.seedProGrants((x) => console.log('[pro] ' + x))).catch((e) => console.error('pro:', e)), 15 * 1000)
+    setTimeout(() => void import('./lib/link-audit').then((m) => m.auditToolLinks((x) => console.log('[links] ' + x))).catch((e) => console.error('links:', e)), 150 * 1000)
     setTimeout(() => void import('./lib/media').then((m) => m.applyLogoOverrides((x) => console.log('[media] ' + x))).catch((e) => console.error('media:', e)), 20 * 1000)
     setTimeout(() => void import('./lib/media').then((m) => m.mirrorExternalToolImages((x) => console.log('[media] ' + x))).catch((e) => console.error('media:', e)), 30 * 1000)
     setTimeout(() => void softenThenTranslate(0), 90 * 1000)

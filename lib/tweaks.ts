@@ -68,6 +68,15 @@ async function applyEditorRequests(log: (m: string) => void) {
     await db.jobRun.create({ data: { key, note: `eliminati ${hitT.length} strumenti e ${hitP.length} articoli` } })
   }
 
+  // 1b) WEMIX Play: sito ufficiale https://wemixplay.com/ (il link di affiliazione, se c'è, non si tocca)
+  const wm = await db.tool.findMany({ where: { OR: [{ title: { contains: 'wemix', mode: 'insensitive' } }, { slug: { contains: 'wemix', mode: 'insensitive' } }] } })
+  for (const t of wm) {
+    log(`WEMIX: "${t.title}" (${t.slug}) sito=${t.websiteUrl ?? '-'} affiliazione=${t.refLink ?? '-'}`)
+    if (has(t.title, 'play') || has(t.slug, 'play')) {
+      if (t.websiteUrl !== 'https://wemixplay.com/') { await db.tool.update({ where: { id: t.id }, data: { websiteUrl: 'https://wemixplay.com/' } }); log(`WEMIX Play: sito aggiornato a https://wemixplay.com/ (era ${t.websiteUrl ?? 'vuoto'})`) }
+    }
+  }
+
   // 2) airdrop: AirdropAlert e Airdrops.io per primi (valori fissi, si può ripetere)
   const cat = await db.category.findUnique({ where: { wixId: 'Import7' } })
   if (cat) {
