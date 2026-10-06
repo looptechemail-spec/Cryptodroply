@@ -13,7 +13,7 @@ export async function SocialList({ source, view }: { source: string; view: strin
     where: { source, status: view === 'sent' ? 'PUBLER' : 'DRAFT' },
     orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 150,
   })
-  if (!rows.length) return <p>Nothing here.</p>
+  if (!rows.length) return <p>Non c’è ancora nulla qui.</p>
   const groups = new Map<string, Row[]>()
   for (const r of rows) {
     const key = r.batch ?? `${r.linkUrl ?? ''}|${r.scheduledAt?.toISOString() ?? ''}|${r.createdAt.toISOString().slice(0, 16)}`
@@ -32,23 +32,23 @@ export async function SocialList({ source, view }: { source: string; view: strin
             {list.map((r) => (
               <div key={r.id} style={{ marginBottom: 10 }}>
                 <b>{CH[r.channel] ?? r.channel}</b>{' '}
-                <small style={{ color: r.channel === 'x' && r.text.length > 280 ? '#b00020' : 'var(--muted)' }}>{r.text.length} characters{r.channel === 'x' ? ' (X: max 280)' : ''}</small>
-                {r.publerRef && <div style={{ fontSize: 13, color: r.publerRef.startsWith('ERROR') ? '#b00020' : 'var(--muted)' }}>Publer: {r.publerRef}</div>}
+                <small style={{ color: r.channel === 'x' && r.text.length > 280 ? '#b00020' : 'var(--muted)' }}>{r.text.length} caratteri{r.channel === 'x' ? ' (X: max 280)' : ''}</small>
+                {r.publerRef && <div style={{ fontSize: 13, color: r.publerRef.startsWith('ERR') ? '#b00020' : 'var(--muted)' }}>Publer: {r.publerRef}</div>}
                 {sent
                   ? <p style={{ whiteSpace: 'pre-wrap', margin: '6px 0' }}>{r.text}</p>
                   : <textarea name={`text_${r.id}`} defaultValue={r.text} rows={r.channel === 'x' ? 4 : 5} style={{ width: '100%', padding: 10, marginTop: 4 }} />}
               </div>
             ))}
             {sent ? (
-              <small>{first.scheduledAt ? `Date: ${dateToRome(first.scheduledAt).replace('T', ' ')} (Rome)` : ''}</small>
+              <small>{first.scheduledAt ? `Data: ${dateToRome(first.scheduledAt).replace('T', ' ')} (Roma)` : ''}</small>
             ) : (
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                <label>Date and time (Rome) <input type="datetime-local" name="scheduledAt" defaultValue={dateToRome(first.scheduledAt)} /></label>
-                <button formAction={saveGroup.bind(null, 'save')} className="btn btn-sm">Save</button>
-                <button formAction={saveGroup.bind(null, 'publish-now')} className="btn btn-blue btn-sm">Publish now on X, Telegram and Facebook</button>
-                <button formAction={saveGroup.bind(null, 'schedule')} className="btn btn-yellow btn-sm">Schedule on all three</button>
-                <button formAction={saveGroup.bind(null, 'draft')} className="btn btn-sm">Draft on Publer</button>
-                <button formAction={saveGroup.bind(null, 'discard')} className="btn btn-sm">Discard</button>
+                <label>Data e ora (Roma) <input type="datetime-local" name="scheduledAt" defaultValue={dateToRome(first.scheduledAt)} /></label>
+                <button formAction={saveGroup.bind(null, 'save')} className="btn btn-sm">Salva</button>
+                <button formAction={saveGroup.bind(null, 'publish-now')} className="btn btn-blue btn-sm">Pubblica ora su X, Telegram e Facebook</button>
+                <button formAction={saveGroup.bind(null, 'schedule')} className="btn btn-yellow btn-sm">Programma su tutti e tre</button>
+                <button formAction={saveGroup.bind(null, 'draft')} className="btn btn-sm">Bozza su Publer</button>
+                <button formAction={saveGroup.bind(null, 'discard')} className="btn btn-sm">Scarta</button>
               </div>
             )}
           </form>

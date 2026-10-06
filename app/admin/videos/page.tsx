@@ -46,34 +46,34 @@ export default async function AdminVideos({ searchParams }: { searchParams: Prom
   const list = [...found, ...waiting.filter((t) => !ids.has(t.id))]
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Tool videos</h1>
+      <h1>Video degli strumenti</h1>
       <AdminNav />
-      <p>Paste a YouTube link for a tool and press Add. It goes live on the tool page right away, for registered members. Title and channel are read from YouTube if you leave them empty. You can also set the referral link here.</p>
+      <p>Incolla il link YouTube di uno strumento e premi Aggiungi. Il video va subito online nella pagina dello strumento, per gli iscritti. Se lasci vuoti titolo e canale, vengono letti da YouTube. Qui puoi anche impostare il link referral.</p>
       <form style={{ display: 'flex', gap: 8, margin: '12px 0 20px' }}>
-        <input name="q" defaultValue={q} placeholder="Find a tool by name" style={{ padding: 8, minWidth: 260 }} />
-        <button className="btn btn-sm">Search</button>
+        <input name="q" defaultValue={q} placeholder="Cerca uno strumento per nome" style={{ padding: 8, minWidth: 260 }} />
+        <button className="btn btn-sm">Cerca</button>
       </form>
-      <p style={{ color: 'var(--muted)' }}>{q ? `Results for "${q}", then` : 'Showing'} the newest tools without a video.</p>
+      <p style={{ color: 'var(--muted)' }}>{q ? `Risultati per "${q}", poi` : 'Ecco'} gli strumenti più recenti senza video.</p>
       {list.map((t) => (
         <div key={t.id} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 14, boxShadow: 'var(--shadow-1)' }}>
-          <b>{t.title}</b> · <a href={`/${t.category.slug}/${t.slug}`} target="_blank" rel="noreferrer">open page</a>
+          <b>{t.title}</b> · <a href={`/${t.category.slug}/${t.slug}`} target="_blank" rel="noreferrer">apri pagina</a>
           {t.videos.map((v) => (
             <form key={v.id} action={removeVideo} style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '8px 0' }}>
               <input type="hidden" name="id" value={v.id} />
               <span>🎬 {v.titleEn ?? v.youtubeUrl}</span>
-              <button className="btn btn-sm">Remove</button>
+              <button className="btn btn-sm">Rimuovi</button>
             </form>
           ))}
           <form action={addVideo} style={{ display: 'grid', gap: 8, marginTop: 10 }}>
             <input type="hidden" name="toolId" value={t.id} />
-            <input name="url" placeholder="YouTube link" required style={{ padding: 8 }} />
+            <input name="url" placeholder="Link YouTube" required style={{ padding: 8 }} />
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <input name="title" placeholder="Title (optional)" style={{ padding: 8, flex: 1, minWidth: 200 }} />
-              <input name="credit" placeholder="Credit, e.g. Video created by... (optional)" style={{ padding: 8, flex: 1, minWidth: 200 }} />
+              <input name="title" placeholder="Titolo (facoltativo)" style={{ padding: 8, flex: 1, minWidth: 200 }} />
+              <input name="credit" placeholder="Credito, es. Video created by... (facoltativo)" style={{ padding: 8, flex: 1, minWidth: 200 }} />
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <input name="refLink" placeholder={t.refLink ? 'Referral link set, paste to replace' : 'Referral link (optional)'} style={{ padding: 8, flex: 1, minWidth: 200 }} />
-              <button className="btn btn-yellow btn-sm">Add</button>
+              <input name="refLink" placeholder={t.refLink ? 'Link referral già impostato, incolla per sostituirlo' : 'Link referral (facoltativo)'} style={{ padding: 8, flex: 1, minWidth: 200 }} />
+              <button className="btn btn-yellow btn-sm">Aggiungi</button>
             </div>
           </form>
         </div>

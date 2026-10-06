@@ -48,16 +48,16 @@ export default async function AdminCampaigns() {
   ])
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Campaigns</h1>
+      <h1>Campagne</h1>
       <AdminNav />
-      <p>{active} confirmed subscribers will receive a sent campaign. <a href="/admin/subscribers">Subscriber list</a></p>
+      <p>{active} iscritti confermati riceveranno la campagna inviata. <a href="/admin/subscribers">Elenco iscritti</a></p>
       <form action={create} style={{ display: 'flex', gap: 10, margin: '12px 0 24px' }}>
-        <button name="kind" value="digest" className="btn btn-sm">New draft: weekly digest</button>
-        <button name="kind" value="blank" className="btn btn-sm">New blank draft</button>
+        <button name="kind" value="digest" className="btn btn-sm">Nuova bozza: riepilogo settimanale</button>
+        <button name="kind" value="blank" className="btn btn-sm">Nuova bozza vuota</button>
       </form>
       {rows.map((c) => (
         <div key={c.id} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: 'var(--shadow-1)' }}>
-          <b>{c.sentAt ? `Sent ${c.sentAt.toISOString().slice(0, 16).replace('T', ' ')}` : 'DRAFT'}</b>
+          <b>{c.sentAt ? `Inviata ${c.sentAt.toISOString().slice(0, 16).replace('T', ' ')}` : 'BOZZA'}</b>
           {c.sentAt ? (
             <><h3>{c.subject}</h3><div dangerouslySetInnerHTML={{ __html: c.bodyHtml }} /></>
           ) : (
@@ -66,17 +66,17 @@ export default async function AdminCampaigns() {
                 <input type="hidden" name="id" value={c.id} />
                 <input name="subject" defaultValue={c.subject} style={{ width: '100%', padding: 10, margin: '10px 0' }} />
                 <textarea name="bodyHtml" defaultValue={c.bodyHtml} rows={9} style={{ width: '100%', padding: 10, fontFamily: 'monospace', fontSize: 13 }} />
-                <button className="btn btn-sm">Save</button>
+                <button className="btn btn-sm">Salva</button>
               </form>
-              <details style={{ margin: '12px 0' }}><summary>Preview</summary><div dangerouslySetInnerHTML={{ __html: c.bodyHtml }} /></details>
+              <details style={{ margin: '12px 0' }}><summary>Anteprima</summary><div dangerouslySetInnerHTML={{ __html: c.bodyHtml }} /></details>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <form action={test} style={{ display: 'flex', gap: 6 }}>
                   <input type="hidden" name="id" value={c.id} />
-                  <input name="to" type="email" placeholder="test email" style={{ padding: 8 }} />
-                  <button className="btn btn-sm">Send test</button>
+                  <input name="to" type="email" placeholder="email per la prova" style={{ padding: 8 }} />
+                  <button className="btn btn-sm">Invia prova</button>
                 </form>
-                <form action={send}><input type="hidden" name="id" value={c.id} /><button className="btn btn-yellow btn-sm">Send to {active} subscribers</button></form>
-                <form action={remove}><input type="hidden" name="id" value={c.id} /><button className="btn btn-sm">Delete</button></form>
+                <form action={send}><input type="hidden" name="id" value={c.id} /><button className="btn btn-yellow btn-sm">Invia a {active} iscritti</button></form>
+                <form action={remove}><input type="hidden" name="id" value={c.id} /><button className="btn btn-sm">Elimina</button></form>
               </div>
             </>
           )}

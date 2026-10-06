@@ -16,14 +16,14 @@ export default async function AdminSubscribers() {
     <div className="container" style={{ paddingBottom: 80 }}>
       <h1>Newsletter</h1>
       <AdminNav />
-      <p>{active} confirmed, {pending} waiting for confirmation. <a href="/api/admin/subscribers">Download CSV (confirmed)</a></p>
+      <p>{active} confermati, {pending} in attesa di conferma. <a href="/api/admin/subscribers">Scarica CSV (confermati)</a></p>
       <table className="admin-table">
-        <thead><tr><th>Email</th><th>Language</th><th>Source</th><th>Status</th><th>Joined</th></tr></thead>
+        <thead><tr><th>Email</th><th>Lingua</th><th>Origine</th><th>Stato</th><th>Iscritto il</th></tr></thead>
         <tbody>
           {rows.map((s) => (
             <tr key={s.id}>
               <td>{s.email}</td><td>{s.locale}</td><td>{s.source}</td>
-              <td>{s.unsubscribedAt ? 'Unsubscribed' : s.confirmedAt ? 'Confirmed' : 'Pending'}</td>
+              <td>{s.unsubscribedAt ? 'Disiscritto' : s.confirmedAt ? 'Confermato' : 'In attesa'}</td>
               <td>{d(s.createdAt)}</td>
             </tr>
           ))}

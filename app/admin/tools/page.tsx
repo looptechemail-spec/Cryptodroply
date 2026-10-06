@@ -17,20 +17,20 @@ export default async function AdminTools({ searchParams }: { searchParams: Promi
   ])
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Tools ({tools.length})</h1>
+      <h1>Strumenti ({tools.length})</h1>
       <AdminNav />
       <form className="row-form" style={{ marginBottom: 20 }}>
-        <label>Search<input name="q" defaultValue={q} /></label>
-        <label>Category
+        <label>Cerca<input name="q" defaultValue={q} /></label>
+        <label>Categoria
           <select name="c" defaultValue={c ?? ''} style={{ padding: 12, borderRadius: 14, border: '2px solid var(--line)' }}>
-            <option value="">All</option>
+            <option value="">Tutte</option>
             {cats.map((x) => <option key={x.id} value={x.slug}>{x.slug} ({x._count.tools})</option>)}
           </select>
         </label>
-        <button className="btn btn-blue" type="submit">Filter</button>
+        <button className="btn btn-blue" type="submit">Filtra</button>
       </form>
       <table className="admin-table">
-        <thead><tr><th>Tool</th><th>Category</th><th>Status</th><th>Affiliate link</th><th></th></tr></thead>
+        <thead><tr><th>Strumento</th><th>Categoria</th><th>Stato</th><th>Link di affiliazione</th><th></th></tr></thead>
         <tbody>
           {tools.map((t) => (
             <tr key={t.id}>
@@ -38,7 +38,7 @@ export default async function AdminTools({ searchParams }: { searchParams: Promi
               <td>{t.category.slug}</td>
               <td>{t.status}</td>
               <td style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.refLink ?? '—'}</td>
-              <td><Link href={`/admin/tools/${t.id}`}>Edit</Link></td>
+              <td><Link href={`/admin/tools/${t.id}`}>Modifica</Link></td>
             </tr>
           ))}
         </tbody>

@@ -19,23 +19,23 @@ export default async function AdminReferrals() {
   const paid = await db.commission.aggregate({ where: { status: 'PAID' }, _sum: { amountCents: true } })
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Referral payouts</h1>
+      <h1>Pagamenti referral</h1>
       <AdminNav />
-      <p>Paid so far: {euro(paid._sum.amountCents ?? 0)}. Minimum payout: {euro(MIN_PAYOUT_CENTS)}.</p>
+      <p>Pagato finora: {euro(paid._sum.amountCents ?? 0)}. Pagamento minimo: {euro(MIN_PAYOUT_CENTS)}.</p>
       <table className="admin-table">
-        <thead><tr><th>Member</th><th>Ready</th><th>In hold</th><th>Pay to</th><th></th></tr></thead>
+        <thead><tr><th>Membro</th><th>Pronto</th><th>In attesa</th><th>Paga a</th><th></th></tr></thead>
         <tbody>
           {[...byUser.entries()].map(([id, e]) => (
             <tr key={id}>
               <td>{e.email}</td>
               <td><b>{euro(e.ready)}</b></td>
               <td>{euro(e.hold)}</td>
-              <td>{e.info ?? <em>not set</em>}</td>
+              <td>{e.info ?? <em>non impostato</em>}</td>
               <td>
                 {e.ready >= MIN_PAYOUT_CENTS && (
                   <form method="post" action="/api/admin/referrals">
                     <input type="hidden" name="userId" value={id} />
-                    <button className="btn btn-blue btn-sm" type="submit">Mark as paid</button>
+                    <button className="btn btn-blue btn-sm" type="submit">Segna come pagato</button>
                   </form>
                 )}
               </td>

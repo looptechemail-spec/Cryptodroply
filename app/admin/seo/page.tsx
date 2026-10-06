@@ -14,14 +14,14 @@ async function generate() {
   await requireAdmin()
   const r = await generateSeoDrafts()
   revalidatePath('/admin/seo')
-  redirect(`/admin/seo?msg=${encodeURIComponent(`${r.created} drafts created`)}`)
+  redirect(`/admin/seo?msg=${encodeURIComponent(`${r.created} bozze create`)}`)
 }
 async function clearDrafts() {
   'use server'
   await requireAdmin()
   const r = await db.seoPage.deleteMany({ where: { status: { not: 'PUBLISHED' } } })
   revalidatePath('/admin/seo')
-  redirect(`/admin/seo?msg=${encodeURIComponent(`${r.count} drafts deleted`)}`)
+  redirect(`/admin/seo?msg=${encodeURIComponent(`${r.count} bozze eliminate`)}`)
 }
 async function save(act: string, fd: FormData) {
   'use server'
@@ -38,9 +38,9 @@ async function save(act: string, fd: FormData) {
   let msg = ''
   if (act === 'publish' || act === 'publish-social' || act === 'social') {
     const slug = (await db.seoPage.findUnique({ where: { id }, select: { slug: true } }))?.slug
-    msg = act === 'social' ? '' : 'Published'
+    msg = act === 'social' ? '' : 'Pubblicata'
     if (slug && act !== 'publish') {
-      try { msg += (msg ? '. ' : '') + (await runSocialForSeoPage(slug)) } catch (e) { msg += (msg ? '. ' : '') + `Publer error: ${(e as Error).message}` }
+      try { msg += (msg ? '. ' : '') + (await runSocialForSeoPage(slug)) } catch (e) { msg += (msg ? '. ' : '') + `Errore Publer: ${(e as Error).message}` }
     }
   }
   revalidatePath('/admin/seo')
@@ -53,15 +53,15 @@ export default async function AdminSeo({ searchParams }: { searchParams: Promise
   const pages = await db.seoPage.findMany({ orderBy: [{ status: 'asc' }, { title: 'asc' }] })
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>SEO pages</h1>
+      <h1>Pagine SEO</h1>
       <AdminNav />
-      <p>Pages like "Best wallets" built from your tools. They start as drafts: read and improve the text, then publish. Published pages are listed at <a href="/best">/best</a> and in the sitemap.</p>
+      <p>Pagine come "Best wallets" costruite a partire dai tuoi strumenti. Nascono come bozze: leggi e migliora il testo, poi pubblica. Le pagine pubblicate compaiono su <a href="/best">/best</a> e nella sitemap.</p>
       {msg && <p style={{ background: '#fff', padding: '12px 16px', borderRadius: 14, fontWeight: 600 }}>{msg}</p>}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <form action={generate}><button className="btn btn-sm">Generate drafts from the tools</button></form>
-        <form action={clearDrafts}><button className="btn btn-sm">Delete all drafts</button></form>
+        <form action={generate}><button className="btn btn-sm">Genera bozze dagli strumenti</button></form>
+        <form action={clearDrafts}><button className="btn btn-sm">Elimina tutte le bozze</button></form>
       </div>
-      <p>{pages.filter((p) => p.status === 'PUBLISHED').length} published, {pages.filter((p) => p.status !== 'PUBLISHED').length} drafts.</p>
+      <p>{pages.filter((p) => p.status === 'PUBLISHED').length} pubblicate, {pages.filter((p) => p.status !== 'PUBLISHED').length} bozze.</p>
       {pages.map((p) => (
         <form key={p.id} action={save.bind(null, 'save')} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 14, boxShadow: 'var(--shadow-1)' }}>
           <input type="hidden" name="id" value={p.id} />
@@ -70,14 +70,14 @@ export default async function AdminSeo({ searchParams }: { searchParams: Promise
           <input name="metaDescription" defaultValue={p.metaDescription} style={{ width: '100%', padding: 8, marginBottom: 8 }} />
           <textarea name="intro" defaultValue={p.intro} rows={5} style={{ width: '100%', padding: 8 }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <button formAction={save.bind(null, 'save')} className="btn btn-sm">Save</button>
+            <button formAction={save.bind(null, 'save')} className="btn btn-sm">Salva</button>
             {p.status === 'PUBLISHED'
-              ? <button formAction={save.bind(null, 'unpublish')} className="btn btn-sm">Unpublish</button>
-              : <button formAction={save.bind(null, 'publish')} className="btn btn-yellow btn-sm">Publish</button>}
+              ? <button formAction={save.bind(null, 'unpublish')} className="btn btn-sm">Rimuovi dalla pubblicazione</button>
+              : <button formAction={save.bind(null, 'publish')} className="btn btn-yellow btn-sm">Pubblica</button>}
             {p.status === 'PUBLISHED'
-              ? <button formAction={save.bind(null, 'social')} className="btn btn-sm">Social drafts on Publer</button>
-              : <button formAction={save.bind(null, 'publish-social')} className="btn btn-yellow btn-sm">Publish + drafts on Publer</button>}
-            <button formAction={save.bind(null, 'delete')} className="btn btn-sm">Delete</button>
+              ? <button formAction={save.bind(null, 'social')} className="btn btn-sm">Bozze social su Publer</button>
+              : <button formAction={save.bind(null, 'publish-social')} className="btn btn-yellow btn-sm">Pubblica + bozze su Publer</button>}
+            <button formAction={save.bind(null, 'delete')} className="btn btn-sm">Elimina</button>
           </div>
         </form>
       ))}

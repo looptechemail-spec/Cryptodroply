@@ -15,24 +15,24 @@ export default async function AdminEmails() {
   const ready = !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Emails</h1>
+      <h1>Email</h1>
       <AdminNav />
       <p>
-        All automatic emails of the site. Sender: <b>{process.env.EMAIL_FROM ?? 'not set'}</b>.
-        {ready ? ' Sending is on.' : ' Sending is OFF: RESEND_API_KEY or EMAIL_FROM is missing.'} Open one to see the full email and send yourself a test.
-        The weekly digest is managed in <Link href="/admin/newsletter">Campaigns</Link>.
+        Tutte le email automatiche del sito. Mittente: <b>{process.env.EMAIL_FROM ?? 'non impostato'}</b>.
+        {ready ? ' Invio attivo.' : ' Invio SPENTO: manca RESEND_API_KEY o EMAIL_FROM.'} Aprine una per vedere l’email completa e mandarti una prova.
+        Il riepilogo settimanale si gestisce in <Link href="/admin/newsletter">Campagne</Link>.
       </p>
       {groups.map((g) => (
         <section key={g} style={{ marginBottom: 28 }}>
           <h2 style={{ fontSize: 20, margin: '0 0 10px' }}>{g}</h2>
           <table className="admin-table">
-            <thead><tr><th>Email</th><th>When it is sent</th><th>To</th><th>Switch</th></tr></thead>
+            <thead><tr><th>Email</th><th>Quando parte</th><th>A chi</th><th>Interruttore</th></tr></thead>
             <tbody>
               {FLOWS.filter((f) => f.group === g).map((f) => {
                 const on = !off.has(f.key)
                 return (
                   <tr key={f.key} style={{ opacity: on ? 1 : 0.55 }}>
-                    <td><Link href={`/admin/emails/${f.key}`}><b>{f.name}</b></Link><br /><Link href={`/admin/emails/${f.key}`} style={{ fontSize: 13 }}>Preview and test</Link></td>
+                    <td><Link href={`/admin/emails/${f.key}`}><b>{f.name}</b></Link><br /><Link href={`/admin/emails/${f.key}`} style={{ fontSize: 13 }}>Anteprima e prova</Link></td>
                     <td>{f.when}</td>
                     <td>{f.to}</td>
                     <td>

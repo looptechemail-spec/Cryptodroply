@@ -25,8 +25,8 @@ export async function sendTestEmail(fd: FormData) {
   const flow = flowByKey(key)
   const back = (m: string): never => redirect(`/admin/emails/${key}?msg=${encodeURIComponent(m)}`)
   if (!flow) return redirect('/admin/emails')
-  if (!/^\S+@\S+\.\S+$/.test(to)) return back('Write a valid email address')
+  if (!/^\S+@\S+\.\S+$/.test(to)) return back('Scrivi un indirizzo email valido')
   const mail = await flow.build()
   const ok = await sendEmail({ to, subject: `[TEST] ${mail.subject}`, html: mail.html }).catch(() => false)
-  return back(ok ? `Test sent to ${to}` : 'Could not send. Check RESEND_API_KEY, EMAIL_FROM and that the domain is verified on Resend.')
+  return back(ok ? `Email di prova inviata a ${to}` : 'Invio non riuscito. Controlla RESEND_API_KEY, EMAIL_FROM e che il dominio sia verificato su Resend.')
 }

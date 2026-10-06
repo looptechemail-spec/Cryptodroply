@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const LINKS = [
-  ['/admin', 'Dashboard'], ['/admin/tools', 'Tools'], ['/admin/videos', 'Videos'], ['/admin/users', 'Users'],
-  ['/admin/referrals', 'Referrals'], ['/admin/subscribers', 'Subscribers'], ['/admin/newsletter', 'Campaigns'], ['/admin/emails', 'Emails'], ['/admin/articles', 'Articles'], ['/admin/tool-posts', 'Tool posts'], ['/admin/news', 'News posts'], ['/admin/messages', 'Messages'], ['/admin/import', 'Import'], ['/admin/import-project', 'Import project'], ['/admin/legacy', 'Old contacts'], ['/admin/pro-grants', 'Old PRO'], ['/admin/creators', 'Creators'], ['/admin/launch', 'Launch check'], ['/admin/translate', 'Translate'],
+  ['/admin', 'Dashboard'], ['/admin/tools', 'Strumenti'], ['/admin/videos', 'Video'], ['/admin/users', 'Utenti'],
+  ['/admin/referrals', 'Referral'], ['/admin/subscribers', 'Iscritti'], ['/admin/newsletter', 'Campagne'], ['/admin/emails', 'Email'], ['/admin/articles', 'Articoli'], ['/admin/tool-posts', 'Post strumenti'], ['/admin/news', 'Post news'], ['/admin/messages', 'Messaggi'], ['/admin/import', 'Importa'], ['/admin/import-project', 'Importa progetto'], ['/admin/legacy', 'Vecchi contatti'], ['/admin/pro-grants', 'PRO vecchi clienti'], ['/admin/creators', 'Creator'], ['/admin/launch', 'Controllo lancio'], ['/admin/translate', 'Traduzioni'],
 ] as const
 
 export function AdminNav() {
@@ -17,7 +17,7 @@ export function AdminNav() {
           style={active(href) ? { background: '#3C53F4', color: '#fff', fontWeight: 800 } : undefined}>{label}</Link>
       ))}
       <form method="post" action="/api/admin/logout" style={{ display: 'inline' }}>
-        <button className="btn btn-outline-dark btn-sm" type="submit">Log out</button>
+        <button className="btn btn-outline-dark btn-sm" type="submit">Esci</button>
       </form>
     </nav>
   )

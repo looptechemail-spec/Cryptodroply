@@ -15,8 +15,8 @@ async function importNow() {
   let msg: string
   try {
     const r = await importLegacyContacts()
-    msg = `Import done: ${r.contacts} contacts read from Wix, ${r.added} new saved, ${r.paid} paying people found, ${r.skipped} skipped (already registered or unsubscribed).${r.notes.length ? ' Notes: ' + r.notes.slice(0, 3).join(' | ') : ''}`
-  } catch (e) { msg = `ERROR: ${(e as Error).message}` }
+    msg = `Importazione completata: ${r.contacts} contatti letti da Wix, ${r.added} nuovi salvati, ${r.paid} persone con piano a pagamento trovate, ${r.skipped} saltate (già registrate o disiscritte).${r.notes.length ? ' Note: ' + r.notes.slice(0, 3).join(' | ') : ''}`
+  } catch (e) { msg = `ERRORE: ${(e as Error).message}` }
   revalidatePath('/admin/legacy')
   back(msg)
 }
@@ -29,18 +29,18 @@ async function act(mode: string, fd: FormData) {
   const body = String(fd.get('body') ?? '')
   let msg: string
   try {
-    if (!subject || !body) throw new Error('Subject e testo sono obbligatori')
+    if (!subject || !body) throw new Error('Oggetto e testo sono obbligatori')
     if (mode === 'test') {
       const to = String(fd.get('testTo') ?? '').trim()
       if (!/^[^\s@]+@[^\s@]+$/.test(to)) throw new Error('Scrivi la tua email per la prova')
-      msg = (await sendLegacyTest(group, subject, body, to)) ? `Test email sent to ${to}` : 'ERROR: test non inviato (controlla RESEND_API_KEY e EMAIL_FROM)'
+      msg = (await sendLegacyTest(group, subject, body, to)) ? `Email di prova inviata a ${to}` : 'ERRORE: prova non inviata (controlla RESEND_API_KEY e EMAIL_FROM)'
     } else {
       if (String(fd.get('confirm') ?? '').trim().toUpperCase() !== 'SEND') throw new Error('Per inviare scrivi SEND nel campo di conferma')
       const limit = Math.min(Math.max(Number(fd.get('limit')) || 100, 1), 500)
       const r = await sendLegacyInvites(group, subject, body, limit)
-      msg = r.picked ? `Sent ${r.sent} of ${r.picked} emails` : 'Nobody left to write to in this group'
+      msg = r.picked ? `Inviate ${r.sent} email su ${r.picked}` : 'Nessuno a cui scrivere in questo gruppo'
     }
-  } catch (e) { msg = `ERROR: ${(e as Error).message}` }
+  } catch (e) { msg = `ERRORE: ${(e as Error).message}` }
   revalidatePath('/admin/legacy')
   back(msg)
 }
@@ -53,36 +53,36 @@ export default async function Legacy({ searchParams }: { searchParams: Promise<{
   const c = await legacyCounts()
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Old site contacts</h1>
+      <h1>Contatti del vecchio sito</h1>
       <AdminNav />
       {msg && <p style={{ padding: '12px 16px', borderRadius: 12, fontWeight: 700, background: /^error/i.test(msg) ? '#fde8e8' : '#e6f6ea' }}>{msg}</p>}
       <p>
-        Step 1: read the contacts and the people who paid a plan from the old Wix site. Step 2: check the text and send yourself a test.
-        Step 3: send in groups (it is safer for a new sender to start small). Everyone is written to only once, and people who unsubscribed on Wix, who already signed up here, or who click “Do not contact me” are left out.
+        Passo 1: leggi i contatti e le persone che hanno pagato un piano dal vecchio sito Wix. Passo 2: controlla il testo e mandati una prova.
+        Passo 3: invia a gruppi (per un mittente nuovo è più sicuro partire in piccolo). A ognuno si scrive una sola volta e restano esclusi chi si è disiscritto su Wix, chi si è già registrato qui o chi clicca «Non contattarmi».
       </p>
-      <form action={importNow}><button className="btn btn-yellow btn-sm">1. Import contacts from Wix (takes a minute)</button></form>
-      <p><b>{c.total}</b> saved · <b>{c.contacts}</b> contacts to invite · <b>{c.paid}</b> paying people to invite · {c.invited} already written to · {c.optOut} do not want emails</p>
+      <form action={importNow}><button className="btn btn-yellow btn-sm">1. Importa i contatti da Wix (ci vuole circa un minuto)</button></form>
+      <p><b>{c.total}</b> salvati · <b>{c.contacts}</b> contatti da invitare · <b>{c.paid}</b> persone con piano a pagamento da invitare · {c.invited} già contattati · {c.optOut} non vogliono email</p>
       {(['CONTACT', 'PAID'] as const).map((g) => (
         <form key={g} action={act.bind(null, 'send')} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
           <input type="hidden" name="group" value={g} />
-          <h2 style={{ marginTop: 0 }}>{g === 'PAID' ? `People who paid (${c.paid} left)` : `Other contacts (${c.contacts} left)`}</h2>
-          <label style={{ fontWeight: 700 }}>Subject</label>
+          <h2 style={{ marginTop: 0 }}>{g === 'PAID' ? `Chi ha pagato (ne restano ${c.paid})` : `Altri contatti (ne restano ${c.contacts})`}</h2>
+          <label style={{ fontWeight: 700 }}>Oggetto</label>
           <input name="subject" defaultValue={DEFAULTS[g].subject} style={box} />
-          <label style={{ fontWeight: 700 }}>Text (HTML). {'{name}'} = first name, {'{button}'} = sign-up button</label>
+          <label style={{ fontWeight: 700 }}>Testo (HTML). {'{name}'} = nome di battesimo, {'{button}'} = pulsante di registrazione</label>
           <textarea name="body" defaultValue={DEFAULTS[g].body} rows={10} style={{ ...box, fontFamily: 'monospace' }} />
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
-            <input name="testTo" type="email" placeholder="your email for the test" style={{ padding: 10, minWidth: 240 }} />
-            <button formAction={act.bind(null, 'test')} className="btn btn-sm">2. Send me a test</button>
+            <input name="testTo" type="email" placeholder="la tua email per la prova" style={{ padding: 10, minWidth: 240 }} />
+            <button formAction={act.bind(null, 'test')} className="btn btn-sm">2. Inviami una prova</button>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <label>How many now (max 500) <input name="limit" type="number" defaultValue={100} min={1} max={500} style={{ padding: 10, width: 90 }} /></label>
-            <input name="confirm" placeholder="type SEND to confirm" style={{ padding: 10 }} />
-            <button className="btn btn-blue btn-sm">3. Send</button>
+            <label>Quante ora (massimo 500) <input name="limit" type="number" defaultValue={100} min={1} max={500} style={{ padding: 10, width: 90 }} /></label>
+            <input name="confirm" placeholder="scrivi SEND per confermare" style={{ padding: 10 }} />
+            <button className="btn btn-blue btn-sm">3. Invia</button>
           </div>
         </form>
       ))}
       <p style={{ color: 'var(--muted)' }}>
-        Important for people who paid: payments on the old site are not moved. If a plan is still active on Wix, cancel it there so nobody is charged twice.
+        Importante per chi ha pagato: i pagamenti del vecchio sito non vengono trasferiti. Se un piano è ancora attivo su Wix, disdicilo lì così nessuno paga due volte.
       </p>
     </div>
   )

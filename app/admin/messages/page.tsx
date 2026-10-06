@@ -9,10 +9,10 @@ export default async function AdminMessages() {
   const rows = await db.formSubmission.findMany({ orderBy: [{ handled: 'asc' }, { createdAt: 'desc' }], take: 200 })
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <h1>Messages</h1>
+      <h1>Messaggi</h1>
       <AdminNav />
       <table className="admin-table">
-        <thead><tr><th>Date</th><th>From</th><th>Message</th><th></th></tr></thead>
+        <thead><tr><th>Data</th><th>Da</th><th>Messaggio</th><th></th></tr></thead>
         <tbody>
           {rows.map((m) => {
             const p = m.payload as Record<string, unknown>
@@ -25,7 +25,7 @@ export default async function AdminMessages() {
                   {!m.handled && (
                     <form method="post" action="/api/admin/messages">
                       <input type="hidden" name="id" value={m.id} />
-                      <button className="btn btn-outline-dark btn-sm" type="submit">Done</button>
+                      <button className="btn btn-outline-dark btn-sm" type="submit">Fatto</button>
                     </form>
                   )}
                 </td>

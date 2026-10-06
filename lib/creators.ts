@@ -4,7 +4,7 @@ import { sendEmail, emailShell, siteUrl } from './email'
 import { COMMISSION_RATE } from './referral'
 
 export const STATUSES = ['TO_CONTACT', 'CONTACTED', 'REPLIED', 'PARTNER', 'DECLINED'] as const
-export const STATUS_LABEL: Record<string, string> = { TO_CONTACT: 'To contact', CONTACTED: 'Contacted', REPLIED: 'Replied', PARTNER: 'Partner', DECLINED: 'Do not contact' }
+export const STATUS_LABEL: Record<string, string> = { TO_CONTACT: 'Da contattare', CONTACTED: 'Contattato', REPLIED: 'Ha risposto', PARTNER: 'Partner', DECLINED: 'Non contattare' }
 
 export const DEFAULT_SUBJECT = 'Your video is featured on Cryptodroply'
 export const DEFAULT_BODY = `Hi {name},

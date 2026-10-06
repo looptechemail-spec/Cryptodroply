@@ -79,7 +79,7 @@ export async function wixPayments(emails: string[]): Promise<{ map: Map<string, 
       const e = emailOf.get(o.buyer?.memberId)
       if (!e || !want.has(e)) continue
       const end = o.currentCycle?.endedDate ?? o.endDate ?? o.lastPaymentDate
-      map.set(e, [...(map.get(e) ?? []), `${o.planName ?? 'plan'}: ${o.status ?? '?'}${o.lastPaymentStatus ? ', last payment ' + o.lastPaymentStatus : ''}${end ? ', until ' + String(end).slice(0, 10) : ''}`])
+      map.set(e, [...(map.get(e) ?? []), `${o.planName ?? 'piano'}: ${o.status ?? '?'}${o.lastPaymentStatus ? ', ultimo pagamento ' + o.lastPaymentStatus : ''}${end ? ', fino al ' + String(end).slice(0, 10) : ''}`])
     }
     return { map }
   } catch (e) { return { map, error: (e as Error).message } }

@@ -52,11 +52,11 @@ export async function saveGroup(act: string, fd: FormData) {
           }
         }
         const what = state === 'now' ? 'Pubblicato ora' : state === 'scheduled' ? 'Programmato' : 'Bozza inviata'
-        msg = `${ok.length ? `${what} su ${ok.join(', ')}` : 'Nessun post inviato'}${bad.length ? `. ERROR ${bad.join(' | ')}` : ''}`
+        msg = `${ok.length ? `${what} su ${ok.join(', ')}` : 'Nessun post inviato'}${bad.length ? `. ERRORE: ${bad.join(' | ')}` : ''}`
       }
     }
   } catch (e) {
-    msg = `ERROR: ${(e as Error).message}`
+    msg = `ERRORE: ${(e as Error).message}`
   }
   refresh()
   back(page, msg)
@@ -83,18 +83,18 @@ export async function sendAll(stateArg: string, fd: FormData) {
     }
   }
   refresh()
-  back(pageOf(source), `${ok} sent to Publer${bad ? `, ${bad} failed (see the red lines)` : ''}${!list.length ? ': nothing to send' : ''}`)
+  back(pageOf(source), `${ok} inviati a Publer${bad ? `, ${bad} non riusciti (guarda le righe rosse)` : ''}${!list.length ? ': non c’era niente da inviare' : ''}`)
 }
 
 /** Carica un CSV nel formato di Publer: per ogni riga crea le bozze per X, Telegram e Facebook. */
 export async function importCsv(fd: FormData) {
   await requireAdmin()
   const f = fd.get('file')
-  if (!(f && typeof f === 'object' && 'arrayBuffer' in f) || !(f as File).size) back('/admin/tool-posts', 'Choose a CSV file first')
+  if (!(f && typeof f === 'object' && 'arrayBuffer' in f) || !(f as File).size) back('/admin/tool-posts', 'Scegli prima un file CSV')
   const rows = parseCsv(await (f as File).text())
   const head = rows.shift() ?? []
   const iDate = head.indexOf('Date'), iText = head.indexOf('Text'), iLink = head.indexOf('Link(s)')
-  if (iDate < 0 || iText < 0) back('/admin/tool-posts', 'The file has no Date and Text columns')
+  if (iDate < 0 || iText < 0) back('/admin/tool-posts', 'Nel file mancano le colonne Date e Text')
   let made = 0
   for (const r of rows) {
     const when = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(r[iDate] ?? '') ? romeToDate(r[iDate].replace(' ', 'T')) : null
@@ -108,7 +108,7 @@ export async function importCsv(fd: FormData) {
     }
   }
   refresh()
-  back('/admin/tool-posts', `${made} drafts created from the CSV`)
+  back('/admin/tool-posts', `${made} bozze create dal CSV`)
 }
 
 /** Prepara la settimana dei post sugli strumenti (bozze direttamente su Publer). */
@@ -116,7 +116,7 @@ export async function prepareWeek(fd: FormData) {
   await requireAdmin()
   const m = String(fd.get('monday') ?? '').trim()
   let msg = ''
-  try { msg = await runWeekPlan(/^\d{4}-\d{2}-\d{2}$/.test(m) ? m : nextMondayRome()); await log('week', msg) } catch (e) { msg = `ERROR: ${(e as Error).message}`; await log('week', msg) }
+  try { msg = await runWeekPlan(/^\d{4}-\d{2}-\d{2}$/.test(m) ? m : nextMondayRome()); await log('week', msg) } catch (e) { msg = `ERRORE: ${(e as Error).message}`; await log('week', msg) }
   refresh()
   back('/admin/tool-posts', msg)
 }
@@ -125,7 +125,7 @@ export async function prepareWeek(fd: FormData) {
 export async function findNews() {
   await requireAdmin()
   let msg = ''
-  try { msg = `${await runDailySocial()} drafts from the news`; await log('news', msg) } catch (e) { msg = `ERROR: ${(e as Error).message}`; await log('news', msg) }
+  try { msg = `${await runDailySocial()} bozze dalle news`; await log('news', msg) } catch (e) { msg = `ERRORE: ${(e as Error).message}`; await log('news', msg) }
   refresh()
   back('/admin/news', msg)
 }
@@ -153,10 +153,10 @@ export async function newsFromText(mode: string, fd: FormData) {
           bad.push(`${p.channel}: ${(e as Error).message.slice(0, 120)}`)
         }
       }
-      msg = `${ok.length ? `${state === 'now' ? 'Pubblicato ora' : 'Programmato'} su ${ok.join(', ')}` : 'Nessun post inviato'}${bad.length ? `. ERROR ${bad.join(' | ')} (i testi restano nelle bozze)` : ''}`
+      msg = `${ok.length ? `${state === 'now' ? 'Pubblicato ora' : 'Programmato'} su ${ok.join(', ')}` : 'Nessun post inviato'}${bad.length ? `. ERRORE: ${bad.join(' | ')} (i testi restano nelle bozze)` : ''}`
     }
     await log('news', msg)
-  } catch (e) { msg = `ERROR: ${(e as Error).message}`; await log('news', msg) }
+  } catch (e) { msg = `ERRORE: ${(e as Error).message}`; await log('news', msg) }
   refresh()
   back('/admin/news', msg)
 }

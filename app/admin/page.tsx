@@ -52,39 +52,39 @@ export default async function AdminHome() {
       <AdminNav />
 
       <div className="stats">
-        <Stat label="Affiliate clicks, 7 days" value={clicks7} note={`${clicks30} in 30 days`} />
-        <Stat label="Page views, 7 days" value={views7} />
-        <Stat label="PRO subscribers" value={pro} note={`about €${mrr} per month`} />
-        <Stat label="Newsletter" value={subs} note={`${confirmed} confirmed`} />
-        <Stat label="Tools published" value={tools} />
-        <Stat label="Articles" value={posts} note={`${proPosts} PRO analyses`} />
-        <Stat label="Accounts" value={users} />
+        <Stat label="Click affiliati, 7 giorni" value={clicks7} note={`${clicks30} in 30 giorni`} />
+        <Stat label="Visualizzazioni di pagina, 7 giorni" value={views7} />
+        <Stat label="Abbonati PRO" value={pro} note={`circa €${mrr} al mese`} />
+        <Stat label="Newsletter" value={subs} note={`${confirmed} confermati`} />
+        <Stat label="Strumenti pubblicati" value={tools} />
+        <Stat label="Articoli" value={posts} note={`${proPosts} analisi PRO`} />
+        <Stat label="Account" value={users} />
       </div>
 
       <div className="two-col" style={{ margin: '40px 0 72px' }}>
         <div>
-          <h2 style={{ fontSize: 26, marginBottom: 12 }}>Most clicked tools, 30 days</h2>
+          <h2 style={{ fontSize: 26, marginBottom: 12 }}>Strumenti più cliccati, 30 giorni</h2>
           <div className="posts">
-            {top.length === 0 && <p style={{ color: 'var(--muted)' }}>No affiliate clicks yet.</p>}
+            {top.length === 0 && <p style={{ color: 'var(--muted)' }}>Ancora nessun click affiliato.</p>}
             {top.map((t) => {
               const n = byId.get(t.toolId!)
               return (
                 <Link key={t.toolId} href={n ? `/${n.category.slug}/${n.slug}` : '#'} className="post-row">
-                  <span className="t" style={{ fontSize: 19 }}>{n?.title ?? 'Deleted tool'}</span>
-                  <span className="m"><b>{t._count._all}</b> clicks</span>
+                  <span className="t" style={{ fontSize: 19 }}>{n?.title ?? 'Strumento eliminato'}</span>
+                  <span className="m"><b>{t._count._all}</b> click</span>
                 </Link>
               )
             })}
           </div>
         </div>
         <div>
-          <h2 style={{ fontSize: 26, marginBottom: 12 }}>Latest newsletter sign-ups</h2>
+          <h2 style={{ fontSize: 26, marginBottom: 12 }}>Ultime iscrizioni alla newsletter</h2>
           <div className="posts">
-            {recent.length === 0 && <p style={{ color: 'var(--muted)' }}>No sign-ups yet.</p>}
+            {recent.length === 0 && <p style={{ color: 'var(--muted)' }}>Ancora nessuna iscrizione.</p>}
             {recent.map((s) => (
               <div key={s.id} className="post-row">
                 <span className="t" style={{ fontSize: 17 }}>{s.email}</span>
-                <span className="m">{s.confirmedAt ? 'confirmed' : 'waiting'}</span>
+                <span className="m">{s.confirmedAt ? 'confermato' : 'in attesa'}</span>
               </div>
             ))}
           </div>
