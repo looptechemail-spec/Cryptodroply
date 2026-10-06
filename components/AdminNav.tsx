@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 
 const LINKS = [
   ['/admin', 'Dashboard'], ['/admin/tools', 'Strumenti'], ['/admin/videos', 'Video'], ['/admin/users', 'Utenti'],
-  ['/admin/referrals', 'Referral'], ['/admin/subscribers', 'Iscritti'], ['/admin/newsletter', 'Campagne'], ['/admin/emails', 'Email'], ['/admin/articles', 'Articoli'], ['/admin/tool-posts', 'Post strumenti'], ['/admin/news', 'Post news'], ['/admin/messages', 'Messaggi'], ['/admin/import', 'Importa'], ['/admin/import-project', 'Importa progetto'], ['/admin/legacy', 'Vecchi contatti'], ['/admin/pro-grants', 'PRO vecchi clienti'], ['/admin/creators', 'Creator'], ['/admin/launch', 'Controllo lancio'], ['/admin/translate', 'Traduzioni'],
+  ['/admin/referrals', 'Referral'], ['/admin/subscribers', 'Iscritti'], ['/admin/newsletter', 'Campagne'], ['/admin/emails', 'Email'], ['/admin/articles', 'Articoli'], ['/admin/tool-posts', 'Post strumenti'], ['/admin/news', 'Post news'], ['/admin/messages', 'Messaggi'], ['/admin/import', 'Importa'], ['/admin/import-project', 'Importa progetto'], ['/admin/legacy', 'Vecchi contatti'], ['/admin/pro-grants', 'PRO vecchi clienti'], ['/admin/creators', 'Creator'], ['/admin/launch', 'Controllo lancio'], ['/admin/da-risolvere', 'Da risolvere'], ['/admin/translate', 'Traduzioni'],
 ] as const
 
 export function AdminNav() {

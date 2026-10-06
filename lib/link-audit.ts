@@ -50,5 +50,7 @@ export async function auditToolLinks(log: (m: string) => void = () => {}) {
   const key = `link-audit:${new Date().toISOString().slice(0, 10)}`
   const note = `${checked} link controllati, ${out.length} da guardare. ${out.slice(0, 12).join(' | ')}`.slice(0, 900)
   await db.jobRun.upsert({ where: { key }, update: { note }, create: { key, note } }).catch(() => undefined)
+  const full = `${checked} link controllati, ${out.length} da guardare.\n${out.join('\n')}`.slice(0, 20000)
+  await db.jobRun.upsert({ where: { key: 'link-audit:last' }, update: { note: full, ranAt: new Date() }, create: { key: 'link-audit:last', note: full } }).catch(() => undefined)
   return out
 }
