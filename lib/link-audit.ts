@@ -27,11 +27,12 @@ export async function auditToolLinks(log: (m: string) => void = () => {}) {
     for (;;) {
       const t = queue.pop()
       if (!t) return
-      const url = t.websiteUrl!
+      const url = target(t)!
       let host = ''
       try { host = new URL(url).hostname.replace(/^www\./, '') } catch { out.push(`LINK NON VALIDO: ${t.title} -> ${url}`); continue }
       const res = await probe(url)
       checked++
+      if ('final' in res && /youtube\.com|youtu\.be/i.test(res.final) ) out.push(`PORTA A YOUTUBE: ${t.title} -> ${res.final}`)
       if ('error' in res) out.push(`NON RISPONDE: ${t.title} -> ${url} (${res.error})`)
       else if (res.status === 404 || res.status === 410 || res.status >= 500) out.push(`ERRORE ${res.status}: ${t.title} -> ${url}`)
       else if (res.status >= 400) out.push(`BLOCCA I CONTROLLI (${res.status}), da guardare a mano: ${t.title} -> ${url}`)
