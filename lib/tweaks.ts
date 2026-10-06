@@ -56,7 +56,7 @@ async function applyEditorRequests(log: (m: string) => void) {
   const key = 'one-shot:remove-litvm-testnet'
   if (!(await db.jobRun.findUnique({ where: { key } }))) {
     const tools = await db.tool.findMany()
-    const hitT = tools.filter((t) => has(t.title, 'litvm', 'testnet') || has(t.slug, 'litvm', 'testnet')
+    const hitT = tools.filter((t) => has(t.title, 'litvm', 'testnet') || has(t.slug, 'litvm', 'testnet'))
     const posts = await db.post.findMany({ include: { translations: true } })
     const hitP = posts.filter((p) => has(p.slug, 'litvm', 'testnet') || p.translations.some((x) => has(x.title, 'litvm', 'testnet')))
     for (const t of hitT) { await db.tool.delete({ where: { id: t.id } }); log(`LitVM: eliminato strumento "${t.title}" (${t.slug}, ${t.status})`) }
