@@ -93,4 +93,15 @@ async function applyEditorRequests(log: (m: string) => void) {
     if (b) await db.tool.update({ where: { id: b.id }, data: { sortOrder: -99 } })
     log(`Airdrop in cima: ${a ? a.title : 'AirdropAlert NON trovato'}, ${b ? b.title : 'Airdrops.io NON trovato'}`)
   }
+
+  // 3) gaming: PlayToEarn per primo, poi Decentraland, poi gli altri
+  const gcat = await db.category.findUnique({ where: { wixId: 'Gaming' } })
+  if (gcat) {
+    const list = await db.tool.findMany({ where: { categoryId: gcat.id } })
+    const fnd = (...w: string[]) => list.find((t) => w.some((k) => has(t.title, k) || has(t.slug, k.replace(/[^a-z0-9]/g, '')) || has(t.slug, k.replace(/[^a-z0-9]/g, '-')) || has(t.websiteUrl, k.replace(/ /g, ''))))
+    const p = fnd('play to earn', 'playtoearn', 'play-to-earn'), d = fnd('decentraland')
+    if (p) await db.tool.update({ where: { id: p.id }, data: { sortOrder: -100 } })
+    if (d) await db.tool.update({ where: { id: d.id }, data: { sortOrder: -99 } })
+    log(`Gaming in cima: ${p ? p.title : 'PlayToEarn NON trovato'}, ${d ? d.title : 'Decentraland NON trovato'}`)
+  }
 }
