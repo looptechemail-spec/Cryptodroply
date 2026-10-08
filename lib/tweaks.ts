@@ -94,6 +94,27 @@ async function applyEditorRequests(log: (m: string) => void) {
     log(`Airdrop in cima: ${a ? a.title : 'AirdropAlert NON trovato'}, ${b ? b.title : 'Airdrops.io NON trovato'}`)
   }
 
+  // 2b) ordine in cima richiesto per altre sezioni (per slug della categoria; gli altri strumenti restano dopo)
+  const flat = (s: string | null | undefined) => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const TOP: Record<string, string[]> = {
+    'cold-wallet': ['trezor', 'ledger'],
+    'hot-wallet': ['metamask', 'trustwallet', 'rabby'],
+    'exchange-dex': ['uniswap', '1inch'],
+    'crypto-card': ['redotpay', 'etherfi'],
+    'tools-analysis': ['coinmarketcap', 'coingecko', 'dexscreener'],
+  }
+  for (const [slug, names] of Object.entries(TOP)) {
+    const c = await db.category.findFirst({ where: { slug } })
+    if (!c) { log(`Ordine ${slug}: categoria non trovata`); continue }
+    const items = await db.tool.findMany({ where: { categoryId: c.id } })
+    const done: string[] = []
+    for (let i = 0; i < names.length; i++) {
+      const t = items.find((x) => flat(x.title).includes(names[i]) || flat(x.slug).includes(names[i]))
+      if (t) { await db.tool.update({ where: { id: t.id }, data: { sortOrder: -100 + i } }); done.push(t.title) } else done.push(`${names[i]} NON trovato`)
+    }
+    log(`Ordine ${slug}: ${done.join(' > ')}`)
+  }
+
   // 3) gaming: PlayToEarn per primo, poi Decentraland, poi gli altri
   const gcat = await db.category.findUnique({ where: { wixId: 'Gaming' } })
   if (gcat) {
