@@ -68,6 +68,10 @@ async function applyEditorRequests(log: (m: string) => void) {
     await db.jobRun.create({ data: { key, note: `eliminati ${hitT.length} strumenti e ${hitP.length} articoli` } })
   }
 
+  // 1a) SBRC-20 tolto dagli airdrop (a ogni avvio, così non torna con un nuovo import)
+  const sb = (await db.tool.findMany()).filter((t) => has(t.title, 'sbrc') || has(t.slug, 'sbrc'))
+  for (const t of sb) { await db.tool.delete({ where: { id: t.id } }); log(`SBRC-20: eliminato strumento "${t.title}" (${t.slug})`) }
+
   // 1b) WEMIX Play: sito ufficiale https://wemixplay.com/ (il link di affiliazione, se c'è, non si tocca)
   const wm = await db.tool.findMany({ where: { OR: [{ title: { contains: 'wemix', mode: 'insensitive' } }, { slug: { contains: 'wemix', mode: 'insensitive' } }] } })
   for (const t of wm) {
