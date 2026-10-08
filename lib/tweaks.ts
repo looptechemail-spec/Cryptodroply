@@ -72,6 +72,9 @@ async function applyEditorRequests(log: (m: string) => void) {
   const sb = (await db.tool.findMany()).filter((t) => has(t.title, 'sbrc') || has(t.slug, 'sbrc'))
   for (const t of sb) { await db.tool.delete({ where: { id: t.id } }); log(`SBRC-20: eliminato strumento "${t.title}" (${t.slug})`) }
 
+  // 1c) Polyinit tolto (a ogni avvio)
+  for (const t of (await db.tool.findMany()).filter((x) => has(x.title, 'polyinit') || has(x.slug, 'polyinit') || has(x.title, 'poly init'))) { await db.tool.delete({ where: { id: t.id } }); log(`Polyinit: eliminato strumento "${t.title}" (${t.slug})`) }
+
   // 1b) WEMIX Play: sito ufficiale https://wemixplay.com/ (il link di affiliazione, se c'è, non si tocca)
   const wm = await db.tool.findMany({ where: { OR: [{ title: { contains: 'wemix', mode: 'insensitive' } }, { slug: { contains: 'wemix', mode: 'insensitive' } }] } })
   for (const t of wm) {
@@ -102,9 +105,11 @@ async function applyEditorRequests(log: (m: string) => void) {
     'exchange-dex': ['uniswap', '1inch'],
     'crypto-card': ['redotpay', 'etherfi'],
     'tools-analysis': ['coinmarketcap', 'coingecko', 'dexscreener'],
+    'tools-security': ['brave', 'pocketuniverse'],
+    Growth: ['stakingrewards', 'morpho'],
   }
   for (const [slug, names] of Object.entries(TOP)) {
-    const c = await db.category.findFirst({ where: { slug } })
+    const c = await db.category.findFirst({ where: { OR: [{ slug }, { wixId: slug }] } })
     if (!c) { log(`Ordine ${slug}: categoria non trovata`); continue }
     const items = await db.tool.findMany({ where: { categoryId: c.id } })
     const done: string[] = []
