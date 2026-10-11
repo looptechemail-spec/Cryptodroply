@@ -54,6 +54,11 @@ async function load(categoryParam: string, slug: string) {
   return { tool: legacy, pro }
 }
 
+const STAR_CARD = new Set(['TaskPlatform', 'toolsanalysis'])
+function shareImage(t: { logoUrl: string | null; coverUrl: string | null; category: { wixId: string | null } }): string | undefined {
+  return (STAR_CARD.has(t.category.wixId ?? '') ? t.coverUrl ?? t.logoUrl : t.logoUrl ?? t.coverUrl) ?? undefined
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category, slug } = await params
   const { tool } = await load(category, slug)
@@ -64,7 +69,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = t?.seoDescription ?? t?.description ?? undefined
   const seoTitle = it && t?.locale !== 'IT' ? undefined : t?.seoTitle
   // l'anteprima quando il link viene condiviso è il logo dello strumento
-  const image = tool.logoUrl ?? tool.coverUrl ?? undefined
+  // in Task platform e Analisi il logo è un'immagine con le stelle del voto: per la condivisione si usa la copertina
+  const image = shareImage(tool)
   return {
     title: seoTitle ?? (it ? `${tool.title}: cos’è e come si usa` : `${tool.title}: what it is and how to use it`),
     description,
@@ -123,7 +129,7 @@ export default async function ToolPage({ params }: Props) {
   const path = `${base}/${tool.slug}`
   const ld = [
     ...toolLd({
-      name: tool.title, description: cleanText(t?.description), path, lang, category: catName, image: tool.logoUrl ?? tool.coverUrl, website: tool.websiteUrl,
+      name: tool.title, description: cleanText(t?.description), path, lang, category: catName, image: shareImage(tool), website: tool.websiteUrl,
       faq: [
         { q: tr(`What is ${tool.title}?`, `Che cos’è ${tool.title}?`), a: plain(t?.whatIs || t?.fullDescription || t?.description) },
         { q: tr(`How does ${tool.title} work?`, `Come funziona ${tool.title}?`), a: plain(t?.howItWorks) },
