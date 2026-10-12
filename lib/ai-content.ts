@@ -291,7 +291,7 @@ export async function articleSocial(postId: string, when: Date): Promise<string>
   const post = await db.post.findUnique({ where: { id: postId }, include: { translations: true, category: true } })
   if (!post) throw new Error('articolo non trovato')
   // le analisi PRO a pagamento non vanno mai sui social
-  if (post.access === 'PRO' || post.category?.slug === 'weekly-crypto-analysis') return 'Analisi PRO: nessun post social creato (le analisi a pagamento non si condividono).'
+  if (post.category?.slug === 'weekly-crypto-analysis' || (post.access === 'PRO' && !post.categoryId)) return 'Analisi PRO: nessun post social creato (le analisi a pagamento non si condividono).'
   const t = post.translations.find((x) => x.locale === 'EN') ?? post.translations[0]
   if (!t) throw new Error('articolo senza testo')
   const link = `${siteUrl()}/post/${post.slug}`

@@ -24,6 +24,10 @@ type Tool = {
   run: (a: any) => Promise<string>
 }
 
+/** Analisi PRO = l'analisi di una moneta/progetto (categoria Weekly Crypto analysis). Tutto il resto (tutorial, news, guide) è un articolo normale. */
+const ANALYSIS_WHERE = { OR: [{ category: { slug: 'weekly-crypto-analysis' } }, { access: 'PRO' as const, categoryId: null }] }
+const isAnalysis = (p: { access: string; categoryId?: string | null; category?: { slug: string } | null }) => p.category?.slug === 'weekly-crypto-analysis' || (p.access === 'PRO' && !p.categoryId)
+
 const enTitle = (t: { locale: string; title: string | null }[]) => t.find((x) => x.locale === 'EN')?.title ?? t[0]?.title ?? '(senza titolo)'
 
 async function postOrThrow(id: string) {
@@ -91,7 +95,7 @@ const TOOLS: Tool[] = [
       const p = await postOrThrow(a.id)
       if (p.status !== 'DRAFT') throw new Error('Non è una bozza')
       if (!p.coverUrl) throw new Error('Manca la copertina: va aggiunta prima (dal pannello Articoli)')
-      return { title: `Pubblicare "${enTitle(p.translations)}"`, detail: `${p.access === 'PRO' ? 'Articolo PRO (nessun post social).' : a.social ? 'Con post social su Publer tra 15 minuti.' : 'Senza post social.'}` }
+      return { title: `Pubblicare "${enTitle(p.translations)}"`, detail: `${isAnalysis(p) ? 'Analisi PRO (nessun post social).' : a.social ? 'Con post social su Publer tra 15 minuti.' : 'Senza post social.'}` }
     },
     run: async (a) => publishNow(String(a.id), !!a.social),
   },
@@ -102,7 +106,7 @@ const TOOLS: Tool[] = [
       const p = await postOrThrow(a.id)
       if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(String(a.when))) throw new Error('Formato data non valido')
       if (!p.coverUrl) throw new Error('Manca la copertina')
-      return { title: `Programmare "${enTitle(p.translations)}" per il ${String(a.when).replace('T', ' alle ')}`, detail: a.social && p.access !== 'PRO' ? 'Con post social alla stessa ora.' : 'Senza post social.' }
+      return { title: `Programmare "${enTitle(p.translations)}" per il ${String(a.when).replace('T', ' alle ')}`, detail: a.social && !isAnalysis(p) ? 'Con post social alla stessa ora.' : 'Senza post social.' }
     },
     run: async (a) => scheduleArticle(String(a.id), romeToDate(String(a.when)), !!a.social),
   },
@@ -256,7 +260,7 @@ const SYSTEM = `Sei l'assistente di Nicolò Allodio per Cryptodroply.com (direct
 Regole:
 - Non dire mai che hai fatto qualcosa se non l'hai fatto tu con uno strumento e il risultato lo conferma. Le azioni che cambiano il sito (pubblicare, programmare, rispondere a clienti, cambiare link, post social) passano da un'approvazione con pulsanti: dopo aver chiamato lo strumento di' solo che hai mandato la proposta e cosa contiene, senza ripeterla tutta.
 - Prima di proporre qualcosa leggi i dati (list_drafts, list_messages, read_article). Non inventare id.
-- Le analisi PRO settimanali non si condividono mai sui social. Non si pubblica senza copertina.
+- L'analisi PRO è l'analisi di una moneta/progetto (categoria Weekly Crypto analysis) e non si condivide mai sui social. Tutto il resto (tutorial, news, guide, articoli normali) si condivide. Non si pubblica senza copertina.
 - Per codice, deploy, Railway, grandi operazioni su Publer, immagini o tutto ciò che non hai come strumento: usa queue_for_claude e spiega che lo riprenderà Claude nella sessione di lavoro.
 - Hai il registro delle attività (sotto): usalo per sapere cosa è già stato fatto, proposto o chiesto, anche da Claude o dal sistema, e non ripetere cose già fatte.
 - Se manca un dato essenziale fai una sola domanda.
@@ -375,7 +379,7 @@ const when = (d: Date | null) => (d ? dateToRome(d).replace('T', ' ') : '')
 
 export async function dashboard(): Promise<{ text: string; buttons: Button[][] }> {
   const [drafts, proDrafts, sched, msgs, queued, proposed, proSubs, subs, mute] = await Promise.all([
-    db.post.count({ where: { status: 'DRAFT' } }), db.post.count({ where: { status: 'DRAFT', access: 'PRO' } }),
+    db.post.count({ where: { status: 'DRAFT' } }), db.post.count({ where: { status: 'DRAFT', ...ANALYSIS_WHERE } }),
     db.post.findMany({ where: { status: 'DRAFT', scheduledAt: { not: null } }, orderBy: { scheduledAt: 'asc' }, take: 5, include: { translations: true } }),
     db.formSubmission.count({ where: { handled: false } }), db.agentTask.count({ where: { status: 'QUEUED' } }), db.agentTask.count({ where: { status: 'PROPOSED' } }),
     db.subscription.count({ where: { status: 'ACTIVE' } }), db.subscriber.count(), mutedUntil(),
@@ -384,7 +388,7 @@ export async function dashboard(): Promise<{ text: string; buttons: Button[][] }
     `📋 Oggi, ${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' })}`,
     '',
     `⏳ Da approvare: ${proposed}`,
-    `📝 Bozze: ${drafts}${proDrafts ? ` (di cui ${proDrafts} PRO)` : ''}`,
+    `📝 Bozze: ${drafts}${proDrafts ? ` (di cui ${proDrafts} analisi PRO)` : ''}`,
     `📨 Messaggi da gestire: ${msgs}`,
     `🧰 In coda per Claude: ${queued}`,
     `💎 Abbonati PRO: ${proSubs} · ✉️ Iscritti: ${subs}`,
@@ -406,10 +410,10 @@ export async function dashboard(): Promise<{ text: string; buttons: Button[][] }
 export async function showSection(name: string) {
   if (name === 'oggi') { const d = await dashboard(); return void (await sendOwner(d.text, d.buttons)) }
   if (name === 'bozze') {
-    const rows = await db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 8, include: { translations: true } })
+    const rows = await db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 8, include: { translations: true, category: true } })
     if (!rows.length) return void (await sendOwner('📝 Nessuna bozza.'))
     for (const p of rows) {
-      const line2 = [p.access === 'PRO' ? '💎 PRO' : 'FREE', p.coverUrl ? 'copertina ✅' : 'copertina ❌', p.scheduledAt ? '📅 ' + when(p.scheduledAt) : 'non programmata'].join(' · ')
+      const line2 = [isAnalysis(p) ? '📊 Analisi PRO' : p.access === 'PRO' ? '💎 PRO' : 'articolo', p.coverUrl ? 'copertina ✅' : 'copertina ❌', p.scheduledAt ? '📅 ' + when(p.scheduledAt) : 'non programmata'].join(' · ')
       const row2: Button[] = []
       if (p.coverUrl) { row2.push({ text: '🚀 Pubblica ora', data: `pb:${p.id}` }); row2.push({ text: p.scheduledAt ? '📅 Cambia: domani 10:00' : '📅 Domani 10:00', data: `sc:${p.id}` }) }
       if (p.scheduledAt) row2.push({ text: '🚫 Togli programma', data: `us:${p.id}` })
@@ -483,8 +487,8 @@ async function handleAction(act: string, id: string, done: (t: string) => Promis
       const t = p.translations.find((x) => x.locale === 'EN') ?? p.translations[0]
       return void (await sendOwner(`👁 ${t?.title}\n\n${t?.excerpt ?? ''}\n\n${short(t?.contentMd ?? '', 2600)}`, [[{ text: '🚀 Pubblica ora', data: `pb:${id}` }, { text: '📅 Domani 10:00', data: `sc:${id}` }]]))
     }
-    if (act === 'pb') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('publish_article'), { id, social: p.access !== 'PRO' })) }
-    if (act === 'sc') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('schedule_article'), { id, when: dateToRome(tomorrowRome(10)), social: p.access !== 'PRO' })) }
+    if (act === 'pb') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('publish_article'), { id, social: !isAnalysis(p) })) }
+    if (act === 'sc') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('schedule_article'), { id, when: dateToRome(tomorrowRome(10)), social: !isAnalysis(p) })) }
     if (act === 'us') { await done('Proposta pronta'); return void (await propose(tool('unschedule_article'), { id })) }
     if (act === 'mh') { await db.formSubmission.update({ where: { id }, data: { handled: true } }); await done('Segnato come gestito ✅'); return }
     if (act === 'mr') { await done('Preparo la bozza…'); return void (await sendOwner(await converse(`Scrivi una bozza di risposta al messaggio ${id} (leggilo con list_messages) e proponila per l'approvazione con reply_message.`))) }
@@ -579,11 +583,16 @@ async function reminders(date: string, wd: number) {
   const silent = Boolean(await mutedUntil())
   // analisi PRO: dovrebbe essercene una a settimana
   const monday = romeToDate(`${new Date(new Date(`${date}T00:00:00Z`).getTime() - wd * 86400000).toISOString().slice(0, 10)}T00:00`)
-  const pro = await db.post.findMany({ where: { access: 'PRO', createdAt: { gte: monday } }, select: { status: true }, take: 5 })
+  const pro = await db.post.findMany({ where: { ...ANALYSIS_WHERE, createdAt: { gte: monday } }, select: { status: true }, take: 5 })
   if (!pro.length && [0, 2, 4].includes(wd)) {
-    await sendOwner('📊 Promemoria: l’analisi PRO di questa settimana non è ancora stata preparata.', [[{ text: '💡 Suggeriscimi 3 progetti', data: 'go:ideas' }], [{ text: '✍️ Scrivi: /analisi NomeProgetto', data: 'm:azioni' }]], silent)
+    await sendOwner('📊 Promemoria: l’analisi PRO di questa settimana (una moneta o un progetto) non è ancora stata preparata.', [[{ text: '💡 Suggeriscimi 3 progetti', data: 'go:ideas' }], [{ text: '✍️ Scrivi: /analisi NomeProgetto', data: 'm:azioni' }]], silent)
   } else if (pro.length && !pro.some((p) => p.status === 'PUBLISHED') && [2, 4].includes(wd)) {
     await sendOwner('📊 Promemoria: l’analisi PRO della settimana è in bozza. Rileggi i dati e pubblicala (non va condivisa sui social).', [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]], silent)
+  }
+  // articoli normali (tutorial, news, guide): almeno uno a settimana in bozza, programmato o pubblicato
+  if ([1, 3].includes(wd)) {
+    const normal = await db.post.count({ where: { NOT: ANALYSIS_WHERE, OR: [{ createdAt: { gte: monday } }, { publishedAt: { gte: monday } }, { scheduledAt: { gte: monday } }] } })
+    if (!normal) await sendOwner('✍️ Promemoria: questa settimana non c’è ancora nessun articolo normale (tutorial, news o guida), né in bozza né programmato.', [[{ text: '✍️ Prepara l’articolo della settimana', data: 'go:article' }]], silent)
   }
   // programmazione social della settimana prossima
   if ([3, 4, 6].includes(wd)) {
