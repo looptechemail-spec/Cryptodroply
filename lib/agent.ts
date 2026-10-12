@@ -578,17 +578,18 @@ export async function eveningDigest() {
   await sendOwner(L.join('\n'), todo.length ? [[{ text: `⏳ Da approvare (${proposed})`, data: 'm:approvare' }, { text: `📨 Messaggi (${msgs})`, data: 'm:messaggi' }]] : undefined, Boolean(await mutedUntil()))
 }
 
-/** Promemoria: analisi PRO settimanale e programmazione dei social della settimana dopo. */
+/** Promemoria: analisi PRO (martedì), articolo normale e programmazione dei social della settimana dopo. */
 async function reminders(date: string, wd: number) {
   const silent = Boolean(await mutedUntil())
-  // analisi PRO: dovrebbe essercene una a settimana
-  const monday = romeToDate(`${new Date(new Date(`${date}T00:00:00Z`).getTime() - wd * 86400000).toISOString().slice(0, 10)}T00:00`)
-  const pro = await db.post.findMany({ where: { ...ANALYSIS_WHERE, createdAt: { gte: monday } }, select: { status: true }, take: 5 })
-  if (!pro.length && [0, 2, 4].includes(wd)) {
-    await sendOwner('📊 Promemoria: l’analisi PRO di questa settimana (una moneta o un progetto) non è ancora stata preparata.', [[{ text: '💡 Suggeriscimi 3 progetti', data: 'go:ideas' }], [{ text: '✍️ Scrivi: /analisi NomeProgetto', data: 'm:azioni' }]], silent)
-  } else if (pro.length && !pro.some((p) => p.status === 'PUBLISHED') && [2, 4].includes(wd)) {
-    await sendOwner('📊 Promemoria: l’analisi PRO della settimana è in bozza. Rileggi i dati e pubblicala (non va condivisa sui social).', [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]], silent)
-  }
+  // analisi PRO (moneta/progetto): una a settimana, esce solo il martedì (sul blog, non sui social)
+  const drafts = await db.post.count({ where: { status: 'DRAFT', ...ANALYSIS_WHERE } })
+  const doneWeek = await db.post.count({ where: { status: 'PUBLISHED', ...ANALYSIS_WHERE, publishedAt: { gte: monday } } })
+  const needIdea: Button[][] = [[{ text: '💡 Suggeriscimi 3 progetti', data: 'go:ideas' }], [{ text: '✍️ Scrivi: /analisi NomeProgetto', data: 'm:azioni' }]]
+  if (wd === 4 && !drafts) await sendOwner('📊 Promemoria: martedì esce l’analisi PRO (una moneta o un progetto) e non c’è ancora la bozza. Conviene prepararla nel weekend: servono 3-5 minuti.', needIdea, silent)
+  else if (wd === 0 && !drafts) await sendOwner('📊 Promemoria: domani, martedì, esce l’analisi PRO e non c’è ancora la bozza. Preparala oggi.', needIdea, silent)
+  else if (wd === 0 && drafts) await sendOwner('📊 Promemoria: domani esce l’analisi PRO. La bozza c’è: rileggi i dati (prezzi, supply, date) prima di pubblicarla.', [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]], silent)
+  else if (wd === 1 && drafts) await sendOwner('📊 Oggi è martedì: esce l’analisi PRO. Pubblicala dalla bozza (va sul blog, non sui social).', [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]], silent)
+  else if (wd === 1 && !drafts && !doneWeek) await sendOwner('📊 Oggi è martedì ma l’analisi PRO non è pronta. Se la scrivi ora esce oggi, altrimenti martedì prossimo.', needIdea, silent)
   // articoli normali (tutorial, news, guide): almeno uno a settimana in bozza, programmato o pubblicato
   if ([1, 3].includes(wd)) {
     const normal = await db.post.count({ where: { NOT: ANALYSIS_WHERE, OR: [{ createdAt: { gte: monday } }, { publishedAt: { gte: monday } }, { scheduledAt: { gte: monday } }] } })
