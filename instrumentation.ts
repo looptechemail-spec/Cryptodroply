@@ -27,7 +27,7 @@ export async function register() {
       await import('./lib/translate').then((m) => m.translateMissing((x) => console.log('[translate] ' + x), limit)).catch((e) => console.error('translate:', e))
     }
     setTimeout(() => void import('./lib/tgbot').then((m) => m.registerWebhook((process.env.SITE_URL ?? 'https://www.cryptodroply.com').replace(/\/$/, ''), (x) => console.log('[agent] ' + x))).catch((e) => console.error('agent:', e)), 25 * 1000)
-    setInterval(() => void import('./lib/agent').then((m) => m.morningBrief()).catch((e) => console.error('brief:', e)), 10 * 60 * 1000)
+    setInterval(() => void import('./lib/agent').then((m) => m.agentTick()).catch((e) => console.error('brief:', e)), 5 * 60 * 1000)
     setTimeout(() => void import('./lib/pro-grants').then((m) => m.seedProGrants((x) => console.log('[pro] ' + x))).catch((e) => console.error('pro:', e)), 15 * 1000)
     setTimeout(() => void import('./lib/image-audit').then((m) => m.auditToolImages((x) => console.log('[img] ' + x))).catch((e) => console.error('img:', e)), 60 * 1000)
     setTimeout(() => void import('./lib/link-audit').then((m) => m.auditToolLinks((x) => console.log('[links] ' + x))).catch((e) => console.error('links:', e)), 150 * 1000)

@@ -547,3 +547,40 @@ export async function tickAutomation(log: (m: string) => void = () => {}) {
     if (monday >= (process.env.WEEKPLAN_FROM ?? '2026-10-19')) await once(`weekplan-${monday}`, () => runWeekPlan(monday), log)
   }
 }
+
+/** Una sola notizia del giorno (post per X e Telegram) da pubblicare subito, dopo OK. Evita le fonti già usate. */
+export async function proposeNewsPost(skipLinks: string[] = []): Promise<{ channel: 'x' | 'telegram'; text: string; link: string }[]> {
+  const today = new Date().toISOString().slice(0, 10)
+  const skip = skipLinks.filter(Boolean).slice(0, 60).join('\n')
+  const out = await ask({
+    model: FAST(), maxTokens: 2000, searches: 6,
+    system: `You write social posts for Cryptodroply, a directory of crypto tools (wallets, exchanges, airdrops, privacy, security, analysis). ${STYLE}`,
+    prompt: `Today is ${today}. Search the web for the single most useful crypto news of the last 24 hours for ordinary users: a security incident, an airdrop, a wallet or exchange update, or a regulation that changes what users can do. Skip price talk and rumors. Pick the one that matters most.
+${skip ? `Do NOT use any of these sources or the stories they cover:\n${skip}\n` : ''}Write exactly two posts about that story: one for Telegram (2 to 4 short lines, at most one emoji) and one for X (under 250 characters including the link, at most 2 hashtags). Each post ends with the source link.
+Answer ONLY in this exact format, nothing else:
+<post channel="telegram" link="SOURCE_URL">text</post>
+<post channel="x" link="SOURCE_URL">text</post>`,
+  })
+  const re = /<post\s+channel=["'“”]?(telegram|x)["'“”]?\s+link=["'“”]?([^"'“”>]*)["'“”]?\s*>([\s\S]*?)<\/post>/gi
+  const posts: { channel: 'x' | 'telegram'; text: string; link: string }[] = []
+  for (const m of out.matchAll(re)) {
+    const text = m[3].trim()
+    if (text.length < 15 || !/^https?:\/\//.test(m[2])) continue
+    posts.push({ channel: m[1].toLowerCase() as 'x' | 'telegram', text: text.slice(0, 1000), link: m[2] })
+  }
+  if (!posts.length) throw new Error('nessuna notizia utilizzabile nella risposta')
+  return posts
+}
+
+/** Tre progetti da analizzare questa settimana (analisi PRO), diversi da quelli già fatti. */
+export async function suggestAnalysisIdeas(): Promise<{ name: string; reason: string }[]> {
+  const done = await db.postTranslation.findMany({ where: { locale: 'EN', post: { access: 'PRO' } }, select: { title: true }, orderBy: { post: { createdAt: 'desc' } }, take: 40 })
+  const out = await ask({
+    model: FAST(), maxTokens: 1200, searches: 4,
+    system: 'You help pick crypto projects for a weekly in-depth analysis written for retail users. Be neutral and factual.',
+    prompt: `Today is ${new Date().toISOString().slice(0, 10)}. Suggest 3 real crypto projects worth a deep weekly analysis now (active product or token, with some recent news or user interest, not obvious scams). Do not repeat projects already analyzed:\n${done.map((d: { title: string | null }) => d.title).join('\n')}\nAnswer ONLY with 3 lines in this format: ProjectName | one short reason in Italian (max 90 characters)`,
+  })
+  const items = out.split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((p) => p.length >= 2 && p[0].length > 1 && p[0].length < 40).slice(0, 3).map((p) => ({ name: p[0].replace(/^[\d.\-\s*]+/, ''), reason: p[1] }))
+  if (!items.length) throw new Error('nessun suggerimento')
+  return items
+}

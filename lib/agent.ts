@@ -8,7 +8,7 @@ import { siteUrl, sendEmail } from './email'
 import { publishNow, scheduleArticle } from './articles'
 import { sendToPubler } from './publer'
 import { romeToDate, dateToRome, tomorrowRome } from './time'
-import { runWeeklyArticle, runWeekPlan, nextMondayRome, runWeeklyDigest, runDailySocial, runWeeklyAnalysis } from './ai-content'
+import { runWeeklyArticle, runWeekPlan, nextMondayRome, runWeeklyDigest, runDailySocial, runWeeklyAnalysis, proposeNewsPost, suggestAnalysisIdeas } from './ai-content'
 import { tg, sendOwner, ownerChat, agentToken, mutedUntil, setMute, type Button } from './tgbot'
 
 const MODEL = () => process.env.AI_MODEL_AGENT ?? 'claude-sonnet-5-5'
@@ -107,6 +107,27 @@ const TOOLS: Tool[] = [
     run: async (a) => scheduleArticle(String(a.id), romeToDate(String(a.when)), !!a.social),
   },
   {
+    name: 'publish_news', mode: 'approve', description: 'Pubblica SUBITO su Publer una news (post per X e/o Telegram). Mai per analisi PRO.',
+    schema: { properties: { posts: { type: 'array', items: { type: 'object', properties: { channel: { type: 'string', enum: ['x', 'telegram', 'facebook'] }, text: { type: 'string' }, link: { type: 'string' } }, required: ['channel', 'text'] } } }, required: ['posts'] },
+    prepare: async (a) => {
+      const posts = Array.isArray(a.posts) ? a.posts : []
+      if (!posts.length) throw new Error('Nessun post')
+      return { title: `Pubblicare ora su Publer (${posts.map((x: any) => x.channel).join(' + ')})`, detail: posts.map((x: any) => `[${x.channel}]\n${x.text}`).join('\n\n') }
+    },
+    run: async (a) => {
+      const res: string[] = []
+      for (const x of a.posts as { channel: string; text: string; link?: string }[]) {
+        try {
+          const job = await sendToPubler({ channel: x.channel, text: x.text, linkUrl: x.link ?? null }, 'now')
+          await db.socialPost.create({ data: { channel: x.channel, text: x.text.slice(0, 3000), linkUrl: x.link ?? null, source: 'news', status: 'PUBLER', publerRef: `now:${job}`, sentAt: new Date() } })
+          res.push(`${x.channel}: inviato`)
+        } catch (e) { res.push(`${x.channel}: ERRORE ${(e as Error).message.slice(0, 120)}`) }
+      }
+      if (res.every((r) => r.includes('ERRORE'))) throw new Error(res.join(' · '))
+      return res.join(' · ')
+    },
+  },
+  {
     name: 'unschedule_article', mode: 'approve', description: 'Toglie la programmazione a una bozza (resta bozza). I post social già creati su Publer vanno gestiti a parte.',
     schema: { properties: { id: { type: 'string' } }, required: ['id'] },
     prepare: async (a) => { const p = await postOrThrow(a.id); if (!p.scheduledAt) throw new Error('Non è programmata'); return { title: `Togliere la programmazione a "${enTitle(p.translations)}"`, detail: 'Resta in bozza. Eventuali post Publer già programmati restano da controllare.' } },
@@ -173,11 +194,11 @@ async function taskLines(n: number): Promise<string> {
   return rows.map((t) => `${dateToRome(t.createdAt).replace('T', ' ')} [${t.status}] (${t.source}) ${short(t.title, 140)}${t.result ? ' → ' + short(t.result, 120) : ''}`).join('\n')
 }
 
-async function propose(tool: Tool, args: any): Promise<string> {
+async function propose(tool: Tool, args: any, extra?: Button[]): Promise<string> {
   let p: { title: string; detail: string }
   try { p = await tool.prepare!(args) } catch (e) { return `Non posso proporlo: ${(e as Error).message}` }
   const task = await db.agentTask.create({ data: { kind: tool.name, title: p.title, detail: p.detail, args, status: 'PROPOSED', source: 'agente' } })
-  const id = await sendOwner(`🔔 Da approvare\n\n${p.title}\n\n${short(p.detail, 1500)}`, [[{ text: '✅ Approva', data: `a:${task.id}` }, { text: '❌ Scarta', data: `r:${task.id}` }]])
+  const id = await sendOwner(`🔔 Da approvare\n\n${p.title}\n\n${short(p.detail, 1500)}`, [[{ text: '✅ Approva', data: `a:${task.id}` }, { text: '❌ Scarta', data: `r:${task.id}` }], ...(extra ? [extra] : [])], Boolean(await mutedUntil()))
   if (id) await db.agentTask.update({ where: { id: task.id }, data: { chatMessage: id } })
   return `Proposta inviata a Nicolò con i pulsanti Approva/Scarta (id ${task.id}). Non è ancora eseguita: aspetta il suo OK.`
 }
@@ -198,9 +219,10 @@ async function execTool(name: string, args: any): Promise<string> {
 export async function handleCallback(cb: any) {
   const chat = String(cb.message?.chat?.id ?? '')
   if (chat !== (await ownerChat())) return
-  const [act, id] = String(cb.data ?? '').split(':')
+  const [act, ...restp] = String(cb.data ?? '').split(':')
+  const id = restp.join(':')
   const done = (text: string) => tg('answerCallbackQuery', { callback_query_id: cb.id, text: text.slice(0, 190) }).catch(() => undefined)
-  if (act !== 'a' && act !== 'r') return handleAction(act, id ?? '', done)
+  if (act !== 'a' && act !== 'r') return handleAction(act, id, done)
   const edit = (text: string) => tg('editMessageText', { chat_id: chat, message_id: cb.message.message_id, text: text.slice(0, 3900), reply_markup: { inline_keyboard: [] } }).catch(() => undefined)
   const task = await db.agentTask.findUnique({ where: { id } })
   if (!task) return void (await done('Attività non trovata'))
@@ -336,7 +358,7 @@ async function processUpdate(u: any) {
 
 const SECTIONS: Record<string, string> = {
   '📋 Oggi': 'oggi', '/oggi': 'oggi', '/stato': 'oggi', '📝 Bozze': 'bozze', '/bozze': 'bozze', '📨 Messaggi': 'messaggi', '/messaggi': 'messaggi',
-  '⏳ Da approvare': 'approvare', '/approvare': 'approvare', '🧰 Coda Claude': 'coda', '/coda': 'coda', '⚙️ Azioni': 'azioni', '/azioni': 'azioni',
+  '/riepilogo': 'riepilogo', '/news': 'news', '⏳ Da approvare': 'approvare', '/approvare': 'approvare', '🧰 Coda Claude': 'coda', '/coda': 'coda', '⚙️ Azioni': 'azioni', '/azioni': 'azioni',
 }
 
 async function sendKeyboard(text: string) {
@@ -416,11 +438,14 @@ export async function showSection(name: string) {
     for (const t of rows) await sendOwner(`🧰 Per Claude\n\n${short(t.detail || t.title, 1500)}`, [[{ text: '✔ Segna fatta', data: `qd:${t.id}` }]])
     return void (await sendOwner('Queste richieste le riprende Claude quando apri la sessione di lavoro e scrivi "guarda la coda".'))
   }
+  if (name === 'riepilogo') return void (await eveningDigest())
+  if (name === 'news') return void (await dailyNews(true))
   if (name === 'azioni') {
     return void (await sendOwner('⚙️ Cosa vuoi che prepari? Tutto esce come bozza, mai pubblicato da solo.', [
       [{ text: '✍️ Articolo della settimana', data: 'go:article' }],
       [{ text: '📅 Programma social settimana', data: 'go:week' }, { text: '📧 Bozza newsletter', data: 'go:digest' }],
-      [{ text: '📰 Notizie → bozze social', data: 'go:news' }],
+      [{ text: '📰 Proponi la news di oggi', data: 'go:news' }, { text: '🌙 Riepilogo del giorno', data: 'm:riepilogo' }],
+      [{ text: '💡 Idee per analisi PRO', data: 'go:ideas' }, { text: '🗓 Notizie → bozze per domani', data: 'go:newsdrafts' }],
       [{ text: '🔕 Silenzio 8 ore', data: 'go:mute' }, { text: '🔔 Riattiva avvisi', data: 'go:unmute' }],
       [{ text: '📊 Analisi PRO: scrivi /analisi Nome', data: 'm:oggi' }],
     ]))
@@ -428,7 +453,7 @@ export async function showSection(name: string) {
 }
 
 async function startJob(job: string, arg = '') {
-  const names: Record<string, string> = { article: 'articolo della settimana', week: 'programma social della settimana', digest: 'bozza newsletter', news: 'bozze dalle notizie', analysis: `analisi di ${arg}` }
+  const names: Record<string, string> = { article: 'articolo della settimana', week: 'programma social della settimana', digest: 'bozza newsletter', newsdrafts: 'bozze dalle notizie', analysis: `analisi di ${arg}` }
   await sendOwner(`⏳ Avviato: ${names[job]}. Ti scrivo quando è pronto${job === 'analysis' || job === 'article' ? ' (3-5 minuti)' : ''}.`)
   const task = await db.agentTask.create({ data: { kind: 'job:' + job, title: `Preparo ${names[job]}`, status: 'RUNNING', source: 'agente' } })
   void (async () => {
@@ -437,7 +462,7 @@ async function startJob(job: string, arg = '') {
       if (job === 'article') out = await runWeeklyArticle()
       else if (job === 'week') out = await runWeekPlan(nextMondayRome())
       else if (job === 'digest') out = 'Campagna in bozza: ' + (await runWeeklyDigest()) + ' · ' + admin('newsletter')
-      else if (job === 'news') out = `${await runDailySocial()} bozze di post create su Telegram e X (vedi ${admin('news')})`
+      else if (job === 'newsdrafts') out = `${await runDailySocial()} bozze di post create su Telegram e X (vedi ${admin('news')})`
       else if (job === 'analysis') out = `Analisi "${(await runWeeklyAnalysis(arg)).title}" in bozza (PRO, non si condivide sui social). ${admin('articles')}`
       await db.agentTask.update({ where: { id: task.id }, data: { status: 'DONE', result: out.slice(0, 500) } })
       await sendOwner(`✅ Pronto: ${names[job]}\n\n${short(out, 600)}`, [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]])
@@ -463,10 +488,13 @@ async function handleAction(act: string, id: string, done: (t: string) => Promis
     if (act === 'us') { await done('Proposta pronta'); return void (await propose(tool('unschedule_article'), { id })) }
     if (act === 'mh') { await db.formSubmission.update({ where: { id }, data: { handled: true } }); await done('Segnato come gestito ✅'); return }
     if (act === 'mr') { await done('Preparo la bozza…'); return void (await sendOwner(await converse(`Scrivi una bozza di risposta al messaggio ${id} (leggilo con list_messages) e proponila per l'approvazione con reply_message.`))) }
+    if (act === 'an') { await done('Avvio l’analisi'); return await startJob('analysis', id) }
     if (act === 'qd') { await db.agentTask.update({ where: { id }, data: { status: 'DONE', result: 'Segnata come fatta da Nicolò' } }); await done('Segnata come fatta ✅'); return }
     if (act === 'go') {
       if (id === 'mute') { await setMute(8); return void (await done('🔕 Silenzio per 8 ore')) }
       if (id === 'unmute') { await setMute(null); return void (await done('🔔 Avvisi riattivati')) }
+      if (id === 'news') { await done('Cerco la news…'); return await dailyNews(true) }
+      if (id === 'ideas') { await done('Cerco idee…'); return await analysisIdeas() }
       await done('Avviato')
       return await startJob(id)
     }
@@ -474,13 +502,106 @@ async function handleAction(act: string, id: string, done: (t: string) => Promis
   } catch (e) { await done('Errore'); await sendOwner('⚠️ ' + (e as Error).message) }
 }
 
-/** Ogni 10 minuti: alle 8:30 (ora di Roma) manda il riepilogo del giorno, solo se c'è qualcosa da decidere. */
-export async function morningBrief() {
-  if (!agentToken() || !(await ownerChat())) return
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map((x) => [x.type, x.value]))
+// --- messaggi programmati ------------------------------------------------------------------
+
+function romeNow() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hour12: false }).formatToParts(new Date()).map((x) => [x.type, x.value]))
   const hour = Number(p.hour) % 24
-  if (hour < 8 || (hour === 8 && Number(p.minute) < 30) || hour >= 12) return
-  try { await db.jobRun.create({ data: { key: `agent:brief-${p.year}-${p.month}-${p.day}` } }) } catch { return }
-  const d = await dashboard()
-  await sendOwner('☀️ Buongiorno\n\n' + d.text.replace(/^📋 Oggi, /, '📋 '), d.buttons, Boolean(await mutedUntil()))
+  const wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(p.weekday)
+  return { date: `${p.year}-${p.month}-${p.day}`, mins: hour * 60 + Number(p.minute), wd }
+}
+const at = (h: number, m = 0) => h * 60 + m
+
+async function claim(name: string, date: string): Promise<boolean> {
+  try { await db.jobRun.create({ data: { key: `agent:${name}-${date}` } }); return true } catch { return false }
+}
+
+/** Notizia del giorno: la prepara e la propone con Approva (pubblica ORA su Publer), Altra notizia, Scarta. */
+export async function dailyNews(manual = false) {
+  if (manual) await sendOwner('⏳ Cerco la notizia più utile di oggi…')
+  try {
+    const recent = await db.socialPost.findMany({ where: { linkUrl: { not: null } }, orderBy: { createdAt: 'desc' }, take: 150, select: { linkUrl: true } })
+    const proposed = await db.agentTask.findMany({ where: { kind: 'publish_news', createdAt: { gte: new Date(Date.now() - 3 * 86400000) } }, select: { args: true } })
+    const links = [...recent.map((r) => r.linkUrl ?? ''), ...proposed.flatMap((t) => ((t.args as any)?.posts ?? []).map((x: any) => x.link ?? ''))]
+    const posts = await proposeNewsPost(links)
+    await propose(TOOLS.find((t) => t.name === 'publish_news')!, { posts }, [{ text: '🔄 Altra notizia', data: 'go:news' }])
+  } catch (e) {
+    await sendOwner(`⚠️ Non sono riuscito a preparare la news: ${(e as Error).message}. Riprova con /news.`)
+  }
+}
+
+async function analysisIdeas() {
+  try {
+    const ideas = await suggestAnalysisIdeas()
+    await sendOwner('💡 Tre progetti per l’analisi PRO di questa settimana:\n\n' + ideas.map((i, n) => `${n + 1}. ${i.name}: ${i.reason}`).join('\n'),
+      ideas.map((i) => [{ text: `📊 Analizza ${i.name}`.slice(0, 60), data: `an:${i.name}`.slice(0, 60) }]))
+  } catch (e) { await sendOwner('⚠️ Non ho trovato idee: ' + (e as Error).message) }
+}
+
+/** Riepilogo serale: cosa è successo oggi sul sito e cosa aspetta una decisione. */
+export async function eveningDigest() {
+  const { date } = romeNow()
+  const since = romeToDate(`${date}T00:00`)
+  const prev = new Date(since.getTime() - 86400000)
+  const [views, viewsPrev, clicks, users, subs, pro, forms, published, social, done, failed, proposed, oldDrafts, msgs, topRaw] = await Promise.all([
+    db.event.count({ where: { kind: 'PAGE_VIEW', createdAt: { gte: since } } }),
+    db.event.count({ where: { kind: 'PAGE_VIEW', createdAt: { gte: prev, lt: since } } }),
+    db.event.count({ where: { kind: 'AFFILIATE_CLICK', createdAt: { gte: since } } }),
+    db.user.count({ where: { createdAt: { gte: since } } }),
+    db.subscriber.count({ where: { createdAt: { gte: since } } }),
+    db.subscription.count({ where: { createdAt: { gte: since }, status: 'ACTIVE' } }),
+    db.formSubmission.count({ where: { createdAt: { gte: since } } }),
+    db.post.findMany({ where: { status: 'PUBLISHED', publishedAt: { gte: since } }, include: { translations: true } }),
+    db.socialPost.count({ where: { sentAt: { gte: since } } }),
+    db.agentTask.count({ where: { status: 'DONE', updatedAt: { gte: since }, source: { not: 'sistema' } } }),
+    db.agentTask.count({ where: { status: 'FAILED', updatedAt: { gte: since } } }),
+    db.agentTask.count({ where: { status: 'PROPOSED' } }),
+    db.post.count({ where: { status: 'DRAFT', createdAt: { lt: new Date(Date.now() - 2 * 86400000) } } }),
+    db.formSubmission.count({ where: { handled: false } }),
+    db.event.groupBy({ by: ['toolId'], where: { kind: 'AFFILIATE_CLICK', createdAt: { gte: since }, toolId: { not: null } }, _count: { toolId: true }, orderBy: { _count: { toolId: 'desc' } }, take: 3 }),
+  ])
+  const topTools = topRaw.length ? await db.tool.findMany({ where: { id: { in: topRaw.map((t) => t.toolId as string) } }, select: { id: true, title: true } }) : []
+  const arrow = viewsPrev ? (views >= viewsPrev ? `▲ ${Math.round(((views - viewsPrev) / viewsPrev) * 100)}%` : `▼ ${Math.round(((viewsPrev - views) / viewsPrev) * 100)}%`) + ' su ieri' : ''
+  const L = [`🌙 Cosa è successo oggi sul sito`, '', `👁 Visite: ${views} ${arrow}`.trim(), `🔗 Click su link di affiliazione: ${clicks}`]
+  for (const t of topRaw) L.push(`   • ${topTools.find((x) => x.id === t.toolId)?.title ?? '?'}: ${t._count.toolId}`)
+  L.push(`👤 Nuovi utenti: ${users} · ✉️ Nuovi iscritti newsletter: ${subs} · 💎 Nuovi PRO: ${pro}`)
+  L.push(`📨 Moduli ricevuti: ${forms}`)
+  if (published.length) L.push(`📰 Articoli pubblicati: ${published.map((p) => short(enTitle(p.translations), 50)).join(' · ')}`)
+  L.push(`📣 Post social inviati: ${social}`)
+  if (done || failed) L.push(`🤖 Azioni dell’agente: ${done} fatte${failed ? `, ${failed} non riuscite ⚠️` : ''}`)
+  const todo = [proposed && `${proposed} proposte da approvare`, msgs && `${msgs} messaggi da gestire`, oldDrafts && `${oldDrafts} bozze ferme da più di 2 giorni`].filter(Boolean)
+  L.push('', todo.length ? '⏳ In sospeso: ' + todo.join(', ') : '✅ Niente in sospeso.')
+  await sendOwner(L.join('\n'), todo.length ? [[{ text: `⏳ Da approvare (${proposed})`, data: 'm:approvare' }, { text: `📨 Messaggi (${msgs})`, data: 'm:messaggi' }]] : undefined, Boolean(await mutedUntil()))
+}
+
+/** Promemoria: analisi PRO settimanale e programmazione dei social della settimana dopo. */
+async function reminders(date: string, wd: number) {
+  const silent = Boolean(await mutedUntil())
+  // analisi PRO: dovrebbe essercene una a settimana
+  const monday = romeToDate(`${new Date(new Date(`${date}T00:00:00Z`).getTime() - wd * 86400000).toISOString().slice(0, 10)}T00:00`)
+  const pro = await db.post.findMany({ where: { access: 'PRO', createdAt: { gte: monday } }, select: { status: true }, take: 5 })
+  if (!pro.length && [0, 2, 4].includes(wd)) {
+    await sendOwner('📊 Promemoria: l’analisi PRO di questa settimana non è ancora stata preparata.', [[{ text: '💡 Suggeriscimi 3 progetti', data: 'go:ideas' }], [{ text: '✍️ Scrivi: /analisi NomeProgetto', data: 'm:azioni' }]], silent)
+  } else if (pro.length && !pro.some((p) => p.status === 'PUBLISHED') && [2, 4].includes(wd)) {
+    await sendOwner('📊 Promemoria: l’analisi PRO della settimana è in bozza. Rileggi i dati e pubblicala (non va condivisa sui social).', [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]], silent)
+  }
+  // programmazione social della settimana prossima
+  if ([3, 4, 6].includes(wd)) {
+    const nm = romeToDate(`${nextMondayRome()}T00:00`)
+    const n = await db.socialPost.count({ where: { scheduledAt: { gte: nm, lt: new Date(nm.getTime() + 7 * 86400000) } } })
+    if (n < 7) await sendOwner(`📅 Promemoria: la programmazione social della settimana prossima ha solo ${n} post preparati (ne servono almeno 7, uno al giorno).`, [[{ text: '📅 Prepara il programma', data: 'go:week' }], [{ text: '🔗 Social in admin', url: admin('news') }]], silent)
+  }
+}
+
+/** Ogni 5 minuti: manda i messaggi programmati (ora di Roma). Ogni messaggio parte una sola volta al giorno. */
+export async function agentTick() {
+  if (!agentToken() || !(await ownerChat())) return
+  const { date, mins, wd } = romeNow()
+  if (mins >= at(8, 30) && mins < at(12) && (await claim('brief', date))) {
+    const d = await dashboard()
+    await sendOwner('☀️ Buongiorno\n\n' + d.text.replace(/^📋 Oggi, /, '📋 '), d.buttons, Boolean(await mutedUntil()))
+  }
+  if (mins >= at(9, 30) && mins < at(13) && (await claim('reminders', date))) await reminders(date, wd).catch((e) => console.error('[agent] promemoria: ' + e.message))
+  if (mins >= at(11) && mins < at(14) && (await claim('news', date))) await dailyNews()
+  if (mins >= at(20, 30) && mins < at(23, 30) && (await claim('evening', date))) await eveningDigest().catch((e) => console.error('[agent] riepilogo: ' + e.message))
 }

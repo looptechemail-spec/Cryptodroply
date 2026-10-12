@@ -52,7 +52,7 @@ export async function registerWebhook(siteUrl: string, log: (m: string) => void 
   if (!agentToken()) return
   try {
     await tg('setWebhook', { url: `${siteUrl}/api/telegram/${webhookSecret()}`, secret_token: webhookSecret(), allowed_updates: ['message', 'callback_query'] })
-    await tg('setMyCommands', { commands: [{ command: 'oggi', description: 'Riepilogo di oggi' }, { command: 'bozze', description: 'Bozze da gestire' }, { command: 'messaggi', description: 'Messaggi dal sito' }, { command: 'approvare', description: 'Proposte in attesa' }, { command: 'azioni', description: 'Genera articoli, programma, newsletter' }, { command: 'registro', description: 'Ultime attività' }, { command: 'silenzio', description: 'Avvisi senza suono (ore)' }, { command: 'menu', description: 'Mostra i tasti' }] })
+    await tg('setMyCommands', { commands: [{ command: 'oggi', description: 'Riepilogo di oggi' }, { command: 'riepilogo', description: 'Cosa è successo oggi sul sito' }, { command: 'news', description: 'Proponi la news di oggi' }, { command: 'bozze', description: 'Bozze da gestire' }, { command: 'messaggi', description: 'Messaggi dal sito' }, { command: 'approvare', description: 'Proposte in attesa' }, { command: 'azioni', description: 'Genera articoli, programma, newsletter' }, { command: 'registro', description: 'Ultime attività' }, { command: 'silenzio', description: 'Avvisi senza suono (ore)' }, { command: 'menu', description: 'Mostra i tasti' }] })
     log('webhook registrato')
   } catch (e) { log('errore ' + (e as Error).message) }
 }
