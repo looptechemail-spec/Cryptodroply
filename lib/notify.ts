@@ -5,15 +5,17 @@
  */
 import { db } from './db'
 import { siteUrl } from './email'
+import { alertOwner, agentToken } from './tgbot'
 
-export const notifyReady = () => Boolean(process.env.CALLMEBOT_PHONE && process.env.CALLMEBOT_APIKEY)
+export const waReady = () => Boolean(process.env.CALLMEBOT_PHONE && process.env.CALLMEBOT_APIKEY)
+export const notifyReady = () => waReady() || Boolean(agentToken())
 
 let chain: Promise<unknown> = Promise.resolve()
 
 async function sendNow(text: string): Promise<string> {
   const phone = process.env.CALLMEBOT_PHONE
   const apikey = process.env.CALLMEBOT_APIKEY
-  if (!phone || !apikey) return 'non configurato (mancano CALLMEBOT_PHONE e CALLMEBOT_APIKEY)'
+  if (!phone || !apikey) return 'ok' // WhatsApp non configurato: resta Telegram
   try {
     const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone.trim())}&text=${encodeURIComponent(text.slice(0, 1000))}&apikey=${encodeURIComponent(apikey.trim())}`
     const res = await fetch(url, { signal: AbortSignal.timeout(20000) })
@@ -31,7 +33,8 @@ export async function notify(text: string, key?: string): Promise<string> {
     if (key) await db.jobRun.create({ data: { key: `notified:${key}`.slice(0, 190), note: text.slice(0, 120) } })
   } catch { return 'già inviato' }
   const p = chain.then(async () => {
-    const r = await sendNow(text)
+    let r = await sendNow(text)
+    if (agentToken()) { const t = await alertOwner(text).catch(() => false); if (!t && r === 'ok' && !waReady()) r = 'Telegram: chat non collegata' }
     if (r !== 'ok') {
       console.error('[whatsapp] ' + r)
       if (key) await db.jobRun.delete({ where: { key: `notified:${key}`.slice(0, 190) } }).catch(() => undefined)

@@ -536,3 +536,30 @@ model Creator {
   contactedAt DateTime?
   createdAt   DateTime  @default(now())
 }
+
+// Agente su Telegram: registro condiviso di ciò che viene proposto, approvato e fatto (da lui, dal sistema e da Claude)
+model AgentTask {
+  id          String   @id @default(cuid())
+  kind        String // azione (publish_article, reply_message...) o "nota"
+  title       String
+  detail      String   @default("")
+  args        Json     @default("{}")
+  status      String   @default("PROPOSED") // PROPOSED, DONE, REJECTED, FAILED, QUEUED (per Claude), INFO
+  source      String   @default("agente") // agente, sistema, claude
+  result      String?
+  chatMessage Int? // messaggio Telegram con i pulsanti
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+// Conversazione con l'agente (ultimi scambi, per ricordare il filo del discorso)
+model AgentMsg {
+  id        String   @id @default(cuid())
+  role      String // user, assistant
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
