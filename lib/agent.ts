@@ -7,8 +7,9 @@ import { db } from './db'
 import { siteUrl, sendEmail } from './email'
 import { publishNow, scheduleArticle } from './articles'
 import { sendToPubler } from './publer'
-import { romeToDate, dateToRome } from './time'
-import { tg, sendOwner, ownerChat, agentToken, type Button } from './tgbot'
+import { romeToDate, dateToRome, tomorrowRome } from './time'
+import { runWeeklyArticle, runWeekPlan, nextMondayRome, runWeeklyDigest, runDailySocial, runWeeklyAnalysis } from './ai-content'
+import { tg, sendOwner, ownerChat, agentToken, mutedUntil, setMute, type Button } from './tgbot'
 
 const MODEL = () => process.env.AI_MODEL_AGENT ?? 'claude-sonnet-5-5'
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -106,6 +107,12 @@ const TOOLS: Tool[] = [
     run: async (a) => scheduleArticle(String(a.id), romeToDate(String(a.when)), !!a.social),
   },
   {
+    name: 'unschedule_article', mode: 'approve', description: 'Toglie la programmazione a una bozza (resta bozza). I post social già creati su Publer vanno gestiti a parte.',
+    schema: { properties: { id: { type: 'string' } }, required: ['id'] },
+    prepare: async (a) => { const p = await postOrThrow(a.id); if (!p.scheduledAt) throw new Error('Non è programmata'); return { title: `Togliere la programmazione a "${enTitle(p.translations)}"`, detail: 'Resta in bozza. Eventuali post Publer già programmati restano da controllare.' } },
+    run: async (a) => { await db.post.update({ where: { id: String(a.id) }, data: { scheduledAt: null } }); return 'Programmazione tolta.' },
+  },
+  {
     name: 'reply_message', mode: 'approve', description: 'Risponde per email a chi ha scritto dal sito (modulo) e segna il messaggio come gestito. Scrivi il testo completo in italiano o inglese secondo chi ha scritto.',
     schema: { properties: { id: { type: 'string' }, text: { type: 'string' } }, required: ['id', 'text'] },
     prepare: async (a) => {
@@ -193,6 +200,7 @@ export async function handleCallback(cb: any) {
   if (chat !== (await ownerChat())) return
   const [act, id] = String(cb.data ?? '').split(':')
   const done = (text: string) => tg('answerCallbackQuery', { callback_query_id: cb.id, text: text.slice(0, 190) }).catch(() => undefined)
+  if (act !== 'a' && act !== 'r') return handleAction(act, id ?? '', done)
   const edit = (text: string) => tg('editMessageText', { chat_id: chat, message_id: cb.message.message_id, text: text.slice(0, 3900), reply_markup: { inline_keyboard: [] } }).catch(() => undefined)
   const task = await db.agentTask.findUnique({ where: { id } })
   if (!task) return void (await done('Attività non trovata'))
@@ -292,20 +300,187 @@ async function processUpdate(u: any) {
 
   if (/^\/start\b/.test(text)) {
     const pass = text.replace(/^\/start\s*/, '').trim()
-    if (owner) return void (await reply(owner === chat ? 'Ci sono. Scrivimi cosa serve, oppure /stato.' : 'Questo bot è privato.'))
+    if (owner) return void (owner === chat ? await sendKeyboard('Ci sono. Usa i tasti in basso o scrivimi cosa serve.') : await reply('Questo bot è privato.'))
     const expected = (process.env.ADMIN_PASSWORD ?? '').trim()
     if (expected && pass === expected) {
       await db.jobRun.upsert({ where: { key: 'agent:owner' }, update: { note: chat }, create: { key: 'agent:owner', note: chat } })
-      return void (await reply('Collegato. Da ora ti scrivo qui per ciò che richiede la tua decisione e puoi darmi comandi. Prova /stato.'))
+      await sendKeyboard('Collegato ✅ Da ora ti scrivo qui per ciò che richiede la tua decisione e puoi darmi comandi. Usa i tasti in basso.'); return void (await showSection('oggi'))
     }
     return void (await reply('Per collegarti scrivi: /start seguito dalla password dell’admin.'))
   }
   if (!owner || chat !== owner) return // chiunque altro viene ignorato
 
-  if (/^\/aiuto\b/.test(text)) return void (await reply('Posso: vedere bozze, messaggi e numeri del sito; proporti di pubblicare o programmare un articolo, rispondere a un messaggio, cambiare un link, creare un post su Publer (ti chiedo sempre OK con i pulsanti); mettere in coda per Claude i lavori di codice. Comandi: /stato /registro'))
+  const sec = SECTIONS[text] ?? SECTIONS['/' + text.replace(/^\//, '').split(/[@\s]/)[0]]
+  if (sec) return void (await showSection(sec))
+  if (/^\/menu\b/.test(text)) return void (await sendKeyboard('Tasti attivi. Scrivimi anche a parole: capisco frasi normali.'))
+  if (/^\/silenzio\b/.test(text)) {
+    const h = Number(text.split(/\s+/)[1] ?? 8) || 8
+    await setMute(h)
+    return void (await reply(`🔕 Avvisi senza suono per ${h} ore. Li ricevi comunque, solo in silenzio. /attiva per riattivare.`))
+  }
+  if (/^\/attiva\b/.test(text)) { await setMute(null); return void (await reply('🔔 Avvisi con suono riattivati.')) }
+  if (/^\/analisi\b/.test(text)) {
+    const project = text.replace(/^\/analisi\s*/, '').trim()
+    if (project.length < 2) return void (await reply('Scrivi: /analisi NomeProgetto'))
+    return void (await startJob('analysis', project))
+  }
+  if (/^\/aiuto\b/.test(text)) return void (await reply('Posso: vedere bozze, messaggi e numeri del sito; proporti di pubblicare o programmare un articolo, rispondere a un messaggio, cambiare un link, creare un post su Publer (ti chiedo sempre OK con i pulsanti); mettere in coda per Claude i lavori di codice. Tasti in basso: Oggi, Bozze, Messaggi, Da approvare, Coda Claude, Azioni. Comandi: /oggi /bozze /messaggi /approvare /azioni /analisi Nome /silenzio 8 /attiva /registro'))
   if (/^\/registro\b/.test(text)) return void (await reply(await taskLines(15)))
-  if (/^\/stato\b/.test(text)) return void (await reply(await stateBlock()))
-
+  
   tg('sendChatAction', { chat_id: chat, action: 'typing' }).catch(() => undefined)
   try { await reply(await converse(text)) } catch (e) { await reply('⚠️ Errore: ' + (e as Error).message) }
+}
+
+
+// --- tasti, riepiloghi e azioni rapide ---------------------------------------------------
+
+const SECTIONS: Record<string, string> = {
+  '📋 Oggi': 'oggi', '/oggi': 'oggi', '/stato': 'oggi', '📝 Bozze': 'bozze', '/bozze': 'bozze', '📨 Messaggi': 'messaggi', '/messaggi': 'messaggi',
+  '⏳ Da approvare': 'approvare', '/approvare': 'approvare', '🧰 Coda Claude': 'coda', '/coda': 'coda', '⚙️ Azioni': 'azioni', '/azioni': 'azioni',
+}
+
+async function sendKeyboard(text: string) {
+  const chat = await ownerChat()
+  if (!chat) return
+  await tg('sendMessage', {
+    chat_id: chat, text,
+    reply_markup: { keyboard: [[{ text: '📋 Oggi' }, { text: '📝 Bozze' }, { text: '📨 Messaggi' }], [{ text: '⏳ Da approvare' }, { text: '🧰 Coda Claude' }, { text: '⚙️ Azioni' }]], resize_keyboard: true, is_persistent: true },
+  }).catch(() => undefined)
+}
+
+const admin = (p: string) => siteUrl() + '/admin/' + p
+const when = (d: Date | null) => (d ? dateToRome(d).replace('T', ' ') : '')
+
+export async function dashboard(): Promise<{ text: string; buttons: Button[][] }> {
+  const [drafts, proDrafts, sched, msgs, queued, proposed, proSubs, subs, mute] = await Promise.all([
+    db.post.count({ where: { status: 'DRAFT' } }), db.post.count({ where: { status: 'DRAFT', access: 'PRO' } }),
+    db.post.findMany({ where: { status: 'DRAFT', scheduledAt: { not: null } }, orderBy: { scheduledAt: 'asc' }, take: 5, include: { translations: true } }),
+    db.formSubmission.count({ where: { handled: false } }), db.agentTask.count({ where: { status: 'QUEUED' } }), db.agentTask.count({ where: { status: 'PROPOSED' } }),
+    db.subscription.count({ where: { status: 'ACTIVE' } }), db.subscriber.count(), mutedUntil(),
+  ])
+  const lines = [
+    `📋 Oggi, ${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' })}`,
+    '',
+    `⏳ Da approvare: ${proposed}`,
+    `📝 Bozze: ${drafts}${proDrafts ? ` (di cui ${proDrafts} PRO)` : ''}`,
+    `📨 Messaggi da gestire: ${msgs}`,
+    `🧰 In coda per Claude: ${queued}`,
+    `💎 Abbonati PRO: ${proSubs} · ✉️ Iscritti: ${subs}`,
+  ]
+  if (sched.length) lines.push('', '📅 Prossime uscite programmate:', ...sched.map((p) => `• ${when(p.scheduledAt)} ${short(enTitle(p.translations), 60)}`))
+  if (mute) lines.push('', `🔕 Avvisi in silenzio fino alle ${when(mute)}`)
+  const needs = proposed + msgs + drafts
+  if (!needs) lines.push('', '✅ Niente da decidere.')
+  return {
+    text: lines.join('\n'),
+    buttons: [
+      [{ text: `⏳ Da approvare (${proposed})`, data: 'm:approvare' }, { text: `📝 Bozze (${drafts})`, data: 'm:bozze' }],
+      [{ text: `📨 Messaggi (${msgs})`, data: 'm:messaggi' }, { text: `🧰 Coda (${queued})`, data: 'm:coda' }],
+      [{ text: '⚙️ Azioni', data: 'm:azioni' }, { text: '🔗 Pannello admin', url: admin('') }],
+    ],
+  }
+}
+
+export async function showSection(name: string) {
+  if (name === 'oggi') { const d = await dashboard(); return void (await sendOwner(d.text, d.buttons)) }
+  if (name === 'bozze') {
+    const rows = await db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 8, include: { translations: true } })
+    if (!rows.length) return void (await sendOwner('📝 Nessuna bozza.'))
+    for (const p of rows) {
+      const line2 = [p.access === 'PRO' ? '💎 PRO' : 'FREE', p.coverUrl ? 'copertina ✅' : 'copertina ❌', p.scheduledAt ? '📅 ' + when(p.scheduledAt) : 'non programmata'].join(' · ')
+      const row2: Button[] = []
+      if (p.coverUrl) { row2.push({ text: '🚀 Pubblica ora', data: `pb:${p.id}` }); row2.push({ text: p.scheduledAt ? '📅 Cambia: domani 10:00' : '📅 Domani 10:00', data: `sc:${p.id}` }) }
+      if (p.scheduledAt) row2.push({ text: '🚫 Togli programma', data: `us:${p.id}` })
+      await sendOwner(`📝 ${enTitle(p.translations)}\n${line2}${p.coverUrl ? '' : '\nServe la copertina: aggiungila dal pannello.'}`, [[{ text: '👁 Leggi', data: `rd:${p.id}` }, { text: '🔗 Apri in admin', url: admin('articles') }], ...(row2.length ? [row2] : [])])
+    }
+    return
+  }
+  if (name === 'messaggi') {
+    const rows = await db.formSubmission.findMany({ where: { handled: false }, orderBy: { createdAt: 'desc' }, take: 6 })
+    if (!rows.length) return void (await sendOwner('📨 Nessun messaggio da gestire.'))
+    for (const m of rows) {
+      const p = m.payload as Record<string, unknown>
+      await sendOwner(`📨 ${m.type} · ${m.email ?? ''}\n${p.name ? p.name + ': ' : ''}${short(String(p.message ?? JSON.stringify(p)), 800)}`, [[{ text: '✉️ Rispondi (bozza IA)', data: `mr:${m.id}` }, { text: '✅ Gestito', data: `mh:${m.id}` }]])
+    }
+    return
+  }
+  if (name === 'approvare') {
+    const rows = await db.agentTask.findMany({ where: { status: 'PROPOSED' }, orderBy: { createdAt: 'asc' }, take: 8 })
+    if (!rows.length) return void (await sendOwner('⏳ Niente in attesa di approvazione.'))
+    for (const t of rows) await sendOwner(`🔔 Da approvare\n\n${t.title}\n\n${short(t.detail, 1200)}`, [[{ text: '✅ Approva', data: `a:${t.id}` }, { text: '❌ Scarta', data: `r:${t.id}` }]])
+    return
+  }
+  if (name === 'coda') {
+    const rows = await db.agentTask.findMany({ where: { status: 'QUEUED' }, orderBy: { createdAt: 'asc' }, take: 8 })
+    if (!rows.length) return void (await sendOwner('🧰 Niente in coda per Claude.'))
+    for (const t of rows) await sendOwner(`🧰 Per Claude\n\n${short(t.detail || t.title, 1500)}`, [[{ text: '✔ Segna fatta', data: `qd:${t.id}` }]])
+    return void (await sendOwner('Queste richieste le riprende Claude quando apri la sessione di lavoro e scrivi "guarda la coda".'))
+  }
+  if (name === 'azioni') {
+    return void (await sendOwner('⚙️ Cosa vuoi che prepari? Tutto esce come bozza, mai pubblicato da solo.', [
+      [{ text: '✍️ Articolo della settimana', data: 'go:article' }],
+      [{ text: '📅 Programma social settimana', data: 'go:week' }, { text: '📧 Bozza newsletter', data: 'go:digest' }],
+      [{ text: '📰 Notizie → bozze social', data: 'go:news' }],
+      [{ text: '🔕 Silenzio 8 ore', data: 'go:mute' }, { text: '🔔 Riattiva avvisi', data: 'go:unmute' }],
+      [{ text: '📊 Analisi PRO: scrivi /analisi Nome', data: 'm:oggi' }],
+    ]))
+  }
+}
+
+async function startJob(job: string, arg = '') {
+  const names: Record<string, string> = { article: 'articolo della settimana', week: 'programma social della settimana', digest: 'bozza newsletter', news: 'bozze dalle notizie', analysis: `analisi di ${arg}` }
+  await sendOwner(`⏳ Avviato: ${names[job]}. Ti scrivo quando è pronto${job === 'analysis' || job === 'article' ? ' (3-5 minuti)' : ''}.`)
+  const task = await db.agentTask.create({ data: { kind: 'job:' + job, title: `Preparo ${names[job]}`, status: 'RUNNING', source: 'agente' } })
+  void (async () => {
+    try {
+      let out = ''
+      if (job === 'article') out = await runWeeklyArticle()
+      else if (job === 'week') out = await runWeekPlan(nextMondayRome())
+      else if (job === 'digest') out = 'Campagna in bozza: ' + (await runWeeklyDigest()) + ' · ' + admin('newsletter')
+      else if (job === 'news') out = `${await runDailySocial()} bozze di post create su Telegram e X (vedi ${admin('news')})`
+      else if (job === 'analysis') out = `Analisi "${(await runWeeklyAnalysis(arg)).title}" in bozza (PRO, non si condivide sui social). ${admin('articles')}`
+      await db.agentTask.update({ where: { id: task.id }, data: { status: 'DONE', result: out.slice(0, 500) } })
+      await sendOwner(`✅ Pronto: ${names[job]}\n\n${short(out, 600)}`, [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]])
+    } catch (e) {
+      await db.agentTask.update({ where: { id: task.id }, data: { status: 'FAILED', result: (e as Error).message.slice(0, 500) } })
+      await sendOwner(`⚠️ Non riuscito: ${names[job]}\n${(e as Error).message}`)
+    }
+  })()
+}
+
+async function handleAction(act: string, id: string, done: (t: string) => Promise<unknown>) {
+  const tool = (n: string) => TOOLS.find((t) => t.name === n)!
+  try {
+    if (act === 'm') { await done(''); return await showSection(id) }
+    if (act === 'rd') {
+      await done('')
+      const p = await postOrThrow(id)
+      const t = p.translations.find((x) => x.locale === 'EN') ?? p.translations[0]
+      return void (await sendOwner(`👁 ${t?.title}\n\n${t?.excerpt ?? ''}\n\n${short(t?.contentMd ?? '', 2600)}`, [[{ text: '🚀 Pubblica ora', data: `pb:${id}` }, { text: '📅 Domani 10:00', data: `sc:${id}` }]]))
+    }
+    if (act === 'pb') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('publish_article'), { id, social: p.access !== 'PRO' })) }
+    if (act === 'sc') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('schedule_article'), { id, when: dateToRome(tomorrowRome(10)), social: p.access !== 'PRO' })) }
+    if (act === 'us') { await done('Proposta pronta'); return void (await propose(tool('unschedule_article'), { id })) }
+    if (act === 'mh') { await db.formSubmission.update({ where: { id }, data: { handled: true } }); await done('Segnato come gestito ✅'); return }
+    if (act === 'mr') { await done('Preparo la bozza…'); return void (await sendOwner(await converse(`Scrivi una bozza di risposta al messaggio ${id} (leggilo con list_messages) e proponila per l'approvazione con reply_message.`))) }
+    if (act === 'qd') { await db.agentTask.update({ where: { id }, data: { status: 'DONE', result: 'Segnata come fatta da Nicolò' } }); await done('Segnata come fatta ✅'); return }
+    if (act === 'go') {
+      if (id === 'mute') { await setMute(8); return void (await done('🔕 Silenzio per 8 ore')) }
+      if (id === 'unmute') { await setMute(null); return void (await done('🔔 Avvisi riattivati')) }
+      await done('Avviato')
+      return await startJob(id)
+    }
+    await done('Azione sconosciuta')
+  } catch (e) { await done('Errore'); await sendOwner('⚠️ ' + (e as Error).message) }
+}
+
+/** Ogni 10 minuti: alle 8:30 (ora di Roma) manda il riepilogo del giorno, solo se c'è qualcosa da decidere. */
+export async function morningBrief() {
+  if (!agentToken() || !(await ownerChat())) return
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map((x) => [x.type, x.value]))
+  const hour = Number(p.hour) % 24
+  if (hour < 8 || (hour === 8 && Number(p.minute) < 30) || hour >= 12) return
+  try { await db.jobRun.create({ data: { key: `agent:brief-${p.year}-${p.month}-${p.day}` } }) } catch { return }
+  const d = await dashboard()
+  await sendOwner('☀️ Buongiorno\n\n' + d.text.replace(/^📋 Oggi, /, '📋 '), d.buttons, Boolean(await mutedUntil()))
 }
