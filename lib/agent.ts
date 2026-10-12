@@ -581,6 +581,7 @@ export async function eveningDigest() {
 /** Promemoria: analisi PRO (martedì), articolo normale e programmazione dei social della settimana dopo. */
 async function reminders(date: string, wd: number) {
   const silent = Boolean(await mutedUntil())
+  const monday = romeToDate(`${new Date(new Date(`${date}T00:00:00Z`).getTime() - wd * 86400000).toISOString().slice(0, 10)}T00:00`)
   // analisi PRO (moneta/progetto): una a settimana, esce solo il martedì (sul blog, non sui social)
   const drafts = await db.post.count({ where: { status: 'DRAFT', ...ANALYSIS_WHERE } })
   const doneWeek = await db.post.count({ where: { status: 'PUBLISHED', ...ANALYSIS_WHERE, publishedAt: { gte: monday } } })
