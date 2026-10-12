@@ -3,6 +3,7 @@ import type Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { stripe } from '@/lib/stripe'
 import { purchaseEmail, renewalEmail, paymentFailedEmail, canceledEmail } from '@/lib/emails'
+import { notifyBg } from '@/lib/notify'
 import { COMMISSION_RATE, RECURRING } from '@/lib/referral'
 
 export const dynamic = 'force-dynamic'
@@ -86,6 +87,7 @@ export async function POST(req: Request) {
       await db.user.update({ where: { id: session.client_reference_id }, data: { stripeCustomerId: session.customer } }).catch(() => undefined)
     }
     if (typeof session.subscription === 'string') await syncSubscription(await stripe().subscriptions.retrieve(session.subscription))
+    notifyBg(`🎉 Nuovo abbonato PRO${session.customer_details?.email ? ': ' + session.customer_details.email : ''}`, `sub-${session.id}`)
   } else if (
     event.type === 'customer.subscription.created' ||
     event.type === 'customer.subscription.updated' ||
@@ -100,6 +102,7 @@ export async function POST(req: Request) {
     const inv = event.data.object as Stripe.Invoice
     const u = await userOf(inv.customer)
     if (u) await paymentFailedEmail(u.email, u.name)
+    notifyBg(`⚠️ Pagamento PRO fallito${u ? ': ' + u.email : ''}`, `fail-${inv.id}`)
   } else if (event.type === 'charge.refunded') {
     const inv = (event.data.object as any).invoice
     const id = typeof inv === 'string' ? inv : inv?.id

@@ -3,6 +3,8 @@ import { absUrl } from '@/lib/url'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { sendFlow } from '@/lib/email-gate'
+import { notifyBg } from '@/lib/notify'
+import { siteUrl } from '@/lib/email'
 import { tplContact } from '@/lib/email-templates'
 
 const TYPES = { contact: 'CONTACT', project: 'LIST_PROJECT', collab: 'COLLAB' } as const
@@ -22,6 +24,8 @@ export async function POST(req: Request) {
 
   const d = parsed.data
   await db.formSubmission.create({ data: { type: TYPES[d.topic], email: d.email, payload: { name: d.name, message: d.message } } })
+  const label = { contact: 'Messaggio', project: 'Richiesta di inserire un progetto', collab: 'Proposta di collaborazione' }[d.topic]
+  notifyBg(`📨 ${label} da ${d.name || d.email} (${d.email}): ${d.message.slice(0, 300)}\nRispondi da ${siteUrl()}/admin/messages`)
   const to = process.env.CONTACT_TO ?? process.env.EMAIL_FROM
   if (to) {
     await sendFlow('contact-notify', { to, ...tplContact(d) }).catch(() => false)

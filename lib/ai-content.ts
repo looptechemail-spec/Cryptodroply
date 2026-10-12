@@ -4,6 +4,7 @@
  */
 import { db } from './db'
 import { siteUrl } from './email'
+import { notifyBg } from './notify'
 import { buildDigest, mainList } from './newsletter'
 import { slugify } from './v1'
 import { SECTIONS } from './sections'
@@ -498,6 +499,7 @@ Answer ONLY in this format:
   const cat = await db.postCategory.findUnique({ where: { slug: 'weekly-crypto-analysis' } })
   const post = await db.post.create({ data: { slug, legacyPath: `/post/${slug}`, access: 'PRO', status: 'DRAFT', categoryId: cat?.id ?? null } })
   await db.postTranslation.create({ data: { postId: post.id, locale: 'EN', title, excerpt, contentMd: body, seoTitle: title.slice(0, 60), seoDescription: excerpt.slice(0, 155) } })
+  notifyBg(`📊 Analisi PRO pronta in bozza: "${title}". Rileggi e pubblica: ${siteUrl()}/admin/articles`, `analysis-${post.id}`)
   return { id: post.id, title }
 }
 
@@ -523,9 +525,12 @@ async function once(key: string, fn: () => Promise<unknown>, log: (m: string) =>
     const r = await fn()
     await db.jobRun.update({ where: { key }, data: { note: String(r).slice(0, 200) } })
     log(`${key}: ok`)
+    const what = key.startsWith('article-') ? '📝 Bozza dell’articolo della settimana pronta' : key.startsWith('weekplan-') ? '📅 Programma social della settimana pronto' : key.startsWith('digest-') ? '📧 Bozza newsletter pronta' : ''
+    if (what) notifyBg(`${what}. Serve la tua decisione: ${siteUrl()}/admin/${key.startsWith('weekplan-') ? 'news' : key.startsWith('digest-') ? 'newsletter' : 'articles'}`, key)
   } catch (e) {
     await db.jobRun.delete({ where: { key } }).catch(() => undefined) // riprova al prossimo controllo
     log(`${key}: errore ${(e as Error).message}`)
+    notifyBg(`⚠️ Lavoro automatico fallito (${key.split('-')[0]}): ${(e as Error).message}`.slice(0, 300), `err-${key}-${new Date().toISOString().slice(0, 13)}`)
   }
 }
 
