@@ -8,10 +8,15 @@ import { sendToPubler } from './publer'
 import { parseCsv } from './csv'
 import { nextMondayRome, runNewsDrafts, runWeekPlan, runDailySocial } from './ai-content'
 
-const PAGES = ['/admin/tool-posts', '/admin/news']
+const PAGES = ['/admin/tool-posts', '/admin/news', '/admin/approvazioni', '/admin']
 const refresh = () => PAGES.forEach((p) => revalidatePath(p))
-const back = (page: string, msg: string): never => redirect(`${page}?msg=${encodeURIComponent(msg.slice(0, 300))}`)
+const back = (page: string, msg: string): never => redirect(`${page}${page.includes('?') ? '&' : '?'}msg=${encodeURIComponent(msg.slice(0, 300))}`)
 const pageOf = (source: string) => (source === 'tool' ? '/admin/tool-posts' : '/admin/news')
+/** Pagina a cui tornare, se il modulo la indica: solo pagine dell'admin (mai indirizzi esterni). */
+const returnTo = (fd: FormData, fallback: string) => {
+  const b = String(fd.get('back') ?? '')
+  return /^\/admin(\/[a-z-]+)?(\?r=[a-z]+)?$/.test(b) ? b : fallback
+}
 const log = (key: string, note: string) => db.jobRun.create({ data: { key: `manual-${key}-${Date.now()}`, note: note.slice(0, 400) } })
 
 /** Un contenuto = un blocco con i testi per X, Telegram e Facebook. Un solo pulsante lo salva, lo scarta, lo pubblica subito o lo programma su tutti. */
@@ -22,7 +27,7 @@ export async function saveGroup(act: string, fd: FormData) {
   const rows = await db.socialPost.findMany({ where: { id: { in: ids } } })
   if (!rows.length) back('/admin/news', 'Post non trovato: ricarica la pagina')
   const source = rows[0].source
-  const page = pageOf(source)
+  const page = returnTo(fd, pageOf(source))
   let msg = ''
   try {
     if (act === 'discard') {

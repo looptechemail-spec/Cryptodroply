@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin'
 import { AdminNav } from '@/components/AdminNav'
+import { pendingApprovals } from '@/lib/approvals'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +36,7 @@ export default async function AdminHome() {
   })
   const byId = new Map(names.map((n) => [n.id, n]))
   const mrr = pro * 14
+  const ap = await pendingApprovals()
 
   const Stat = ({ label, value, note }: { label: string; value: string | number; note?: string }) => (
     <div className="stat">
@@ -50,6 +52,11 @@ export default async function AdminHome() {
         <h1 style={{ fontSize: 44 }}>Admin</h1>
       </div>
       <AdminNav />
+
+      <Link href="/admin/approvazioni" className="post-row" style={{ margin: '0 0 20px', padding: '16px 20px', background: ap.total ? 'var(--tint)' : '#fff', borderRadius: 20 }}>
+        <span className="t" style={{ fontSize: 20 }}>{ap.total ? `🔔 ${ap.total} cose da approvare` : '✅ Niente da approvare'}</span>
+        <span className="m">{ap.articles.length} articoli · {ap.social} post social · {ap.campaigns.length} newsletter · {ap.tasks.length} proposte agente →</span>
+      </Link>
 
       <div className="stats">
         <Stat label="Click affiliati, 7 giorni" value={clicks7} note={`${clicks30} in 30 giorni`} />

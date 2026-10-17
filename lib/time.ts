@@ -35,3 +35,13 @@ export function nextWeekdayRome(wd: number, hour = 10, minute = 0): Date {
   }
   return tomorrowRome(hour, minute)
 }
+
+/** Inizio (lunedì 00:00) e fine (lunedì successivo 00:00) di una settimana, ora di Roma. offset: 0 = questa, 1 = prossima. */
+export function weekRangeRome(offset = 0): { from: Date; to: Date } {
+  const nowRome = new Date(Date.now() + offsetMin(new Date()) * 60000)
+  const dow = (nowRome.getUTCDay() + 6) % 7 // 0 = lunedì
+  const mon = new Date(Date.UTC(nowRome.getUTCFullYear(), nowRome.getUTCMonth(), nowRome.getUTCDate() - dow + offset * 7))
+  const next = new Date(mon.getTime() + 7 * 86400000)
+  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  return { from: romeToDate(`${iso(mon)}T00:00`), to: romeToDate(`${iso(next)}T00:00`) }
+}

@@ -1,17 +1,22 @@
+import type { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { dateToRome } from '@/lib/time'
 import { saveGroup } from '@/lib/social-actions'
 
 const CH: Record<string, string> = { x: 'X', telegram: 'Telegram', facebook: 'Facebook' }
 const ORDER = ['x', 'telegram', 'facebook']
+const SOURCE: Record<string, string> = { tool: 'Strumento', news: 'News', article: 'Articolo' }
 
 type Row = Awaited<ReturnType<typeof db.socialPost.findMany>>[number]
 
-/** Elenco dei contenuti: ogni contenuto è UN solo blocco con i testi X, Telegram e Facebook. */
-export async function SocialList({ source, view }: { source: string; view: string }) {
+/**
+ * Elenco dei contenuti: ogni contenuto è UN solo blocco con i testi X, Telegram e Facebook.
+ * Senza `source` mostra tutte le origini (con l'etichetta); `back` è la pagina a cui tornare dopo l'azione; `where` restringe l'elenco (es. una settimana).
+ */
+export async function SocialList({ source, view, back, where, take = 150 }: { source?: string; view: string; back?: string; where?: Prisma.SocialPostWhereInput; take?: number }) {
   const rows = await db.socialPost.findMany({
-    where: { source, status: view === 'sent' ? 'PUBLER' : 'DRAFT' },
-    orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 150,
+    where: { AND: [{ ...(source ? { source } : {}), status: view === 'sent' ? 'PUBLER' : 'DRAFT' }, where ?? {}] },
+    orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take,
   })
   if (!rows.length) return <p>Non c’è ancora nulla qui.</p>
   const groups = new Map<string, Row[]>()
@@ -28,6 +33,8 @@ export async function SocialList({ source, view }: { source: string; view: strin
         return (
           <form key={key} action={saveGroup.bind(null, 'save')} style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: 'var(--shadow-1)' }}>
             <input type="hidden" name="ids" value={list.map((r) => r.id).join(',')} />
+            {back && <input type="hidden" name="back" value={back} />}
+            {!source && <div style={{ marginBottom: 8 }}><span style={{ background: 'var(--tint)', borderRadius: 999, padding: '2px 10px', fontWeight: 800, fontSize: 12 }}>{SOURCE[first.source] ?? first.source}</span></div>}
             {first.linkUrl && <div style={{ marginBottom: 8 }}>Link: <a href={first.linkUrl} target="_blank" rel="noreferrer">{first.linkUrl}</a></div>}
             {list.map((r) => (
               <div key={r.id} style={{ marginBottom: 10 }}>

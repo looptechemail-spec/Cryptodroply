@@ -26,7 +26,7 @@ type Tool = {
 
 /** Analisi PRO = l'analisi di una moneta/progetto (categoria Weekly Crypto analysis). Tutto il resto (tutorial, news, guide) è un articolo normale. */
 const ANALYSIS_WHERE = { OR: [{ category: { slug: 'weekly-crypto-analysis' } }, { access: 'PRO' as const, categoryId: null }] }
-const isAnalysis = (p: { access: string; categoryId?: string | null; category?: { slug: string } | null }) => p.category?.slug === 'weekly-crypto-analysis' || (p.access === 'PRO' && !p.categoryId)
+export const isAnalysis = (p: { access: string; categoryId?: string | null; category?: { slug: string } | null }) => p.category?.slug === 'weekly-crypto-analysis' || (p.access === 'PRO' && !p.categoryId)
 
 const enTitle = (t: { locale: string; title: string | null }[]) => t.find((x) => x.locale === 'EN')?.title ?? t[0]?.title ?? '(senza titolo)'
 
@@ -243,6 +243,34 @@ export async function handleCallback(cb: any) {
   } catch (e) {
     await db.agentTask.update({ where: { id }, data: { status: 'FAILED', result: (e as Error).message.slice(0, 500) } })
     await edit(`⚠️ Non riuscito\n\n${task.title}\n\n${(e as Error).message}`)
+  }
+}
+
+/**
+ * Approva o scarta una proposta dal sito (pagina Approvazioni dell'admin). Stessa regola dei pulsanti su Telegram:
+ * la proposta si "prenota" una volta sola, quindi non può partire due volte. Poi chiude i pulsanti del messaggio Telegram.
+ */
+export async function decideTask(id: string, approve: boolean): Promise<{ ok: boolean; text: string }> {
+  const task = await db.agentTask.findUnique({ where: { id } })
+  if (!task) return { ok: false, text: 'Proposta non trovata' }
+  const claim = await db.agentTask.updateMany({ where: { id, status: 'PROPOSED' }, data: { status: approve ? 'RUNNING' : 'REJECTED', result: approve ? null : 'Scartata dal sito' } })
+  if (!claim.count) return { ok: false, text: 'Già gestita (forse da Telegram)' }
+  const closeChat = async (text: string) => {
+    const chat = await ownerChat()
+    if (chat && task.chatMessage) await tg('editMessageText', { chat_id: chat, message_id: task.chatMessage, text: text.slice(0, 3900), reply_markup: { inline_keyboard: [] } }).catch(() => undefined)
+  }
+  if (!approve) { await closeChat(`❌ Scartata dal sito\n\n${task.title}`); return { ok: true, text: 'Proposta scartata' } }
+  const tool = TOOLS.find((t) => t.name === task.kind)
+  try {
+    if (!tool) throw new Error('azione sconosciuta')
+    const out = await tool.run(task.args)
+    await db.agentTask.update({ where: { id }, data: { status: 'DONE', result: out.slice(0, 500) } })
+    await closeChat(`✅ Fatto dal sito\n\n${task.title}\n\n${short(out, 800)}`)
+    return { ok: true, text: `Fatto: ${short(out, 200)}` }
+  } catch (e) {
+    await db.agentTask.update({ where: { id }, data: { status: 'FAILED', result: (e as Error).message.slice(0, 500) } })
+    await closeChat(`⚠️ Non riuscito\n\n${task.title}\n\n${(e as Error).message}`)
+    return { ok: false, text: `Non riuscito: ${(e as Error).message.slice(0, 200)}` }
   }
 }
 
