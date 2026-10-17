@@ -227,23 +227,48 @@ export async function handleCallback(cb: any) {
   const id = restp.join(':')
   const done = (text: string) => tg('answerCallbackQuery', { callback_query_id: cb.id, text: text.slice(0, 190) }).catch(() => undefined)
   if (act !== 'a' && act !== 'r') return handleAction(act, id, done)
-  const edit = (text: string) => tg('editMessageText', { chat_id: chat, message_id: cb.message.message_id, text: text.slice(0, 3900), reply_markup: { inline_keyboard: [] } }).catch(() => undefined)
   const task = await db.agentTask.findUnique({ where: { id } })
   if (!task) return void (await done('Attività non trovata'))
-  const claim = await db.agentTask.updateMany({ where: { id, status: 'PROPOSED' }, data: { status: act === 'a' ? 'RUNNING' : 'REJECTED', result: act === 'a' ? null : 'Scartata da Nicolò' } })
-  if (!claim.count) return void (await done('Già gestita'))
-  if (act !== 'a') { await done('Scartata'); return void (await edit(`❌ Scartata\n\n${task.title}`)) }
+  if (!task.chatMessage && cb.message?.message_id) await db.agentTask.update({ where: { id }, data: { chatMessage: cb.message.message_id } })
+  if (act !== 'a') { const r = await rejectTask(id); return void (await done(r.ok ? 'Scartata' : r.text)) }
   await done('Eseguo…')
+  await approveTask(id)
+}
+
+/** Aggiorna il messaggio Telegram della proposta (toglie i pulsanti e mostra l'esito), anche se si approva dal sito. */
+async function closeProposalMessage(chatMessage: number | null, text: string) {
+  const chat = await ownerChat()
+  if (!chat || !chatMessage) return
+  await tg('editMessageText', { chat_id: chat, message_id: chatMessage, text: text.slice(0, 3900), reply_markup: { inline_keyboard: [] } }).catch(() => undefined)
+}
+
+/** Approva una proposta ed esegue l'azione. Usata dai pulsanti di Telegram e dalla dashboard del sito. */
+export async function approveTask(id: string): Promise<{ ok: boolean; text: string }> {
+  const claim = await db.agentTask.updateMany({ where: { id, status: 'PROPOSED' }, data: { status: 'RUNNING', result: null } })
+  if (!claim.count) return { ok: false, text: 'Già gestita' }
+  const task = await db.agentTask.findUnique({ where: { id } })
+  if (!task) return { ok: false, text: 'Attività non trovata' }
   const tool = TOOLS.find((t) => t.name === task.kind)
   try {
     if (!tool) throw new Error('azione sconosciuta')
     const out = await tool.run(task.args)
     await db.agentTask.update({ where: { id }, data: { status: 'DONE', result: out.slice(0, 500) } })
-    await edit(`✅ Fatto\n\n${task.title}\n\n${short(out, 800)}`)
+    await closeProposalMessage(task.chatMessage, `✅ Fatto\n\n${task.title}\n\n${short(out, 800)}`)
+    return { ok: true, text: out }
   } catch (e) {
-    await db.agentTask.update({ where: { id }, data: { status: 'FAILED', result: (e as Error).message.slice(0, 500) } })
-    await edit(`⚠️ Non riuscito\n\n${task.title}\n\n${(e as Error).message}`)
+    const msg = (e as Error).message
+    await db.agentTask.update({ where: { id }, data: { status: 'FAILED', result: msg.slice(0, 500) } })
+    await closeProposalMessage(task.chatMessage, `⚠️ Non riuscito\n\n${task.title}\n\n${msg}`)
+    return { ok: false, text: msg }
   }
+}
+
+export async function rejectTask(id: string): Promise<{ ok: boolean; text: string }> {
+  const claim = await db.agentTask.updateMany({ where: { id, status: 'PROPOSED' }, data: { status: 'REJECTED', result: 'Scartata da Nicolò' } })
+  if (!claim.count) return { ok: false, text: 'Già gestita' }
+  const task = await db.agentTask.findUnique({ where: { id } })
+  if (task) await closeProposalMessage(task.chatMessage, `❌ Scartata\n\n${task.title}`)
+  return { ok: true, text: 'Scartata' }
 }
 
 // --- conversazione --------------------------------------------------------------------

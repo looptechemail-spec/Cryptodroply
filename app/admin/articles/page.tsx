@@ -166,7 +166,7 @@ export default async function Articles({ searchParams }: { searchParams: Promise
         const t = p.translations.find((x) => x.locale === 'EN')
         const it = p.translations.find((x) => x.locale === 'IT')
         return (
-          <form key={p.id} action={act.bind(null, 'save')} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
+          <form key={p.id} id={`p-${p.id}`} action={act.bind(null, 'save')} encType="multipart/form-data" style={{ background: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, boxShadow: 'var(--shadow-1)' }}>
             <input type="hidden" name="id" value={p.id} />
             <small>/post/{p.slug} · creato il {p.createdAt.toISOString().slice(0, 10)}</small>{p.access === 'PRO' && <span style={{ background: '#FFD300', borderRadius: 999, padding: '2px 10px', fontWeight: 800, fontSize: 12, marginLeft: 8 }}>Analisi PRO</span>}
             {p.scheduledAt && (
