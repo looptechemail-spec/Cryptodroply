@@ -405,28 +405,79 @@ Answer ONLY with:
   return `${n} bozze su Publer${errors.length ? ` (errori: ${[...new Set(errors)].join('; ')})` : ''}`
 }
 
-/** Un articolo per il blog, in bozza, su un tema di attualità utile ai principianti. */
+/**
+ * Un articolo per il blog, in bozza, SEMPRE costruito attorno a uno o più strumenti della directory:
+ * tutorial, confronto, guida o notizia vista attraverso quegli strumenti, con i link alle loro pagine sul sito.
+ * Per non ripetersi parte dagli strumenti citati meno spesso negli articoli recenti.
+ */
 export async function runWeeklyArticle(topicHint?: string): Promise<string> {
-  const recent = await db.postTranslation.findMany({ where: { locale: 'EN' }, orderBy: { post: { createdAt: 'desc' } }, take: 25, select: { title: true } })
-  const out = await ask({
-    model: WRITER(), maxTokens: 6000, searches: 8,
-    system: `You are an editor of the Cryptodroply blog, a crypto tools directory. ${STYLE}`,
-    prompt: `Write one blog article of 800 to 1100 words.
-${topicHint ? `Topic: ${topicHint}` : 'Pick the most useful topic for crypto users from this week\'s news (a security threat, a new airdrop type, a wallet or exchange change, a regulation that affects users). Search the web first.'}
+  const recent = await db.postTranslation.findMany({ where: { locale: 'EN' }, orderBy: { post: { createdAt: 'desc' } }, take: 40, select: { title: true, contentMd: true } })
+  const tools = await db.tool.findMany({
+    where: { status: 'PUBLISHED', category: { wixId: { notIn: PRO_COLLECTIONS } } },
+    include: { translations: true, category: { include: { translations: true } } }, take: 400,
+  })
+  const withText = tools.filter((t) => t.translations.some((x) => x.locale === 'EN' && x.description))
+  if (withText.length < 3) throw new Error('Servono almeno 3 strumenti pubblicati con descrizione')
+  const urlOf = (t: (typeof tools)[number]) => `${siteUrl()}/${t.category.slug}/${t.slug}`
+  const catName = (t: (typeof tools)[number]) => t.category.translations.find((x) => x.locale === 'EN')?.name ?? t.category.slug
+  // quante volte ogni strumento compare già negli articoli recenti
+  const usage = new Map<string, number>()
+  for (const t of withText) usage.set(t.id, recent.filter((r) => (r.contentMd ?? '').includes(`/${t.category.slug}/${t.slug}`)).length)
+  const hint = (topicHint ?? '').toLowerCase()
+  const named = hint ? withText.filter((t) => hint.includes(t.title.toLowerCase())) : []
+  const byUse = [...withText].sort((a, b) => (usage.get(a.id)! - usage.get(b.id)!) || Math.random() - 0.5)
+  const focus = (named.length ? named : byUse).slice(0, named.length ? 4 : 3)
+  const facts = (t: (typeof tools)[number]) => {
+    const e = t.translations.find((x) => x.locale === 'EN') ?? t.translations[0]
+    return [e?.description, e?.whatIs, e?.whenToUse].filter(Boolean).join(' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 600)
+  }
+  const catalog = withText.map((t) => `${t.title} | ${catName(t)} | ${urlOf(t)}`).join('\n')
+  const focusText = focus.map((t) => `### ${t.title} (${catName(t)}) ${urlOf(t)}\n${facts(t)}`).join('\n\n')
+  const allowed = new Set(withText.map((t) => urlOf(t)))
+
+  const attempt = async (feedback: string) => ask({
+    model: WRITER(), maxTokens: 7000, searches: 8,
+    system: `You are an editor of the Cryptodroply blog, a directory of crypto tools. Every article is about the tools in the directory, and its job is to send readers to the tool pages on the site. ${STYLE}`,
+    prompt: `Write one blog article of 900 to 1200 words that is built around 1 to 4 tools from the CATALOG below.
+${topicHint ? `Requested topic: ${topicHint}. Choose the catalog tools that fit it.` : 'Start from the SUGGESTED FOCUS tools (they have not been covered recently). You may swap or add tools from the catalog if they work better together.'}
+Pick the angle that is most useful to the reader. It can be a how-to or tutorial, a comparison, a "how these tools work together" guide (for example a wallet plus a DEX plus a security tool), a safety guide, or recent news that affects these tools. If you use news, search the web first and tie it directly to the tools. Never write a general news article that is not about the tools.
+Hard rules:
+- Use ONLY tools from the catalog, and describe them only with facts from the focus notes or from web sources you found. Do not invent features, prices or numbers.
+- Link every tool to its Cryptodroply page the first time it is mentioned, as a markdown link with the exact URL from the catalog, for example [Tool name](${urlOf(focus[0])}). Never link to a tool's own website or to affiliate links.
+- Include at least 2 different tool links. Add a section "## Tools mentioned" at the end that lists each tool with its Cryptodroply link and one short line.
+- Where it fits, add a short "What to do" section with practical steps.
+- If you used web sources, add a final "## Sources" section with a markdown link for every source.
+- End with one line: "This article is for information only and is not financial advice."
+${feedback}
 Do not repeat these recent titles: ${recent.map((r) => r.title).join(' | ')}
-Structure: a short intro, 3 to 5 sections with ## headings, bold for key terms, short paragraphs, a "What to do" section with practical steps, and a final "Sources" section with a markdown link for every source you used. End with one line: "This article is for information only and is not financial advice."
+
+SUGGESTED FOCUS:
+${focusText}
+
+CATALOG (name | category | Cryptodroply URL):
+${catalog}
+
 Answer ONLY in this format:
 <title>article title, under 70 characters</title>
 <excerpt>one sentence summary, under 160 characters</excerpt>
 <body>full article in markdown</body>`,
   })
-  const title = tag(out, 'title'), excerpt = tag(out, 'excerpt'), body = tag(out, 'body')
+
+  const linked = (body: string) => new Set([...body.matchAll(/\]\((https?:\/\/[^)\s]+?)\/?\)/g)].map((m) => m[1]).filter((u) => allowed.has(u)))
+  let out = await attempt('')
+  let title = tag(out, 'title'), excerpt = tag(out, 'excerpt'), body = tag(out, 'body')
+  if (!title || body.length < 600 || linked(body).size < 2) {
+    out = await attempt('IMPORTANT: your previous draft was rejected because it did not contain at least 2 different markdown links to tool pages from the catalog (exact URLs), or it was incomplete. Fix this.')
+    title = tag(out, 'title'); excerpt = tag(out, 'excerpt'); body = tag(out, 'body')
+  }
   if (!title || body.length < 600) throw new Error('articolo incompleto')
+  const n = linked(body).size
+  if (n < 2) throw new Error('l’articolo non collega almeno 2 strumenti della directory: non salvato')
   let slug = slugify(title)
   if (await db.post.findUnique({ where: { slug } })) slug += '-' + Date.now().toString(36).slice(-4)
   const post = await db.post.create({ data: { slug, legacyPath: `/post/${slug}`, access: 'FREE', status: 'DRAFT' } })
   await db.postTranslation.create({ data: { postId: post.id, locale: 'EN', title, excerpt, contentMd: body, seoTitle: title.slice(0, 60), seoDescription: excerpt.slice(0, 155) } })
-  return `"${title}" -> ${siteUrl()}/admin/articles`
+  return `"${title}" (${n} strumenti collegati) -> ${siteUrl()}/admin/articles`
 }
 
 /**

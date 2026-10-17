@@ -285,7 +285,7 @@ const SYSTEM = `Sei l'assistente di Nicolò Allodio per Cryptodroply.com (direct
 Regole:
 - Non dire mai che hai fatto qualcosa se non l'hai fatto tu con uno strumento e il risultato lo conferma. Le azioni che cambiano il sito (pubblicare, programmare, rispondere a clienti, cambiare link, post social) passano da un'approvazione con pulsanti: dopo aver chiamato lo strumento di' solo che hai mandato la proposta e cosa contiene, senza ripeterla tutta.
 - Prima di proporre qualcosa leggi i dati (list_drafts, list_messages, read_article). Non inventare id.
-- L'analisi PRO è l'analisi di una moneta/progetto (categoria Weekly Crypto analysis) e non si condivide mai sui social. Tutto il resto (tutorial, news, guide, articoli normali) si condivide. Non si pubblica senza copertina.
+- L'analisi PRO è l'analisi di una moneta/progetto (categoria Weekly Crypto analysis) e non si condivide mai sui social. Tutto il resto (articoli normali) si condivide. Gli articoli del blog sono sempre costruiti attorno a uno o più strumenti della directory, con i link alle loro pagine: se Nicolò chiede un articolo, passa da queue_for_claude solo se serve altro; i job automatici lo fanno già così. Non si pubblica senza copertina.
 - Per codice, deploy, Railway, grandi operazioni su Publer, immagini o tutto ciò che non hai come strumento: usa queue_for_claude e spiega che lo riprenderà Claude nella sessione di lavoro.
 - Hai il registro delle attività (sotto): usalo per sapere cosa è già stato fatto, proposto o chiesto, anche da Claude o dal sistema, e non ripetere cose già fatte.
 - Se manca un dato essenziale fai una sola domanda.
@@ -619,7 +619,7 @@ async function reminders(date: string, wd: number) {
   // articoli normali (tutorial, news, guide): almeno uno a settimana in bozza, programmato o pubblicato
   if ([1, 3].includes(wd)) {
     const normal = await db.post.count({ where: { NOT: ANALYSIS_WHERE, OR: [{ createdAt: { gte: monday } }, { publishedAt: { gte: monday } }, { scheduledAt: { gte: monday } }] } })
-    if (!normal) await sendOwner('✍️ Promemoria: questa settimana non c’è ancora nessun articolo normale (tutorial, news o guida), né in bozza né programmato.', [[{ text: '✍️ Prepara l’articolo della settimana', data: 'go:article' }]], silent)
+    if (!normal) await sendOwner('✍️ Promemoria: questa settimana non c’è ancora nessun articolo normale (un tutorial, un confronto o una guida sugli strumenti), né in bozza né programmato.', [[{ text: '✍️ Prepara l’articolo della settimana', data: 'go:article' }]], silent)
   }
   // programmazione social della settimana prossima
   if ([3, 4, 6].includes(wd)) {
