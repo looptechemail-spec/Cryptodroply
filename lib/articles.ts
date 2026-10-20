@@ -44,7 +44,10 @@ async function ready(postId: string) {
 export async function publishNow(postId: string, social: boolean): Promise<string> {
   await ready(postId)
   const itNote = await ensureItalian(postId)
-  await db.post.update({ where: { id: postId }, data: { status: 'PUBLISHED', publishedAt: new Date(), scheduledAt: null } })
+  const an = await db.post.findUnique({ where: { id: postId }, select: { access: true, categoryId: true, category: { select: { slug: true } } } })
+  const isAn = an?.category?.slug === 'weekly-crypto-analysis' || (an?.access === 'PRO' && !an?.categoryId)
+  await db.post.update({ where: { id: postId }, data: { status: 'PUBLISHED', publishedAt: new Date(), scheduledAt: null, ...(an?.category?.slug === 'weekly-crypto-analysis' ? { access: 'PRO' as const } : {}) } })
+  if (isAn) return 'Analisi pubblicata solo per gli utenti PRO (nessun post social).' + itNote
   if (!social) return 'Articolo pubblicato in inglese e italiano.' + itNote
   return 'Articolo pubblicato in inglese e italiano.' + itNote + ' ' + (await articleSocial(postId, new Date(Date.now() + 15 * 60000)))
 }
