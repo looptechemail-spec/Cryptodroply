@@ -572,8 +572,11 @@ const rome = () => {
 
 async function once(key: string, fn: () => Promise<unknown>, log: (m: string) => void) {
   try { await db.jobRun.create({ data: { key } }) } catch { return } // già eseguito o in corso
+  const started = new Date()
   try {
     const r = await fn()
+    // articolo della settimana: su Telegram arriva anche la scheda della bozza, a cui rispondere con la foto della copertina
+    if (key.startsWith('article-')) void import('./agent').then((m) => m.sendNewDraftCard(started)).catch((e) => log(`${key}: scheda Telegram non inviata (${(e as Error).message})`))
     await db.jobRun.update({ where: { key }, data: { note: String(r).slice(0, 200) } })
     log(`${key}: ok`)
     const what = key.startsWith('article-') ? '📝 Bozza dell’articolo della settimana pronta' : key.startsWith('weekplan-') ? '📅 Programma social della settimana pronto' : key.startsWith('digest-') ? '📧 Bozza newsletter pronta' : ''

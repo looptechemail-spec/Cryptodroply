@@ -5,7 +5,7 @@
  */
 import { db } from './db'
 import { siteUrl, sendEmail } from './email'
-import { publishNow, scheduleArticle } from './articles'
+import { publishNow, scheduleArticle, saveCover } from './articles'
 import { sendToPubler } from './publer'
 import { romeToDate, dateToRome, tomorrowRome } from './time'
 import { runWeeklyArticle, runWeekPlan, nextMondayRome, runWeeklyDigest, runDailySocial, runWeeklyAnalysis, proposeNewsPost, suggestAnalysisIdeas } from './ai-content'
@@ -87,6 +87,12 @@ const TOOLS: Tool[] = [
       const t = await db.agentTask.create({ data: { kind: 'claude_request', title: short(String(a.request), 200), detail: String(a.request), status: 'QUEUED', source: 'agente' } })
       return `In coda per Claude (id ${t.id}). Lo vedrà alla prossima sessione.`
     },
+  },
+  {
+    name: 'write_article', mode: 'safe',
+    description: 'Scrive un articolo normale del blog IN BOZZA (non pubblica nulla) sull’argomento indicato, costruito attorno agli strumenti della directory. Ci vogliono 3-5 minuti; quando è pronto Nicolò riceve la scheda della bozza e può mandare la foto della copertina. Non usarlo per le analisi PRO.',
+    schema: { properties: { topic: { type: 'string', description: 'Argomento richiesto, anche con i nomi degli strumenti' } }, required: ['topic'] },
+    run: async (a) => { await startJob('article', String(a.topic ?? '').trim()); return 'Scrittura avviata: arriverà la scheda della bozza quando è pronta.' },
   },
   {
     name: 'publish_article', mode: 'approve', description: 'Pubblica subito una bozza (EN + IT). social=true crea anche i post social (le analisi PRO non vengono mai condivise).',
@@ -343,6 +349,10 @@ export function handleUpdate(u: any) {
 async function processUpdate(u: any) {
   if (u.callback_query) return handleCallback(u.callback_query)
   const m = u.message
+  if (m && (m.photo?.length || String(m.document?.mime_type ?? '').startsWith('image/'))) {
+    if (String(m.chat.id) === (await ownerChat())) await handleCoverPhoto(m).catch((e) => sendOwner('⚠️ Copertina non salvata: ' + (e as Error).message))
+    return
+  }
   const text: string = (m?.text ?? '').trim()
   if (!m || !text) return
   const chat = String(m.chat.id)
@@ -375,7 +385,8 @@ async function processUpdate(u: any) {
     if (project.length < 2) return void (await reply('Scrivi: /analisi NomeProgetto'))
     return void (await startJob('analysis', project))
   }
-  if (/^\/aiuto\b/.test(text)) return void (await reply('Posso: vedere bozze, messaggi e numeri del sito; proporti di pubblicare o programmare un articolo, rispondere a un messaggio, cambiare un link, creare un post su Publer (ti chiedo sempre OK con i pulsanti); mettere in coda per Claude i lavori di codice. Tasti in basso: Oggi, Bozze, Messaggi, Da approvare, Coda Claude, Azioni. Comandi: /oggi /bozze /messaggi /approvare /azioni /analisi Nome /silenzio 8 /attiva /registro'))
+  if (/^\/articolo\b/.test(text)) return void (await startJob('article', text.replace(/^\/articolo(@\S+)?\s*/, '').trim()))
+  if (/^\/aiuto\b/.test(text)) return void (await reply('Posso: vedere bozze, messaggi e numeri del sito; scrivere un articolo in bozza sull’argomento che scegli; proporti di pubblicare o programmare un articolo, rispondere a un messaggio, cambiare un link, creare un post su Publer (ti chiedo sempre OK con i pulsanti); mettere in coda per Claude i lavori di codice. Copertina: rispondi con una foto al messaggio della bozza. Tasti in basso: Oggi, Bozze, Messaggi, Da approvare, Coda Claude, Azioni. Comandi: /oggi /bozze /messaggi /approvare /azioni /articolo Argomento /analisi Nome /silenzio 8 /attiva /registro'))
   if (/^\/registro\b/.test(text)) return void (await reply(await taskLines(15)))
   
   tg('sendChatAction', { chat_id: chat, action: 'typing' }).catch(() => undefined)
@@ -437,13 +448,7 @@ export async function showSection(name: string) {
   if (name === 'bozze') {
     const rows = await db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'desc' }], take: 8, include: { translations: true, category: true } })
     if (!rows.length) return void (await sendOwner('📝 Nessuna bozza.'))
-    for (const p of rows) {
-      const line2 = [isAnalysis(p) ? '📊 Analisi PRO' : p.access === 'PRO' ? '💎 PRO' : 'articolo', p.coverUrl ? 'copertina ✅' : 'copertina ❌', p.scheduledAt ? '📅 ' + when(p.scheduledAt) : 'non programmata'].join(' · ')
-      const row2: Button[] = []
-      if (p.coverUrl) { row2.push({ text: '🚀 Pubblica ora', data: `pb:${p.id}` }); row2.push({ text: p.scheduledAt ? '📅 Cambia: domani 10:00' : '📅 Domani 10:00', data: `sc:${p.id}` }) }
-      if (p.scheduledAt) row2.push({ text: '🚫 Togli programma', data: `us:${p.id}` })
-      await sendOwner(`📝 ${enTitle(p.translations)}\n${line2}${p.coverUrl ? '' : '\nServe la copertina: aggiungila dal pannello.'}`, [[{ text: '👁 Leggi', data: `rd:${p.id}` }, { text: '🔗 Apri in admin', url: admin('articles') }], ...(row2.length ? [row2] : [])])
-    }
+    for (const p of rows) await sendDraftCard(p)
     return
   }
   if (name === 'messaggi') {
@@ -471,7 +476,7 @@ export async function showSection(name: string) {
   if (name === 'news') return void (await dailyNews(true))
   if (name === 'azioni') {
     return void (await sendOwner('⚙️ Cosa vuoi che prepari? Tutto esce come bozza, mai pubblicato da solo.', [
-      [{ text: '✍️ Articolo della settimana', data: 'go:article' }],
+      [{ text: '✍️ Articolo della settimana', data: 'go:article' }, { text: '✍️ Su un tema: /articolo Argomento', data: 'm:azioni' }],
       [{ text: '📅 Programma social settimana', data: 'go:week' }, { text: '📧 Bozza newsletter', data: 'go:digest' }],
       [{ text: '📰 Proponi la news di oggi', data: 'go:news' }, { text: '🌙 Riepilogo del giorno', data: 'm:riepilogo' }],
       [{ text: '💡 Idee per analisi PRO', data: 'go:ideas' }, { text: '🗓 Notizie → bozze per domani', data: 'go:newsdrafts' }],
@@ -481,20 +486,75 @@ export async function showSection(name: string) {
   }
 }
 
+type DraftPost = { id: string; access: string; coverUrl: string | null; scheduledAt: Date | null; categoryId: string | null; category: { slug: string } | null; translations: { locale: string; title: string | null }[] }
+
+/** Scheda di una bozza con i pulsanti. Il messaggio resta legato alla bozza: rispondendo con una foto diventa la copertina. */
+async function sendDraftCard(p: DraftPost, prefix = '') {
+  const line2 = [isAnalysis(p) ? '📊 Analisi PRO' : p.access === 'PRO' ? '💎 PRO' : 'articolo', p.coverUrl ? 'copertina ✅' : 'copertina ❌', p.scheduledAt ? '📅 ' + when(p.scheduledAt) : 'non programmata'].join(' · ')
+  const row2: Button[] = []
+  if (p.coverUrl) { row2.push({ text: '🚀 Pubblica ora', data: `pb:${p.id}` }); row2.push({ text: p.scheduledAt ? '📅 Cambia: domani 10:00' : '📅 Domani 10:00', data: `sc:${p.id}` }) }
+  if (p.scheduledAt) row2.push({ text: '🚫 Togli programma', data: `us:${p.id}` })
+  const hint = p.coverUrl ? '\nPer cambiare copertina rispondi a questo messaggio con una foto.' : '\nServe la copertina: rispondi a questo messaggio con una foto.'
+  const mid = await sendOwner(`${prefix}📝 ${enTitle(p.translations)}\n${line2}${hint}`, [[{ text: '👁 Leggi', data: `rd:${p.id}` }, { text: '🔗 Apri in admin', url: admin('articles') }], ...(row2.length ? [row2] : [])])
+  if (mid) await linkMessageToPost(mid, p.id)
+}
+
+/** Manda la scheda della bozza più recente creata dopo `since` (per i lavori automatici). */
+export async function sendNewDraftCard(since: Date) {
+  if (!agentToken() || !(await ownerChat())) return
+  const draft = await db.post.findFirst({ where: { status: 'DRAFT', createdAt: { gte: since } }, orderBy: { createdAt: 'desc' }, include: { translations: true, category: true } })
+  if (draft) await sendDraftCard(draft, '✍️ Nuova bozza pronta\n\n')
+}
+
+const coverKey = (messageId: number) => `agent:cover:${messageId}`
+async function linkMessageToPost(messageId: number, postId: string) {
+  await db.jobRun.upsert({ where: { key: coverKey(messageId) }, update: { note: postId }, create: { key: coverKey(messageId), note: postId } }).catch(() => undefined)
+}
+
+/** Foto ricevuta: se risponde alla scheda di una bozza diventa la sua copertina, altrimenti si chiede a quale bozza assegnarla. */
+async function handleCoverPhoto(m: any) {
+  const fileId: string = m.photo?.length ? m.photo[m.photo.length - 1].file_id : m.document.file_id
+  const replyTo = m.reply_to_message?.message_id as number | undefined
+  const linked = replyTo ? (await db.jobRun.findUnique({ where: { key: coverKey(replyTo) } }))?.note : null
+  if (linked) return void (await applyCover(linked, fileId))
+  const drafts = await db.post.findMany({ where: { status: 'DRAFT' }, orderBy: [{ coverUrl: { sort: 'asc', nulls: 'first' } }, { createdAt: 'desc' }], take: 6, include: { translations: true } })
+  if (!drafts.length) return void (await sendOwner('🖼 Nessuna bozza a cui mettere la copertina.'))
+  await db.jobRun.upsert({ where: { key: 'agent:pendingcover' }, update: { note: fileId }, create: { key: 'agent:pendingcover', note: fileId } })
+  await sendOwner('🖼 A quale bozza metto questa copertina?', drafts.map((p) => [{ text: `${p.coverUrl ? '🔁' : '➕'} ${short(enTitle(p.translations), 50)}`, data: `cv:${p.id}` }]))
+}
+
+async function applyCover(postId: string, fileId: string) {
+  const post = await postOrThrow(postId)
+  const info = await tg('getFile', { file_id: fileId })
+  const res = await fetch(`https://api.telegram.org/file/bot${agentToken()}/${info.file_path}`, { signal: AbortSignal.timeout(30000) })
+  if (!res.ok) throw new Error(`download da Telegram non riuscito (${res.status})`)
+  const ext = String(info.file_path).split('.').pop()?.toLowerCase() ?? ''
+  const type = ({ png: 'image/png', webp: 'image/webp', gif: 'image/gif' } as Record<string, string>)[ext] ?? 'image/jpeg'
+  const cover = await saveCover(post.id, new Blob([await res.arrayBuffer()], { type }), '')
+  if (!cover) throw new Error('immagine vuota')
+  await db.agentTask.create({ data: { kind: 'cover', title: `Copertina per "${short(enTitle(post.translations), 150)}"`, status: 'DONE', source: 'agente', result: cover } })
+  await sendDraftCard({ ...post, coverUrl: cover }, '🖼 Copertina salvata\n\n')
+}
+
 async function startJob(job: string, arg = '') {
-  const names: Record<string, string> = { article: 'articolo della settimana', week: 'programma social della settimana', digest: 'bozza newsletter', newsdrafts: 'bozze dalle notizie', analysis: `analisi di ${arg}` }
+  const names: Record<string, string> = { article: arg ? `articolo su "${short(arg, 80)}"` : 'articolo della settimana', week: 'programma social della settimana', digest: 'bozza newsletter', newsdrafts: 'bozze dalle notizie', analysis: `analisi di ${arg}` }
   await sendOwner(`⏳ Avviato: ${names[job]}. Ti scrivo quando è pronto${job === 'analysis' || job === 'article' ? ' (3-5 minuti)' : ''}.`)
   const task = await db.agentTask.create({ data: { kind: 'job:' + job, title: `Preparo ${names[job]}`, status: 'RUNNING', source: 'agente' } })
   void (async () => {
     try {
       let out = ''
-      if (job === 'article') out = await runWeeklyArticle()
+      if (job === 'article') out = await runWeeklyArticle(arg || undefined)
       else if (job === 'week') out = await runWeekPlan(nextMondayRome())
       else if (job === 'digest') out = 'Campagna in bozza: ' + (await runWeeklyDigest()) + ' · ' + admin('newsletter')
       else if (job === 'newsdrafts') out = `${await runDailySocial()} bozze di post create su Telegram e X (vedi ${admin('news')})`
       else if (job === 'analysis') out = `Analisi "${(await runWeeklyAnalysis(arg)).title}" in bozza (PRO, non si condivide sui social). ${admin('articles')}`
       await db.agentTask.update({ where: { id: task.id }, data: { status: 'DONE', result: out.slice(0, 500) } })
-      await sendOwner(`✅ Pronto: ${names[job]}\n\n${short(out, 600)}`, [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]])
+      // articolo o analisi: si manda subito la scheda della bozza, a cui rispondere con la foto della copertina
+      const draft = job === 'article' || job === 'analysis'
+        ? await db.post.findFirst({ where: { status: 'DRAFT', createdAt: { gte: task.createdAt } }, orderBy: { createdAt: 'desc' }, include: { translations: true, category: true } })
+        : null
+      if (draft) await sendDraftCard(draft, `✅ Pronto: ${names[job]}\n\n`)
+      else await sendOwner(`✅ Pronto: ${names[job]}\n\n${short(out, 600)}`, [[{ text: '📝 Vedi bozze', data: 'm:bozze' }]])
     } catch (e) {
       await db.agentTask.update({ where: { id: task.id }, data: { status: 'FAILED', result: (e as Error).message.slice(0, 500) } })
       await sendOwner(`⚠️ Non riuscito: ${names[job]}\n${(e as Error).message}`)
@@ -510,7 +570,9 @@ async function handleAction(act: string, id: string, done: (t: string) => Promis
       await done('')
       const p = await postOrThrow(id)
       const t = p.translations.find((x) => x.locale === 'EN') ?? p.translations[0]
-      return void (await sendOwner(`👁 ${t?.title}\n\n${t?.excerpt ?? ''}\n\n${short(t?.contentMd ?? '', 2600)}`, [[{ text: '🚀 Pubblica ora', data: `pb:${id}` }, { text: '📅 Domani 10:00', data: `sc:${id}` }]]))
+      const mid = await sendOwner(`👁 ${t?.title}\n\n${t?.excerpt ?? ''}\n\n${short(t?.contentMd ?? '', 2600)}`, [[{ text: '🚀 Pubblica ora', data: `pb:${id}` }, { text: '📅 Domani 10:00', data: `sc:${id}` }]])
+      if (mid) await linkMessageToPost(mid, id)
+      return
     }
     if (act === 'pb') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('publish_article'), { id, social: !isAnalysis(p) })) }
     if (act === 'sc') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('schedule_article'), { id, when: dateToRome(tomorrowRome(10)), social: !isAnalysis(p) })) }
@@ -518,6 +580,13 @@ async function handleAction(act: string, id: string, done: (t: string) => Promis
     if (act === 'mh') { await db.formSubmission.update({ where: { id }, data: { handled: true } }); await done('Segnato come gestito ✅'); return }
     if (act === 'mr') { await done('Preparo la bozza…'); return void (await sendOwner(await converse(`Scrivi una bozza di risposta al messaggio ${id} (leggilo con list_messages) e proponila per l'approvazione con reply_message.`))) }
     if (act === 'an') { await done('Avvio l’analisi'); return await startJob('analysis', id) }
+    if (act === 'cv') {
+      const fileId = (await db.jobRun.findUnique({ where: { key: 'agent:pendingcover' } }))?.note
+      if (!fileId) return void (await done('Rimanda la foto'))
+      await done('Salvo la copertina…')
+      await db.jobRun.delete({ where: { key: 'agent:pendingcover' } }).catch(() => undefined)
+      return await applyCover(id, fileId)
+    }
     if (act === 'qd') { await db.agentTask.update({ where: { id }, data: { status: 'DONE', result: 'Segnata come fatta da Nicolò' } }); await done('Segnata come fatta ✅'); return }
     if (act === 'go') {
       if (id === 'mute') { await setMute(8); return void (await done('🔕 Silenzio per 8 ore')) }
