@@ -577,6 +577,29 @@ async function handleAction(act: string, id: string, done: (t: string) => Promis
     if (act === 'pb') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('publish_article'), { id, social: !isAnalysis(p) })) }
     if (act === 'sc') { const p = await postOrThrow(id); await done('Proposta pronta'); return void (await propose(tool('schedule_article'), { id, when: dateToRome(tomorrowRome(10)), social: !isAnalysis(p) })) }
     if (act === 'us') { await done('Proposta pronta'); return void (await propose(tool('unschedule_article'), { id })) }
+    if (act === 'nw') {
+      const [how, batch] = [id.slice(0, 1), id.slice(2)]
+      const rows = await db.socialPost.findMany({ where: { batch, status: 'DRAFT' } })
+      if (!rows.length) return void (await done('Già gestiti'))
+      const close = async (t: string) => { await done(t) }
+      if (how === 'x') { await db.socialPost.updateMany({ where: { batch }, data: { status: 'REJECTED' } }); return await close('Scartati') }
+      const state = how === 'p' ? 'now' : 'scheduled'
+      if (state === 'scheduled' && (!rows[0].scheduledAt || rows[0].scheduledAt.getTime() < Date.now() + 3 * 60000)) return await close('La data è passata: usa Pubblica ora')
+      await done(state === 'now' ? 'Pubblico…' : 'Programmo…')
+      const ok: string[] = [], bad: string[] = []
+      for (const r of rows) {
+        try {
+          const job = await sendToPubler(r, state)
+          await db.socialPost.update({ where: { id: r.id }, data: { status: 'PUBLER', publerRef: `${state}:${job}`, sentAt: new Date() } })
+          ok.push(r.channel)
+        } catch (e) {
+          await db.socialPost.update({ where: { id: r.id }, data: { publerRef: `ERROR: ${(e as Error).message}`.slice(0, 400) } })
+          bad.push(`${r.channel}: ${(e as Error).message.slice(0, 100)}`)
+        }
+      }
+      await sendOwner(`${ok.length ? `✅ ${state === 'now' ? 'Pubblicato ora' : 'Programmato'} su ${ok.join(', ')}` : '⚠️ Nessun post inviato'}${bad.length ? `\n\nErrori: ${bad.join(' | ')}` : ''}`)
+      return
+    }
     if (act === 'mh') { await db.formSubmission.update({ where: { id }, data: { handled: true } }); await done('Segnato come gestito ✅'); return }
     if (act === 'mr') { await done('Preparo la bozza…'); return void (await sendOwner(await converse(`Scrivi una bozza di risposta al messaggio ${id} (leggilo con list_messages) e proponila per l'approvazione con reply_message.`))) }
     if (act === 'an') { await done('Avvio l’analisi'); return await startJob('analysis', id) }

@@ -137,7 +137,7 @@ export async function newsFromText(mode: string, fd: FormData) {
   try {
     const when = String(fd.get('when') ?? '')
     if (mode === 'schedule' && !when) throw new Error('Scegli data e ora per programmare')
-    const ids = await runNewsDrafts(String(fd.get('content') ?? ''), when || undefined)
+    const ids = await runNewsDrafts(String(fd.get('content') ?? ''), when || undefined, mode === 'draft')
     if (mode === 'draft') msg = `${ids.length} bozze create`
     else {
       const state = mode === 'now' ? 'now' : 'scheduled'

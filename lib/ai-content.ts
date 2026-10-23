@@ -346,7 +346,7 @@ export async function runNewsFromText(input: string, whenLocal?: string): Promis
 }
 
 /** Come sopra, ma restituisce gli id dei post creati. */
-export async function runNewsDrafts(input: string, whenLocal?: string): Promise<string[]> {
+export async function runNewsDrafts(input: string, whenLocal?: string, askTelegram = true): Promise<string[]> {
   const raw = input.trim()
   if (raw.length < 15) throw new Error('Incolla un testo o un indirizzo web')
   let source = raw, link: string | null = null
@@ -382,7 +382,20 @@ ${source}`,
     ids.push(row.id)
   }
   if (!ids.length) throw new Error('nessun post nella risposta')
+  if (askTelegram) await askNewsApproval(batch).catch(() => undefined)
   return ids
+}
+
+/** Manda su Telegram i post news appena creati con i pulsanti per confermarli, programmarli o scartarli. */
+export async function askNewsApproval(batch: string): Promise<void> {
+  const rows = await db.socialPost.findMany({ where: { batch }, orderBy: { channel: 'asc' } })
+  if (!rows.length) return
+  const CH: Record<string, string> = { x: 'X', telegram: 'Telegram', facebook: 'Facebook' }
+  const when = rows[0].scheduledAt
+  const whenTxt = when ? new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(when) : 'senza data'
+  const text = `📰 Post news da confermare\n\n` + rows.map((r) => `— ${CH[r.channel] ?? r.channel}\n${r.text.slice(0, 600)}`).join('\n\n') + (rows[0].linkUrl ? `\n\n🔗 ${rows[0].linkUrl}` : '') + `\n\nData prevista: ${whenTxt}`
+  const { sendOwner } = await import('./tgbot')
+  await sendOwner(text, [[{ text: '🚀 Pubblica ora', data: `nw:p:${batch}` }, { text: `📅 Programma (${whenTxt})`, data: `nw:s:${batch}` }], [{ text: '❌ Scarta', data: `nw:x:${batch}` }]])
 }
 
 /** Pagina SEO pubblicata -> tre bozze (X, Telegram, Facebook) su Publer, con il link alla pagina. */
