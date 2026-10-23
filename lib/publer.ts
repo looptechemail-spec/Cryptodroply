@@ -86,3 +86,25 @@ export async function jobStatus(job: string): Promise<string> {
   const r = await call(`/job_status/${job}`, { workspace: ws })
   return JSON.stringify(r).slice(0, 400)
 }
+
+/** Giorni (YYYY-MM-DD, ora di Roma) tra `from` e `to` che hanno già post (bozze o programmati) su Publer. Null se Publer non risponde. */
+export async function publerBusyDays(from: string, to: string): Promise<Set<string> | null> {
+  try {
+    const ws = await workspaceId()
+    const days = new Set<string>()
+    for (const state of ['draft', 'scheduled']) {
+      for (let page = 0; page < 10; page++) {
+        const r = await call(`/posts?state=${state}&from=${from}&to=${to}&page=${page}`, { workspace: ws })
+        const arr: any[] = Array.isArray(r) ? r : r?.posts ?? []
+        for (const x of arr) {
+          const at = x?.scheduled_at ?? x?.scheduledAt ?? x?.date
+          if (!at) continue
+          const d = new Date(at)
+          if (!isNaN(d.getTime())) days.add(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Rome' }).format(d))
+        }
+        if (arr.length < 20) break
+      }
+    }
+    return days
+  } catch { return null }
+}

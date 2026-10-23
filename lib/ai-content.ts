@@ -9,7 +9,7 @@ import { buildDigest, mainList } from './newsletter'
 import { slugify } from './v1'
 import { SECTIONS } from './sections'
 import { tomorrowRome, romeToDate, nextWeekdayRome } from './time'
-import { sendToPubler } from './publer'
+import { sendToPubler, publerBusyDays } from './publer'
 
 const PRO_COLLECTIONS = SECTIONS.filter((x) => x.pro).flatMap((x) => x.collections)
 const FAST = () => process.env.AI_MODEL ?? 'claude-haiku-4-5-20251001'
@@ -196,10 +196,24 @@ export async function runWeekPlan(monday: string): Promise<string> {
   const usedLinks = used.map((u) => u.linkUrl ?? '')
   const isUsed = (slug: string) => ALREADY_USED.includes(slug) || usedLinks.some((l) => l.endsWith('/' + slug))
 
+  // giorni della settimana che hanno già post (nel database o su Publer): non vanno toccati né duplicati
+  const dayStr = (i: number) => { const d = new Date(`${monday}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10) }
+  const busy = new Set<string>()
+  const dbPosts = await db.socialPost.findMany({
+    where: { scheduledAt: { gte: romeToDate(`${dayStr(0)}T00:00`), lt: romeToDate(`${dayStr(6)}T23:59`) }, status: { not: 'REJECTED' } },
+    select: { scheduledAt: true, publerRef: true },
+  })
+  for (const r of dbPosts) if (r.scheduledAt && !r.publerRef?.startsWith('ERROR')) busy.add(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Rome' }).format(r.scheduledAt))
+  const onPubler = await publerBusyDays(dayStr(0), dayStr(6))
+  if (onPubler) onPubler.forEach((d) => busy.add(d))
+  const skippedDays = [0, 1, 2, 3, 4, 5, 6].filter((i) => busy.has(dayStr(i)))
+  if (skippedDays.length === 7) return `Settimana ${monday}: tutti i giorni hanno già post, non ho creato nulla`
+
   type Cand = { key: string; title: string; link: string; facts: string }
   const slots: Cand[][] = []
-  for (const slot of WEEK_SLOTS) {
+  for (const [si, slot] of WEEK_SLOTS.entries()) {
     let cands: Cand[] = []
+    if (busy.has(dayStr(si))) { slots.push(cands); continue }
     if (!slot.cats.length) {
       const posts = await db.post.findMany({ where: { status: 'PUBLISHED', access: 'FREE' }, include: { translations: true }, orderBy: { publishedAt: 'desc' }, take: 60 })
       cands = shuffle(posts.filter((p) => !isUsed(p.slug))).slice(0, 2).map((p) => {
@@ -248,7 +262,7 @@ ${brief}`,
   const errors: string[] = []
   for (const m of out.matchAll(/<slot n="(\d)" pick="([AB])">([\s\S]*?)<\/slot>/g)) {
     const i = Number(m[1]); const cand = slots[i]?.['AB'.indexOf(m[2])]
-    if (!cand) continue
+    if (!cand || busy.has(dayStr(i))) continue
     const dayDate = new Date(`${monday}T00:00:00Z`); dayDate.setUTCDate(dayDate.getUTCDate() + i)
     const when = romeToDate(`${dayDate.toISOString().slice(0, 10)}T10:00`)
     const batch = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
@@ -268,7 +282,7 @@ ${brief}`,
     }
   }
   if (!n) throw new Error('nessun post nella risposta')
-  return `Settimana ${monday}: ${n} post creati, ${sent} bozze su Publer${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''} | ${tag(out, 'note').slice(0, 200)}`
+  return `Settimana ${monday}: ${n} post creati${skippedDays.length ? ` (giorni già occupati, lasciati intatti: ${skippedDays.map((d) => dayStr(d)).join(', ')})` : ''}, ${sent} bozze su Publer${errors.length ? ` | errori: ${[...new Set(errors)].join(' ; ')}` : ''} | ${tag(out, 'note').slice(0, 200)}`
 }
 
 
